@@ -598,6 +598,36 @@ export async function changeAdminPassword({ userId = 'admin', currentPassword, n
   return data;
 }
 
+export async function requestPasswordResetOTP(userId = 'admin') {
+  const res = await fetch(`${API_BASE_URL}/api/admin/forgot-password/request-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.detail || 'Failed to send OTP verification email');
+  }
+  return data;
+}
+
+export async function resetPasswordWithOTP({ userId = 'admin', otp, newPassword }) {
+  const res = await fetch(`${API_BASE_URL}/api/admin/forgot-password/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: userId,
+      otp: otp.trim(),
+      new_password: newPassword
+    })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.detail || 'Failed to reset password');
+  }
+  return data;
+}
+
 export async function triggerNotification(payload) {
   try {
     const res = await fetch(`${API_BASE_URL}/api/notifications/notify`, {

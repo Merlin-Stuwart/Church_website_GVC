@@ -1,6 +1,7 @@
 import os
 import hmac
 import hashlib
+import secrets
 import re
 from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel
@@ -166,6 +167,28 @@ class UpdateAuthCredentialsRequest(BaseModel):
     current_password: str
     new_user_id: Optional[str] = None
     new_password: str
+
+class ForgotPasswordRequest(BaseModel):
+    user_id: Optional[str] = "admin"
+
+class ResetPasswordWithOTPRequest(BaseModel):
+    user_id: Optional[str] = "admin"
+    otp: str
+    new_password: str
+
+# In-memory storage fallback for active OTP verification requests
+password_resets_store: Dict[str, Dict[str, Any]] = {}
+
+def _mask_email(email: str) -> str:
+    """Mask email for privacy e.g. madara05112001@gmail.com -> m*****1@gmail.com"""
+    if not email or "@" not in email:
+        return "super admin email"
+    name, domain = email.split("@", 1)
+    if len(name) <= 2:
+        masked_name = name[0] + "*"
+    else:
+        masked_name = name[0] + ("*" * (len(name) - 2)) + name[-1]
+    return f"{masked_name}@{domain}"
 
 class SettingsUpdateRequest(BaseModel):
     church_name: Optional[str] = None
@@ -360,6 +383,160 @@ async def update_auth_credentials(
         "success": True,
         "message": "Admin credentials updated successfully.",
         "user_id": updated_user_id,
+    }
+
+
+@router.post("/forgot-password/request-otp")
+async def request_password_reset_otp(payload: ForgotPasswordRequest):
+    """
+    Sends a 6-digit OTP to the church super admin notification email.
+    Allows resetting admin password without needing the old password.
+    """
+    user_key = (payload.user_id or "admin").strip()
+    if not user_key:
+        user_key = "admin"
+
+    # Find the admin user doc in MongoDB
+    user_doc = None
+    if is_db_connected():
+        try:
+            db = get_database()
+            user_doc = await db.auth.find_one(_identity_query(user_key))
+            if not user_doc:
+                user_doc = await db.auth.find_one({"_id": "admin-account"})
+                if not user_doc:
+                    user_doc = await db.auth.find_one({})
+        except Exception as e:
+            print("DB lookup for forgot-password:", e)
+
+    # Determine recipient super admin email
+    recipient_email = None
+    if user_doc and user_doc.get("email"):
+        recipient_email = user_doc.get("email")
+    if not recipient_email:
+        recipient_email = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", os.getenv("ADMIN_NOTIFICATION_EMAIL", "madara05112001@gmail.com"))
+
+    # Generate cryptographically secure 6-digit numeric OTP
+    otp_code = f"{secrets.randbelow(900000) + 100000}"
+    expires_at = datetime.now().timestamp() + (10 * 60)  # 10 minutes
+
+    user_identifier = (user_doc.get("user_id") if user_doc else user_key).lower()
+    reset_data = {
+        "user_id": user_identifier,
+        "otp": otp_code,
+        "email": recipient_email,
+        "expires_at": expires_at,
+        "created_at": datetime.now().isoformat()
+    }
+    password_resets_store[user_identifier] = reset_data
+
+    # Save to MongoDB password_resets collection
+    if is_db_connected():
+        try:
+            db = get_database()
+            await db.password_resets.update_one(
+                {"user_id": user_identifier},
+                {"$set": reset_data},
+                upsert=True
+            )
+        except Exception as exc:
+            print(f"Failed to save reset OTP to mongo: {exc}")
+
+    # Dispatch email via email_service
+    from app.services.email_service import send_password_reset_otp_email
+    send_password_reset_otp_email(recipient_email, otp_code, user_identifier)
+
+    masked = _mask_email(recipient_email)
+    return {
+        "success": True,
+        "message": f"Verification OTP sent successfully to {masked}.",
+        "masked_email": masked,
+        "user_id": user_identifier
+    }
+
+
+@router.post("/forgot-password/reset")
+async def reset_password_with_otp(payload: ResetPasswordWithOTPRequest):
+    """
+    Validates the 6-digit OTP and updates the admin password with Argon2 hash.
+    Does NOT require the old password.
+    """
+    user_key = (payload.user_id or "admin").strip().lower()
+    provided_otp = (payload.otp or "").strip()
+    new_password = (payload.new_password or "").strip()
+
+    if not provided_otp:
+        raise HTTPException(status_code=400, detail="6-digit OTP is required.")
+    if len(new_password) < 4:
+        raise HTTPException(status_code=400, detail="New password must be at least 4 characters long.")
+
+    # Find reset record in MongoDB or memory
+    record = None
+    if is_db_connected():
+        try:
+            db = get_database()
+            record = await db.password_resets.find_one({"user_id": user_key})
+            if not record:
+                # Also try finding by OTP
+                record = await db.password_resets.find_one({"otp": provided_otp})
+        except Exception as e:
+            print("DB lookup for OTP reset:", e)
+
+    if not record:
+        record = password_resets_store.get(user_key)
+        if not record:
+            for k, r in password_resets_store.items():
+                if r.get("otp") == provided_otp:
+                    record = r
+                    break
+
+    if not record:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP. Please request a new OTP.")
+
+    # Check expiration (10 minutes)
+    if datetime.now().timestamp() > record.get("expires_at", 0):
+        raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
+
+    # Constant-time comparison for security
+    if not hmac.compare_digest(str(record.get("otp", "")).strip(), provided_otp):
+        raise HTTPException(status_code=400, detail="Incorrect OTP code. Please check and try again.")
+
+    # Hash new password with Argon2
+    new_hash = password_hash.hash(new_password)
+
+    # Update in MongoDB db.auth
+    if is_db_connected():
+        try:
+            db = get_database()
+            res = await db.auth.update_one(
+                _identity_query(user_key),
+                {"$set": {
+                    "password": new_hash,
+                    "updated_at": datetime.now().isoformat()
+                }}
+            )
+            if res.matched_count == 0:
+                # Update default or first admin record
+                await db.auth.update_one(
+                    {},
+                    {"$set": {
+                        "password": new_hash,
+                        "updated_at": datetime.now().isoformat()
+                    }}
+                )
+            # Remove used OTP record
+            await db.password_resets.delete_many({"otp": provided_otp})
+            print("Admin password reset with OTP successfully in MongoDB.")
+        except Exception as exc:
+            print("Error saving reset password to MongoDB:", exc)
+
+    # Invalidate OTP in memory
+    password_resets_store.pop(user_key, None)
+
+    return {
+        "success": True,
+        "message": "Password reset successfully! You can now log in with your new password.",
+        "user_id": user_key
     }
 
 

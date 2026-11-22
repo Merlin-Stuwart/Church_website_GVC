@@ -278,3 +278,94 @@ MESSAGE BODY:
 =====================================================
 """
     return send_notification_email(subject, html, text, recipient)
+
+
+def send_password_reset_otp_email(recipient: str, otp: str, user_id: str = "admin") -> bool:
+    """Send a secure 6-digit OTP verification email for admin password reset."""
+    now_str = datetime.now().strftime("%d %b %Y, %I:%M %p")
+    subject = f"[GVC SECURITY] 🔐 Admin Password Reset OTP: {otp}"
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GVC Admin Password Reset OTP</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 30px 15px;">
+            <tr>
+                <td align="center">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+                        <!-- Header Banner -->
+                        <tr>
+                            <td style="background-color: #0b192c; padding: 26px 30px; text-align: left;">
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; font-weight: bold; margin-bottom: 4px;">
+                                    Grace Victory Church • Security Alert
+                                </div>
+                                <div style="font-size: 20px; font-weight: 800; color: #ffffff; font-family: Georgia, serif;">
+                                    Admin Password Reset Code
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 30px;">
+                                <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+                                    Hello Pastor / Church Administrator,
+                                </p>
+                                <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                                    A request was received to reset the password for your Church Admin Portal account (<strong>{user_id}</strong>). Use the verification code below to authorize this password change:
+                                </p>
+                                
+                                <!-- OTP Box -->
+                                <div style="background-color: #fef3c7; border: 2px dashed #f59e0b; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
+                                    <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: #92400e; margin-bottom: 8px;">
+                                        Your 6-Digit One-Time Password (OTP)
+                                    </div>
+                                    <div style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #78350f; font-family: monospace;">
+                                        {otp}
+                                    </div>
+                                    <div style="font-size: 12px; color: #b45309; margin-top: 8px;">
+                                        ⏱️ Valid for 10 minutes only
+                                    </div>
+                                </div>
+
+                                <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin: 20px 0 0 0;">
+                                    🛡️ <strong>Security Notice:</strong> If you did not request this password reset, no action is needed. Your current password remains safe and unchanged. Do not share this OTP with anyone.
+                                </p>
+                            </td>
+                        </tr>
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #f8fafc; padding: 16px 30px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #94a3b8;">
+                                Grace Victory Church, Vattamalai, Tamil Nadu, India • Generated at {now_str}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+
+    text = f"""
+=====================================================
+[GVC SECURITY] ADMIN PASSWORD RESET VERIFICATION CODE
+=====================================================
+Hello Pastor / Church Administrator,
+
+A request was received to reset the password for your Church Admin Portal account ({user_id}).
+
+YOUR 6-DIGIT VERIFICATION CODE (OTP):
+>>>  {otp}  <<<
+
+Valid for 10 minutes only.
+
+If you did not request this password reset, please ignore this email.
+Requested at: {now_str}
+=====================================================
+"""
+    return send_notification_email(subject, html, text, recipient)
