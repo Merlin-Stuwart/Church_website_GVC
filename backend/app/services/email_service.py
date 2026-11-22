@@ -15,17 +15,18 @@ def get_notification_recipient() -> str:
         load_dotenv(env_file, override=True)
     return os.getenv("ADMIN_NOTIFICATION_EMAIL") or getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None) or "contact@gracevictorychurch.org"
 
-def send_notification_email(subject: str, html_content: str, text_content: str, recipient: str = None) -> bool:
+def send_notification_email(subject: str, html_content: str, text_content: str, recipient: str = None, return_error: bool = False):
     """
     Sends an email notification via SMTP (e.g. Gmail App Password).
-    Returns True if sent successfully, False otherwise.
+    Tries configured port (587 or 465) and automatically falls back to alternative port.
+    Returns True if sent successfully, False otherwise (or (bool, str) if return_error=True).
     """
     env_file = BASE_DIR / ".env"
     if env_file.is_file():
         load_dotenv(env_file, override=True)
     to_email = recipient or get_notification_recipient()
     smtp_host = (os.getenv("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")).strip()
-    smtp_port = int(os.getenv("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
+    smtp_port = int(os.getenv("SMTP_PORT") or getattr(settings, "SMTP_PORT", 465))
     smtp_user = (os.getenv("SMTP_USER") or getattr(settings, "SMTP_USER", "")).strip()
     smtp_pass = (os.getenv("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "").strip()
     
@@ -53,29 +54,47 @@ def send_notification_email(subject: str, html_content: str, text_content: str, 
     print(f"=======================================================\n")
 
     if not smtp_user or not smtp_pass:
-        print(f"⚠️ [SMTP UNCONFIGURED] SMTP_USER and SMTP_PASSWORD missing in backend/.env. Cannot deliver email to {to_email}.")
+        print(f"⚠️ [SMTP UNCONFIGURED] SMTP_USER and SMTP_PASSWORD missing. Cannot deliver email to {to_email}.")
         logger.warning(f"SMTP not configured (SMTP_USER/SMTP_PASSWORD missing). Notification cannot be delivered to {to_email}.")
+        if return_error:
+            return False, "SMTP_USER or SMTP_PASSWORD is not configured."
         return False
 
-    try:
-        if smtp_port == 465:
-            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=15) as server:
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(from_email, [to_email], msg.as_string())
-        else:
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(from_email, [to_email], msg.as_string())
-        print(f"✅ [SMTP SUCCESS] Successfully delivered email to {to_email} via {smtp_host}!")
-        logger.info(f"Successfully delivered notification email to {to_email}")
-        return True
-    except Exception as e:
-        print(f"❌ [SMTP ERROR] Failed to send email via SMTP to {to_email}: {e}")
-        logger.error(f"Failed to send SMTP email to {to_email}: {e}")
-        return False
+    # Try preferred port, and if blocked/fails, automatically retry on fallback port (465 SSL vs 587 STARTTLS)
+    ports_to_try = [smtp_port]
+    fallback_port = 465 if smtp_port != 465 else 587
+    if fallback_port not in ports_to_try:
+        ports_to_try.append(fallback_port)
+
+    last_error_str = "Unknown error"
+    for port in ports_to_try:
+        try:
+            print(f"Connecting to {smtp_host}:{port} for email delivery...")
+            if port == 465:
+                with smtplib.SMTP_SSL(smtp_host, port, timeout=12) as server:
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(from_email, [to_email], msg.as_string())
+            else:
+                with smtplib.SMTP(smtp_host, port, timeout=12) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(from_email, [to_email], msg.as_string())
+            print(f"✅ [SMTP SUCCESS] Successfully delivered email to {to_email} via {smtp_host}:{port}!")
+            logger.info(f"Successfully delivered notification email to {to_email}")
+            if return_error:
+                return True, "Delivered"
+            return True
+        except Exception as e:
+            last_error_str = str(e)
+            print(f"⚠️ [SMTP PORT {port} FAILED]: {type(e).__name__} - {e}")
+            logger.warning(f"SMTP attempt on port {port} failed: {e}")
+
+    print(f"❌ [SMTP ALL PORTS FAILED] Could not deliver to {to_email}: {last_error_str}")
+    if return_error:
+        return False, last_error_str
+    return False
 
 
 def _build_html_template(badge_title: str, badge_color: str, title: str, details_rows: list, message_text: str) -> str:
@@ -297,7 +316,7 @@ MESSAGE BODY:
     return send_notification_email(subject, html, text, recipient)
 
 
-def send_password_reset_otp_email(recipient: str, otp: str, user_id: str = "admin") -> bool:
+def send_password_reset_otp_email(recipient: str, otp: str, user_id: str = "admin", return_error: bool = False):
     """Send a secure 6-digit OTP verification email for admin password reset."""
     now_str = datetime.now().strftime("%d %b %Y, %I:%M %p")
     subject = f"[GVC SECURITY] 🔐 Admin Password Reset OTP: {otp}"
@@ -385,4 +404,4 @@ If you did not request this password reset, please ignore this email.
 Requested at: {now_str}
 =====================================================
 """
-    return send_notification_email(subject, html, text, recipient)
+    return send_notification_email(subject, html, text, recipient, return_error=return_error)

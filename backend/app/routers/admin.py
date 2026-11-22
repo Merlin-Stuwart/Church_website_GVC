@@ -470,12 +470,12 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
         )
 
     from app.services.email_service import send_password_reset_otp_email
-    sent_successfully = send_password_reset_otp_email(recipient_email, otp_code, user_identifier)
+    sent_successfully, err_msg = send_password_reset_otp_email(recipient_email, otp_code, user_identifier, return_error=True)
 
     if not sent_successfully:
         raise HTTPException(
             status_code=502,
-            detail=f"Failed to deliver email to {recipient_email}. Please verify your SMTP_USER and SMTP_PASSWORD in backend/.env (ensure 16-character App Password is valid)."
+            detail=f"Email delivery failed: {err_msg}. Please check your server SMTP settings."
         )
 
     masked = _mask_email(recipient_email)
