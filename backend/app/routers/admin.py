@@ -444,7 +444,8 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
 
     # Dispatch email via email_service
     from dotenv import load_dotenv
-    load_dotenv(override=True)
+    from app.config import BASE_DIR
+    load_dotenv(BASE_DIR / ".env", override=True)
 
     smtp_user = (os.getenv("SMTP_USER") or getattr(settings, "SMTP_USER", "")).strip()
     smtp_pass = (os.getenv("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "").strip()
