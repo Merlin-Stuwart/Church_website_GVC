@@ -445,15 +445,28 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
     # Dispatch email via email_service
     from dotenv import load_dotenv
     from app.config import BASE_DIR
-    load_dotenv(BASE_DIR / ".env", override=True)
+    env_file = BASE_DIR / ".env"
+    if env_file.is_file():
+        load_dotenv(env_file, override=True)
 
     smtp_user = (os.getenv("SMTP_USER") or getattr(settings, "SMTP_USER", "")).strip()
     smtp_pass = (os.getenv("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "").strip()
 
+    # Check MongoDB site_settings fallback
+    if (not smtp_user or not smtp_pass) and is_db_connected():
+        try:
+            db = get_database()
+            saved_settings = await db.site_settings.find_one({"_id": "global_config"})
+            if saved_settings:
+                smtp_user = smtp_user or str(saved_settings.get("smtp_user") or "").strip()
+                smtp_pass = smtp_pass or str(saved_settings.get("smtp_password") or "").replace(" ", "").strip()
+        except Exception:
+            pass
+
     if not smtp_user or not smtp_pass:
         raise HTTPException(
             status_code=400,
-            detail="SMTP is not configured yet in backend/.env. Please enter your SMTP_USER and SMTP_PASSWORD (Google App Password) to send real OTP emails."
+            detail="SMTP is not configured on this server. Please add SMTP_USER and SMTP_PASSWORD in your hosting dashboard's Environment Variables (e.g. Render / Railway / Vercel settings)."
         )
 
     from app.services.email_service import send_password_reset_otp_email

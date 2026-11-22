@@ -10,7 +10,9 @@ from app.config import settings, BASE_DIR
 logger = logging.getLogger("gvc_notifications")
 
 def get_notification_recipient() -> str:
-    load_dotenv(BASE_DIR / ".env", override=True)
+    env_file = BASE_DIR / ".env"
+    if env_file.is_file():
+        load_dotenv(env_file, override=True)
     return os.getenv("ADMIN_NOTIFICATION_EMAIL") or getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None) or "contact@gracevictorychurch.org"
 
 def send_notification_email(subject: str, html_content: str, text_content: str, recipient: str = None) -> bool:
@@ -18,7 +20,9 @@ def send_notification_email(subject: str, html_content: str, text_content: str, 
     Sends an email notification via SMTP (e.g. Gmail App Password).
     Returns True if sent successfully, False otherwise.
     """
-    load_dotenv(BASE_DIR / ".env", override=True)
+    env_file = BASE_DIR / ".env"
+    if env_file.is_file():
+        load_dotenv(env_file, override=True)
     to_email = recipient or get_notification_recipient()
     smtp_host = (os.getenv("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")).strip()
     smtp_port = int(os.getenv("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
