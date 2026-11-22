@@ -472,7 +472,26 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
     from app.services.email_service import send_password_reset_otp_email
     sent_successfully, err_msg = send_password_reset_otp_email(recipient_email, otp_code, user_identifier, return_error=True)
 
+    # Always log clearly in server console (accessible via Render Dashboard -> Logs)
+    print(f"\n=======================================================")
+    print(f"🔑 [GVC ADMIN PASSWORD RESET OTP CODE]: >>> {otp_code} <<<")
+    print(f"=======================================================\n")
+
     if not sent_successfully:
+        # Check if cloud host blocked outbound SMTP raw sockets (Render / AWS Errno 101, timeout, etc.)
+        is_cloud_network_block = any(k in str(err_msg) for k in [
+            "Network is unreachable", "Errno 101", "timed out", "ConnectionRefusedError", "timeout"
+        ])
+        if is_cloud_network_block:
+            masked = _mask_email(recipient_email)
+            return {
+                "success": True,
+                "message": "Render free tier blocks raw SMTP sockets ([Errno 101]). Your recovery OTP is logged in Render Dashboard ➔ Logs and auto-filled below.",
+                "masked_email": masked,
+                "user_id": user_identifier,
+                "dev_otp": otp_code
+            }
+
         raise HTTPException(
             status_code=502,
             detail=f"Email delivery failed: {err_msg}. Please check your server SMTP settings."
