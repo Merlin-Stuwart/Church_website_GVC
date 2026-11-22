@@ -6,7 +6,7 @@ import { useChurch } from '../context/ChurchContext';
 export default function PrayerModal({ isOpen, onClose, onPrayerAdded }) {
   const church = useChurch();
   const settings = church?.settings || {};
-  const adminNotificationEmail = settings.adminNotificationEmail || 'madara05112001@gmail.com';
+  const adminNotificationEmail = settings.adminNotificationEmail || settings.email || 'contact@gracevictorychurch.org';
 
   const [formData, setFormData] = useState({
     name: '',

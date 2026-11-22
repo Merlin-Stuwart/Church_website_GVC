@@ -44,7 +44,7 @@ async def create_testimony(testimony: TestimonyCreate, background_tasks: Backgro
 
     testimonies_store[new_id] = testimony_dict
 
-    # Dispatch notification to admin email (madara05112001@gmail.com)
+    # Dispatch notification to church admin email
     background_tasks.add_task(notify_testimony, testimony_dict)
 
     return testimony_dict

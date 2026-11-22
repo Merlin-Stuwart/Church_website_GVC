@@ -15,7 +15,7 @@ export default function Contact() {
   const churchPhone = settings.phone || "+91 93605 88397";
   const churchWhatsapp = settings.whatsappNumber || "+91 93605 88397";
   const churchEmail = settings.email || "contact@gracevictorychurch.org";
-  const adminNotificationEmail = settings.adminNotificationEmail || "madara05112001@gmail.com";
+  const adminNotificationEmail = settings.adminNotificationEmail || churchEmail;
   const googleMapsEmbedUrl = settings.googleMapsEmbedUrl || "https://maps.google.com/maps?q=Grace%20Victory%20Church,%20Vattamalai,%20Tamil%20Nadu,%20India&t=&z=15&ie=UTF8&iwloc=&output=embed";
   const googleMapsLink = settings.googleMapsLink || "https://maps.google.com/?q=Grace+Victory+Church+Vattamalai+Tamil+Nadu+India";
   const sundayTiming = settings.serviceTimings || "09:30 AM – 11:30 AM";

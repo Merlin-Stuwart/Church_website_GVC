@@ -57,7 +57,7 @@ async def submit_prayer(prayer: PrayerCreate, background_tasks: BackgroundTasks)
 
     prayers_store[new_id] = prayer_dict
 
-    # Dispatch notification to admin email (madara05112001@gmail.com)
+    # Dispatch notification to church admin email
     background_tasks.add_task(notify_prayer_request, prayer_dict)
 
     return prayer_dict

@@ -14,7 +14,7 @@ export const DEFAULT_SETTINGS = {
   phone: "+91 93605 88397",
   whatsappNumber: "+91 93605 88397",
   email: "contact@gracevictorychurch.org",
-  adminNotificationEmail: "madara05112001@gmail.com",
+  adminNotificationEmail: "contact@gracevictorychurch.org",
   address: "Grace Victory Church, Vattamalai, Tamil Nadu, India",
   googleMapsEmbedUrl: "https://maps.google.com/maps?q=Grace%20Victory%20Church,%20Vattamalai,%20Tamil%20Nadu,%20India&t=&z=15&ie=UTF8&iwloc=&output=embed",
   googleMapsLink: "https://maps.google.com/?q=Grace+Victory+Church+Vattamalai+Tamil+Nadu+India",
@@ -384,7 +384,7 @@ export function ChurchProvider({ children }) {
       }
     } catch (err) {
       // Offline fallback: check auth collection credentials
-      const validUsers = ['admin', 'gvcadmin', 'madara05112001@gmail.com'];
+      const validUsers = ['admin', 'gvcadmin'];
       if (validUsers.includes(userId.toLowerCase()) && password === 'gvcadmin2026') {
         safeStorage.setItem('gvc_admin_token', 'gvc-admin-session-active');
         setIsAdminLoggedIn(true);

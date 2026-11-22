@@ -18,13 +18,18 @@ class Settings:
         origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,*").split(",")
     ]
     
+    # Church Details
     CHURCH_NAME: str = os.getenv("CHURCH_NAME", "Grace Victory Church")
     CHURCH_EMAIL: str = os.getenv("CHURCH_EMAIL", "contact@gracevictorychurch.org")
     CHURCH_PHONE: str = os.getenv("CHURCH_PHONE", "+91 93605 88397")
     CHURCH_ADDRESS: str = os.getenv("CHURCH_ADDRESS", "Grace Victory Church, Vattamalai, Tamil Nadu, India")
     
+    # Admin Credentials (Set these securely in production environment variables)
+    ADMIN_USER_ID: str = os.getenv("ADMIN_USER_ID", "admin")
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "gvcadmin2026")
+    ADMIN_NOTIFICATION_EMAIL: str = os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@gracevictorychurch.org")
+
     # Email Notification Settings
-    ADMIN_NOTIFICATION_EMAIL: str = os.getenv("ADMIN_NOTIFICATION_EMAIL", "madara05112001@gmail.com")
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER: str = os.getenv("SMTP_USER", "")

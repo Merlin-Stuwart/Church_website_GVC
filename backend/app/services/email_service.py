@@ -9,7 +9,7 @@ from app.config import settings
 logger = logging.getLogger("gvc_notifications")
 
 def get_notification_recipient() -> str:
-    return getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None) or os.getenv("ADMIN_NOTIFICATION_EMAIL", "madara05112001@gmail.com")
+    return getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None) or os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@gracevictorychurch.org")
 
 def send_notification_email(subject: str, html_content: str, text_content: str, recipient: str = None) -> bool:
     """

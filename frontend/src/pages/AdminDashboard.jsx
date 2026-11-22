@@ -70,7 +70,7 @@ export default function AdminDashboard() {
     phone: settings.phone,
     whatsappNumber: settings.whatsappNumber,
     email: settings.email || "contact@gracevictorychurch.org",
-    adminNotificationEmail: settings.adminNotificationEmail || "madara05112001@gmail.com",
+    adminNotificationEmail: settings.adminNotificationEmail || "contact@gracevictorychurch.org",
     address: settings.address,
     googleMapsEmbedUrl: settings.googleMapsEmbedUrl || "https://maps.google.com/maps?q=Grace%20Victory%20Church,%20Vattamalai,%20Tamil%20Nadu,%20India&t=&z=15&ie=UTF8&iwloc=&output=embed",
     googleMapsLink: settings.googleMapsLink || "https://maps.google.com/?q=Grace+Victory+Church+Vattamalai+Tamil+Nadu+India",
@@ -212,7 +212,7 @@ export default function AdminDashboard() {
       phone: settings.phone,
       whatsappNumber: settings.whatsappNumber,
       email: settings.email || "contact@gracevictorychurch.org",
-      adminNotificationEmail: settings.adminNotificationEmail || "madara05112001@gmail.com",
+      adminNotificationEmail: settings.adminNotificationEmail || "contact@gracevictorychurch.org",
       address: settings.address,
       googleMapsEmbedUrl: settings.googleMapsEmbedUrl || "https://maps.google.com/maps?q=Grace%20Victory%20Church,%20Vattamalai,%20Tamil%20Nadu,%20India&t=&z=15&ie=UTF8&iwloc=&output=embed",
       googleMapsLink: settings.googleMapsLink || "https://maps.google.com/?q=Grace+Victory+Church+Vattamalai+Tamil+Nadu+India",
@@ -1964,7 +1964,7 @@ export default function AdminDashboard() {
                     <span>Notification "To" Email (Gmail Alerts Recipient)</span>
                   </label>
                   <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-mono">
-                    To: {siteForm.adminNotificationEmail || 'madara05112001@gmail.com'}
+                    To: {siteForm.adminNotificationEmail || 'contact@gracevictorychurch.org'}
                   </span>
                 </div>
                 <input
@@ -1972,7 +1972,7 @@ export default function AdminDashboard() {
                   required
                   value={siteForm.adminNotificationEmail || ''}
                   onChange={(e) => setSiteForm({ ...siteForm, adminNotificationEmail: e.target.value })}
-                  placeholder="madara05112001@gmail.com"
+                  placeholder="contact@gracevictorychurch.org"
                   className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-amber-500/60 text-white text-sm focus:outline-none focus:border-amber-400 font-mono font-bold"
                 />
                 <p className="text-[11px] text-amber-300/90 leading-relaxed">
@@ -4647,7 +4647,7 @@ export default function AdminDashboard() {
 
               <div className="flex items-center gap-2 text-xs px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300">
                 <span className="font-semibold">Live Alert Sent to:</span>
-                <span className="font-mono text-white font-bold">{siteForm.adminNotificationEmail || 'madara05112001@gmail.com'}</span>
+                <span className="font-mono text-white font-bold">{siteForm.adminNotificationEmail || 'contact@gracevictorychurch.org'}</span>
               </div>
             </div>
 

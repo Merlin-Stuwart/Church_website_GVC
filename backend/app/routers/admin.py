@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from datetime import datetime
+from app.config import settings
 from app.database import get_database, is_db_connected
 from app.routers.contact import visits_store
 from app.routers.donations import donations_store
@@ -28,22 +29,26 @@ def verify_admin_session(authorization: Optional[str] = Header(None)) -> bool:
         )
     return True
 
+# Admin Initial Credentials (Configurable via Environment Variables / .env)
+DEFAULT_ADMIN_USER = getattr(settings, "ADMIN_USER_ID", os.getenv("ADMIN_USER_ID", "admin"))
+DEFAULT_ADMIN_PASSWORD = getattr(settings, "ADMIN_PASSWORD", os.getenv("ADMIN_PASSWORD", "gvcadmin2026"))
+DEFAULT_ADMIN_EMAIL = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@gracevictorychurch.org"))
+
 # Initial default auth document for MongoDB db.auth collection
 DEFAULT_AUTH_DOC = {
     "_id": "admin-account",
-    "user_id": "admin",
-    "username": "admin",
-    "email": "madara05112001@gmail.com",
-    "password": "gvcadmin2026",
+    "user_id": DEFAULT_ADMIN_USER,
+    "username": DEFAULT_ADMIN_USER,
+    "email": DEFAULT_ADMIN_EMAIL,
+    "password": DEFAULT_ADMIN_PASSWORD,
     "role": "superadmin",
     "created_at": datetime.now().isoformat()
 }
 
 # In-memory store fallback for auth collection if MongoDB is offline
 auth_store: Dict[str, Dict[str, Any]] = {
-    "admin": {**DEFAULT_AUTH_DOC},
+    DEFAULT_ADMIN_USER.lower(): {**DEFAULT_AUTH_DOC},
     "gvcadmin": {**DEFAULT_AUTH_DOC, "user_id": "gvcadmin", "username": "gvcadmin"},
-    "madara05112001@gmail.com": {**DEFAULT_AUTH_DOC, "user_id": "madara05112001@gmail.com"}
 }
 
 async def ensure_auth_collection():
@@ -69,7 +74,7 @@ site_settings_cache: Dict[str, Any] = {
     "phone": "+91 93605 88397",
     "whatsapp_number": "+91 93605 88397",
     "email": "contact@gracevictorychurch.org",
-    "admin_notification_email": "madara05112001@gmail.com",
+    "admin_notification_email": DEFAULT_ADMIN_EMAIL,
     "address": "Grace Victory Church, Vattamalai, Tamil Nadu, India",
     "google_maps_embed_url": "https://maps.google.com/maps?q=Grace%20Victory%20Church,%20Vattamalai,%20Tamil%20Nadu,%20India&t=&z=15&ie=UTF8&iwloc=&output=embed",
     "google_maps_link": "https://maps.google.com/?q=Grace+Victory+Church+Vattamalai+Tamil+Nadu+India",

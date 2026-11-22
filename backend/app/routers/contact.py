@@ -28,7 +28,7 @@ async def submit_contact_message(msg: ContactMessageCreate, background_tasks: Ba
 
     messages_store.append(msg_dict)
 
-    # Dispatch notification to admin email (madara05112001@gmail.com)
+    # Dispatch notification to church admin email
     background_tasks.add_task(notify_contact_message, msg_dict)
 
     return msg_dict
