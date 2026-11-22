@@ -26,7 +26,7 @@ class Settings:
     
     # Admin Credentials (Set these securely in production environment variables)
     ADMIN_USER_ID: str = os.getenv("ADMIN_USER_ID", "admin")
-    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "gvcadmin2026")
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "")
     ADMIN_NOTIFICATION_EMAIL: str = os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@gracevictorychurch.org")
 
     # Email Notification Settings

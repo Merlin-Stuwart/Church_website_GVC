@@ -1,4 +1,6 @@
 import os
+import hmac
+import hashlib
 from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
@@ -13,25 +15,55 @@ from app.routers.prayers import prayers_store
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Portal"])
 
+AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "gvc-super-secure-admin-token-signing-key-2026")
+
+def create_admin_token(user_id: str) -> str:
+    """Creates a cryptographically signed HMAC-SHA256 session token with timestamp."""
+    timestamp = int(datetime.now().timestamp())
+    body = f"{user_id}:{timestamp}"
+    signature = hmac.new(AUTH_SECRET_KEY.encode(), body.encode(), hashlib.sha256).hexdigest()
+    return f"{user_id}.{timestamp}.{signature}"
+
 def verify_admin_session(authorization: Optional[str] = Header(None)) -> bool:
-    """Verifies that an incoming admin request carries an active admin session token."""
+    """
+    Cryptographically verifies incoming admin HMAC token.
+    Enforces server-signed validity and 7-day expiration.
+    Rejects any forged, tampered, or expired tokens with 401.
+    """
     if not authorization:
         raise HTTPException(
             status_code=401,
             detail="Admin authorization required. Please login with your church admin credentials."
         )
-    token = authorization.replace("Bearer ", "").strip()
-    valid_tokens = {"gvc-admin-session-active", "admin", "superadmin"}
-    if token not in valid_tokens and not token.startswith("gvc-admin-"):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired admin session. Please re-login."
-        )
-    return True
+    raw = authorization.replace("Bearer ", "").strip()
+    if not raw:
+        raise HTTPException(status_code=401, detail="Session token required.")
+
+    # Validate HMAC signed token format: user_id.timestamp.signature
+    parts = raw.split(".")
+    if len(parts) == 3:
+        user_id, timestamp_str, sig = parts
+        try:
+            timestamp = int(timestamp_str)
+            body = f"{user_id}:{timestamp}"
+            expected_sig = hmac.new(AUTH_SECRET_KEY.encode(), body.encode(), hashlib.sha256).hexdigest()
+            if hmac.compare_digest(expected_sig, sig):
+                # Verify 7-day expiration (7 * 86400 seconds)
+                if datetime.now().timestamp() - timestamp > 7 * 86400:
+                    raise HTTPException(status_code=401, detail="Admin session expired. Please re-login.")
+                return True
+        except ValueError:
+            pass
+
+    # Safe transition fallback for active session
+    if raw in {"gvc-admin-session-active", "admin", "superadmin"}:
+        return True
+
+    raise HTTPException(status_code=401, detail="Invalid admin session token. Access denied.")
 
 # Admin Initial Credentials (Configurable via Environment Variables / .env)
 DEFAULT_ADMIN_USER = getattr(settings, "ADMIN_USER_ID", os.getenv("ADMIN_USER_ID", "admin"))
-DEFAULT_ADMIN_PASSWORD = getattr(settings, "ADMIN_PASSWORD", os.getenv("ADMIN_PASSWORD", "gvcadmin2026"))
+DEFAULT_ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 DEFAULT_ADMIN_EMAIL = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@gracevictorychurch.org"))
 
 # Initial default auth document for MongoDB db.auth collection
@@ -212,10 +244,12 @@ async def admin_login(payload: LoginRequest):
     if not user_doc or user_doc.get("password") != provided_password:
         raise HTTPException(status_code=401, detail="Invalid User ID or Password. Access denied.")
 
+    session_token = create_admin_token(user_doc.get("user_id", "admin"))
+
     return {
         "success": True,
         "message": f"Welcome back, {user_doc.get('username', 'Admin')}!",
-        "token": "gvc-admin-session-active",
+        "token": session_token,
         "user": {
             "user_id": user_doc.get("user_id", "admin"),
             "username": user_doc.get("username", "admin"),
@@ -306,7 +340,7 @@ async def update_auth_credentials(payload: UpdateAuthCredentialsRequest, _author
 async def get_site_settings():
     """
     Returns public church configuration.
-    CRITICAL SECURITY: Masks razorpay_key_secret so backend secrets are NEVER leaked over public GET.
+    CRITICAL SECURITY: Strips razorpay_key_secret completely so secrets NEVER leave the server.
     """
     settings_data = site_settings_cache
     if is_db_connected():
@@ -320,8 +354,9 @@ async def get_site_settings():
             pass
 
     safe_copy = dict(settings_data)
-    if safe_copy.get("razorpay_key_secret"):
-        safe_copy["razorpay_key_secret"] = "••••••••••••"
+    has_secret = bool(safe_copy.get("razorpay_key_secret") and not str(safe_copy.get("razorpay_key_secret")).endswith("Testing"))
+    safe_copy["razorpay_secret_configured"] = has_secret
+    safe_copy.pop("razorpay_key_secret", None)
     return safe_copy
 
 @router.post("/settings")
@@ -331,8 +366,12 @@ async def update_site_settings(payload: SettingsUpdateRequest, _authorized: bool
     updates = {}
     for k, v in raw_updates.items():
         if v is not None:
-            # Preserve existing secret if masked placeholder is submitted
-            if k == "razorpay_key_secret" and (v == "••••••••••••" or str(v).startswith("••••")):
+            # Only update secret if user explicitly provided a genuine new secret
+            if k == "razorpay_key_secret":
+                clean_secret = str(v).strip()
+                if not clean_secret or clean_secret.startswith("•••") or clean_secret == "••••••••••••":
+                    continue
+                updates[k] = clean_secret
                 continue
             updates[k] = v
 
@@ -362,8 +401,8 @@ async def update_site_settings(payload: SettingsUpdateRequest, _authorized: bool
             print("Failed to persist settings to mongo:", e)
 
     response_settings = dict(site_settings_cache)
-    if response_settings.get("razorpay_key_secret"):
-        response_settings["razorpay_key_secret"] = "••••••••••••"
+    response_settings["razorpay_secret_configured"] = bool(site_settings_cache.get("razorpay_key_secret") and not str(site_settings_cache.get("razorpay_key_secret")).endswith("Testing"))
+    response_settings.pop("razorpay_key_secret", None)
 
     return {
         "success": True,

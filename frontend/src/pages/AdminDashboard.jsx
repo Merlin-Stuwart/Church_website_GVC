@@ -91,7 +91,7 @@ export default function AdminDashboard() {
     branch: settings.branch,
     ifscCode: settings.ifscCode,
     razorpayKeyId: settings.razorpayKeyId || settings.razorpay_key_id || 'rzp_test_GVC1024Testing',
-    razorpayKeySecret: settings.razorpayKeySecret || settings.razorpay_key_secret || 'gvcSecretKeyForTesting1024',
+    razorpayKeySecret: '',
     sliderSpeedSeconds: settings.sliderSpeedSeconds || 3,
     featuredHomeTestimonyIds: settings.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
     churchStats: settings.churchStats || CHURCH_STATS,
@@ -233,7 +233,7 @@ export default function AdminDashboard() {
       branch: settings.branch,
       ifscCode: settings.ifscCode,
       razorpayKeyId: settings.razorpayKeyId || settings.razorpay_key_id || 'rzp_test_GVC1024Testing',
-      razorpayKeySecret: settings.razorpayKeySecret || settings.razorpay_key_secret || 'gvcSecretKeyForTesting1024',
+      razorpayKeySecret: '',
       sliderSpeedSeconds: settings.sliderSpeedSeconds || 3,
       featuredHomeTestimonyIds: settings.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
       churchStats: settings.churchStats || CHURCH_STATS,
@@ -4560,7 +4560,7 @@ export default function AdminDashboard() {
                       type="password"
                       value={siteForm.razorpayKeySecret || ''}
                       onChange={(e) => setSiteForm({ ...siteForm, razorpayKeySecret: e.target.value })}
-                      placeholder="Enter secret key..."
+                      placeholder={settings.razorpaySecretConfigured ? "•••••••••••• (Secret securely configured on backend. Enter to update)" : "Enter secret key..."}
                       className={`w-full px-4 py-2.5 rounded-xl border text-xs font-mono focus:border-amber-400 focus:outline-none transition-colors ${
                         isDarkMode 
                           ? 'bg-slate-950 border-slate-700 text-white' 

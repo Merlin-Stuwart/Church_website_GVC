@@ -67,14 +67,14 @@ INITIAL_DONATIONS = [
 donations_store = [dict(d) for d in INITIAL_DONATIONS]
 
 async def get_active_razorpay_keys() -> Tuple[str, str]:
-    """Retrieve Razorpay API credentials from MongoDB, cache, or environment."""
-    key_id = "rzp_test_GVC1024Testing"
-    key_secret = "gvcSecretKeyForTesting1024"
+    """Retrieve Razorpay API credentials securely from Environment, MongoDB, or cache."""
+    key_id = os.getenv("RAZORPAY_KEY_ID", "rzp_test_GVC1024Testing")
+    key_secret = os.getenv("RAZORPAY_KEY_SECRET", "gvcSecretKeyForTesting1024")
 
     try:
         from app.routers.admin import site_settings_cache
-        key_id = site_settings_cache.get("razorpay_key_id", key_id)
-        key_secret = site_settings_cache.get("razorpay_key_secret", key_secret)
+        key_id = site_settings_cache.get("razorpay_key_id") or key_id
+        key_secret = site_settings_cache.get("razorpay_key_secret") or key_secret
     except Exception:
         pass
 
@@ -83,12 +83,12 @@ async def get_active_razorpay_keys() -> Tuple[str, str]:
             db = get_database()
             saved = await db.site_settings.find_one({"_id": "global_config"})
             if saved:
-                key_id = saved.get("razorpay_key_id", key_id)
-                key_secret = saved.get("razorpay_key_secret", key_secret)
+                key_id = saved.get("razorpay_key_id") or key_id
+                key_secret = saved.get("razorpay_key_secret") or key_secret
         except Exception:
             pass
 
-    return key_id.strip() if key_id else "rzp_test_GVC1024Testing", key_secret.strip() if key_secret else "gvcSecretKeyForTesting1024"
+    return (key_id.strip() if key_id else "rzp_test_GVC1024Testing"), (key_secret.strip() if key_secret else "gvcSecretKeyForTesting1024")
 
 @router.get("/details")
 async def get_giving_details():

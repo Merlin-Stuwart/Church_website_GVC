@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS = {
   branch: "Vattamalai Branch",
   ifscCode: "SBIN0004921",
   razorpayKeyId: "rzp_test_GVC1024Testing",
-  razorpayKeySecret: "gvcSecretKeyForTesting1024",
+  razorpaySecretConfigured: false,
   churchStats: CHURCH_STATS,
   milestones: DEFAULT_MILESTONES,
   coreBeliefs: CORE_BELIEFS,
@@ -89,7 +89,7 @@ const safeStorage = {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   },
   removeItem: (key) => {
     delete memoryStore[key];
@@ -97,7 +97,7 @@ const safeStorage = {
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.removeItem(key);
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 };
 
@@ -113,7 +113,7 @@ export function sanitizeFranklinName(name) {
 
 export function normalizeLeadershipTeam(team) {
   if (!Array.isArray(team) || team.length < 2) return team;
-  
+
   let list = team.map(leader => {
     let updatedName = leader.name;
     if (updatedName && updatedName.includes('Franklin') && !updatedName.includes('Rajendran')) {
@@ -126,13 +126,13 @@ export function normalizeLeadershipTeam(team) {
   });
 
   // Re-order: 1) Senior Pastor, 2) Co-Pastor, 3) Youth Pastor
-  const seniorIdx = list.findIndex(l => 
+  const seniorIdx = list.findIndex(l =>
     l.role?.toLowerCase().includes('senior') || l.name?.toLowerCase().includes('p. rajendran')
   );
-  const coPastorIdx = list.findIndex(l => 
+  const coPastorIdx = list.findIndex(l =>
     l.role?.toLowerCase().includes('co-pastor') || l.role?.toLowerCase().includes('women') || l.name?.toLowerCase().includes('joice') || l.name?.toLowerCase().includes('rachel')
   );
-  const youthIdx = list.findIndex(l => 
+  const youthIdx = list.findIndex(l =>
     l.role?.toLowerCase().includes('youth') || l.name?.toLowerCase().includes('franklin')
   );
 
@@ -150,10 +150,10 @@ export function normalizeLeadershipTeam(team) {
 const ChurchContext = createContext({
   settings: DEFAULT_SETTINGS,
   updateSettings: async () => DEFAULT_SETTINGS,
-  resetSettings: () => {},
+  resetSettings: () => { },
   isAdminLoggedIn: false,
   loginAdmin: async () => ({ success: false }),
-  logoutAdmin: () => {},
+  logoutAdmin: () => { },
 });
 
 export function ChurchProvider({ children }) {
@@ -171,7 +171,7 @@ export function ChurchProvider({ children }) {
         }
         return merged;
       }
-    } catch (e) {}
+    } catch (e) { }
     return DEFAULT_SETTINGS;
   });
 
@@ -222,7 +222,7 @@ export function ChurchProvider({ children }) {
               branch: remote.branch || prev.branch,
               ifscCode: remote.ifsc_code || prev.ifscCode,
               razorpayKeyId: remote.razorpay_key_id || prev.razorpayKeyId,
-              razorpayKeySecret: remote.razorpay_key_secret || prev.razorpayKeySecret,
+              razorpaySecretConfigured: Boolean(remote.razorpay_secret_configured),
               churchStats: remote.church_stats || prev.churchStats,
               milestones: remote.milestones || prev.milestones,
               coreBeliefs: remote.core_beliefs || prev.coreBeliefs,
@@ -270,16 +270,17 @@ export function ChurchProvider({ children }) {
       finalLeadership = normalizeLeadershipTeam(finalLeadership);
     }
 
-    const updated = { 
-      ...settings, 
-      ...newSettings, 
+    const updated = {
+      ...settings,
+      ...newSettings,
       associatePastor: sanitizeFranklinName(newSettings.associatePastor || settings.associatePastor),
-      leadershipTeam: finalLeadership 
+      leadershipTeam: finalLeadership
     };
-    
-    // Save locally and update React state immediately (0ms delay)
-    setSettings(updated);
-    safeStorage.setItem('gvc_live_settings', JSON.stringify(updated));
+
+    // Strip sensitive write-only fields so they are NEVER saved to browser localStorage
+    const { razorpayKeySecret, ...cleanSettingsToPersist } = updated;
+    setSettings(cleanSettingsToPersist);
+    safeStorage.setItem('gvc_live_settings', JSON.stringify(cleanSettingsToPersist));
 
     // Dispatch custom event for real-time multi-tab/component sync
     if (typeof window !== 'undefined') {
@@ -293,7 +294,7 @@ export function ChurchProvider({ children }) {
       const token = safeStorage.getItem('gvc_admin_token') || 'gvc-admin-session-active';
       fetch('/api/admin/settings', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -325,7 +326,9 @@ export function ChurchProvider({ children }) {
           branch: updated.branch,
           ifsc_code: updated.ifscCode,
           razorpay_key_id: updated.razorpayKeyId,
-          razorpay_key_secret: updated.razorpayKeySecret,
+          ...(newSettings.razorpayKeySecret && !String(newSettings.razorpayKeySecret).startsWith('•••')
+            ? { razorpay_key_secret: String(newSettings.razorpayKeySecret).trim() }
+            : {}),
           church_stats: updated.churchStats,
           milestones: updated.milestones,
           core_beliefs: updated.coreBeliefs,
@@ -345,9 +348,9 @@ export function ChurchProvider({ children }) {
           prayer_wall_verse: updated.prayerWallVerse,
         }),
         signal: controller.signal
-      }).catch(() => {})
+      }).catch(() => { })
         .finally(() => clearTimeout(timeoutId));
-    } catch (e) {}
+    } catch (e) { }
 
     return updated;
   };
@@ -357,42 +360,64 @@ export function ChurchProvider({ children }) {
     let password = '';
 
     if (typeof param1 === 'object' && param1 !== null) {
-      userId = (param1.userId || param1.user_id || param1.username || 'admin').trim();
-      password = (param1.password || '').trim();
-    } else if (typeof param1 === 'string' && typeof param2 === 'string') {
+      userId = (
+        param1.userId ||
+        param1.user_id ||
+        param1.username ||
+        'admin'
+      ).trim();
+      password = param1.password || '';
+    } else if (
+      typeof param1 === 'string' &&
+      typeof param2 === 'string'
+    ) {
       userId = param1.trim();
-      password = param2.trim();
+      password = param2;
     } else if (typeof param1 === 'string') {
-      password = param1.trim();
+      password = param1;
     }
 
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ user_id: userId, password })
       });
-      if (res.ok) {
-        const data = await res.json();
-        safeStorage.setItem('gvc_admin_token', data.token || 'gvc-admin-session-active');
-        safeStorage.setItem('gvc_admin_user', JSON.stringify(data.user || { user_id: userId }));
-        setIsAdminLoggedIn(true);
-        return { success: true };
-      } else {
-        const err = await res.json().catch(() => ({}));
-        return { success: false, message: err.detail || 'Invalid User ID or Password' };
-      }
-    } catch (err) {
-      // Offline fallback: check auth collection credentials
-      const validUsers = ['admin', 'gvcadmin'];
-      if (validUsers.includes(userId.toLowerCase()) && password === 'gvcadmin2026') {
-        safeStorage.setItem('gvc_admin_token', 'gvc-admin-session-active');
-        setIsAdminLoggedIn(true);
-        return { success: true };
-      }
-    }
 
-    return { success: false, message: 'Invalid User ID or Password. Access denied.' };
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        return {
+          success: false,
+          message: err.detail || 'Invalid User ID or Password'
+        };
+      }
+
+      const data = await res.json();
+
+      if (!data.token || typeof data.token !== 'string') {
+        return {
+          success: false,
+          message: 'Invalid server authentication response'
+        };
+      }
+
+      safeStorage.setItem('gvc_admin_token', data.token);
+      safeStorage.setItem(
+        'gvc_admin_user',
+        JSON.stringify(data.user || { user_id: userId })
+      );
+
+      setIsAdminLoggedIn(true);
+      return { success: true };
+
+    } catch (err) {
+      return {
+        success: false,
+        message: 'Unable to connect to server. Please try again.'
+      };
+    }
   };
 
   const logoutAdmin = () => {
@@ -425,10 +450,10 @@ export function useChurch() {
     return {
       settings: DEFAULT_SETTINGS,
       updateSettings: async () => DEFAULT_SETTINGS,
-      resetSettings: () => {},
+      resetSettings: () => { },
       isAdminLoggedIn: false,
       loginAdmin: async () => ({ success: false }),
-      logoutAdmin: () => {},
+      logoutAdmin: () => { },
     };
   }
   return context;
