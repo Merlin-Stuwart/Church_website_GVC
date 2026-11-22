@@ -15,7 +15,7 @@ from app.routers.prayers import prayers_store
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Portal"])
 
-AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "gvc-super-secure-admin-token-signing-key-2026")
+AUTH_SECRET_KEY = os.environ["AUTH_SECRET_KEY"]
 
 def create_admin_token(user_id: str) -> str:
     """Creates a cryptographically signed HMAC-SHA256 session token with timestamp."""
@@ -55,9 +55,7 @@ def verify_admin_session(authorization: Optional[str] = Header(None)) -> bool:
         except ValueError:
             pass
 
-    # Safe transition fallback for active session
-    if raw in {"gvc-admin-session-active", "admin", "superadmin"}:
-        return True
+   
 
     raise HTTPException(status_code=401, detail="Invalid admin session token. Access denied.")
 
