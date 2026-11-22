@@ -13,21 +13,26 @@ def get_notification_recipient() -> str:
 
 def send_notification_email(subject: str, html_content: str, text_content: str, recipient: str = None) -> bool:
     """
-    Sends an email notification via SMTP.
-    Falls back gracefully to console logging if SMTP is unconfigured or unavailable.
+    Sends an email notification via SMTP (e.g. Gmail App Password).
+    Returns True if sent successfully, False otherwise.
     """
     to_email = recipient or get_notification_recipient()
-    smtp_host = getattr(settings, "SMTP_HOST", os.getenv("SMTP_HOST", "smtp.gmail.com"))
+    smtp_host = getattr(settings, "SMTP_HOST", os.getenv("SMTP_HOST", "smtp.gmail.com")).strip()
     smtp_port = int(getattr(settings, "SMTP_PORT", os.getenv("SMTP_PORT", "587")))
-    smtp_user = getattr(settings, "SMTP_USER", os.getenv("SMTP_USER", ""))
-    smtp_pass = getattr(settings, "SMTP_PASSWORD", os.getenv("SMTP_PASSWORD", ""))
-    from_email = getattr(settings, "SMTP_FROM_EMAIL", os.getenv("SMTP_FROM_EMAIL", smtp_user or "notifications@gracevictorychurch.org"))
+    smtp_user = (getattr(settings, "SMTP_USER", "") or os.getenv("SMTP_USER", "")).strip()
+    smtp_pass = (getattr(settings, "SMTP_PASSWORD", "") or os.getenv("SMTP_PASSWORD", "")).replace(" ", "").strip()
+    
+    # For Gmail, sender must match authenticated user to prevent rejection
+    if smtp_user and ("@gmail.com" in smtp_user.lower() or smtp_host == "smtp.gmail.com"):
+        from_email = smtp_user
+    else:
+        from_email = getattr(settings, "SMTP_FROM_EMAIL", os.getenv("SMTP_FROM_EMAIL", smtp_user or "notifications@gracevictorychurch.org"))
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = f"Grace Victory Church <{from_email}>"
     msg["To"] = to_email
-    msg["Reply-To"] = to_email
+    msg["Reply-To"] = from_email
 
     msg.attach(MIMEText(text_content, "plain", "utf-8"))
     msg.attach(MIMEText(html_content, "html", "utf-8"))
@@ -41,23 +46,28 @@ def send_notification_email(subject: str, html_content: str, text_content: str, 
     print(f"=======================================================\n")
 
     if not smtp_user or not smtp_pass:
-        logger.info(f"SMTP not configured (SMTP_USER/SMTP_PASSWORD missing). Notification logged for {to_email}.")
-        return True
+        print(f"⚠️ [SMTP UNCONFIGURED] SMTP_USER and SMTP_PASSWORD missing in backend/.env. Cannot deliver email to {to_email}.")
+        logger.warning(f"SMTP not configured (SMTP_USER/SMTP_PASSWORD missing). Notification cannot be delivered to {to_email}.")
+        return False
 
     try:
         if smtp_port == 465:
-            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10) as server:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=15) as server:
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(from_email, [to_email], msg.as_string())
         else:
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+                server.ehlo()
                 server.starttls()
+                server.ehlo()
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(from_email, [to_email], msg.as_string())
+        print(f"✅ [SMTP SUCCESS] Successfully delivered email to {to_email} via {smtp_host}!")
         logger.info(f"Successfully delivered notification email to {to_email}")
         return True
     except Exception as e:
-        logger.warning(f"Failed to send SMTP email to {to_email}: {e}. (Message was logged successfully).")
+        print(f"❌ [SMTP ERROR] Failed to send email via SMTP to {to_email}: {e}")
+        logger.error(f"Failed to send SMTP email to {to_email}: {e}")
         return False
 
 

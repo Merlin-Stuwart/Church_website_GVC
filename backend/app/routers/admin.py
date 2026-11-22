@@ -443,23 +443,31 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
             print(f"Failed to save reset OTP to mongo: {exc}")
 
     # Dispatch email via email_service
+    smtp_user = getattr(settings, "SMTP_USER", "") or os.getenv("SMTP_USER", "")
+    smtp_pass = getattr(settings, "SMTP_PASSWORD", "") or os.getenv("SMTP_PASSWORD", "")
+
+    if not smtp_user or not smtp_pass:
+        raise HTTPException(
+            status_code=400,
+            detail="SMTP is not configured yet in backend/.env. Please enter your SMTP_USER and SMTP_PASSWORD (Google App Password) to send real OTP emails."
+        )
+
     from app.services.email_service import send_password_reset_otp_email
-    send_password_reset_otp_email(recipient_email, otp_code, user_identifier)
+    sent_successfully = send_password_reset_otp_email(recipient_email, otp_code, user_identifier)
 
-    smtp_configured = bool(getattr(settings, "SMTP_USER", "") and getattr(settings, "SMTP_PASSWORD", ""))
+    if not sent_successfully:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to deliver email to {recipient_email}. Please verify your SMTP_USER and SMTP_PASSWORD in backend/.env (ensure 16-character App Password is valid)."
+        )
+
     masked = _mask_email(recipient_email)
-
-    response_data: Dict[str, Any] = {
+    return {
         "success": True,
-        "message": f"Verification OTP sent successfully to {masked}." if smtp_configured else f"SMTP not configured in .env. Dev OTP is {otp_code} (also check backend terminal).",
+        "message": f"Verification OTP sent successfully to {masked}. Please check your email inbox and spam folder.",
         "masked_email": masked,
-        "user_id": user_identifier,
-        "smtp_configured": smtp_configured
+        "user_id": user_identifier
     }
-    if not smtp_configured:
-        response_data["dev_otp"] = otp_code
-
-    return response_data
 
 
 @router.post("/forgot-password/reset")
