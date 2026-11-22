@@ -443,8 +443,11 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
             print(f"Failed to save reset OTP to mongo: {exc}")
 
     # Dispatch email via email_service
-    smtp_user = getattr(settings, "SMTP_USER", "") or os.getenv("SMTP_USER", "")
-    smtp_pass = getattr(settings, "SMTP_PASSWORD", "") or os.getenv("SMTP_PASSWORD", "")
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
+
+    smtp_user = (os.getenv("SMTP_USER") or getattr(settings, "SMTP_USER", "")).strip()
+    smtp_pass = (os.getenv("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "").strip()
 
     if not smtp_user or not smtp_pass:
         raise HTTPException(

@@ -4,23 +4,26 @@ import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime
+from dotenv import load_dotenv
 from app.config import settings
 
 logger = logging.getLogger("gvc_notifications")
 
 def get_notification_recipient() -> str:
-    return getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None) or os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@gracevictorychurch.org")
+    load_dotenv(override=True)
+    return os.getenv("ADMIN_NOTIFICATION_EMAIL") or getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None) or "contact@gracevictorychurch.org"
 
 def send_notification_email(subject: str, html_content: str, text_content: str, recipient: str = None) -> bool:
     """
     Sends an email notification via SMTP (e.g. Gmail App Password).
     Returns True if sent successfully, False otherwise.
     """
+    load_dotenv(override=True)
     to_email = recipient or get_notification_recipient()
-    smtp_host = getattr(settings, "SMTP_HOST", os.getenv("SMTP_HOST", "smtp.gmail.com")).strip()
-    smtp_port = int(getattr(settings, "SMTP_PORT", os.getenv("SMTP_PORT", "587")))
-    smtp_user = (getattr(settings, "SMTP_USER", "") or os.getenv("SMTP_USER", "")).strip()
-    smtp_pass = (getattr(settings, "SMTP_PASSWORD", "") or os.getenv("SMTP_PASSWORD", "")).replace(" ", "").strip()
+    smtp_host = (os.getenv("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")).strip()
+    smtp_port = int(os.getenv("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
+    smtp_user = (os.getenv("SMTP_USER") or getattr(settings, "SMTP_USER", "")).strip()
+    smtp_pass = (os.getenv("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "").strip()
     
     # For Gmail, sender must match authenticated user to prevent rejection
     if smtp_user and ("@gmail.com" in smtp_user.lower() or smtp_host == "smtp.gmail.com"):
