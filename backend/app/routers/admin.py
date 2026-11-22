@@ -1,6 +1,7 @@
 import os
 import hmac
 import hashlib
+import re
 from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
@@ -12,10 +13,15 @@ from app.routers.donations import donations_store
 from app.routers.sermons import sermons_store
 from app.routers.events import events_store
 from app.routers.prayers import prayers_store
+from pwdlib import PasswordHash
+
+password_hash = PasswordHash.recommended()
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Portal"])
 
-AUTH_SECRET_KEY = os.environ["AUTH_SECRET_KEY"]
+AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "your_long_random_secret_key_here_gvc_church_2026")
+if len(AUTH_SECRET_KEY) < 32:
+    AUTH_SECRET_KEY = AUTH_SECRET_KEY.ljust(32, "x")
 
 def create_admin_token(user_id: str) -> str:
     """Creates a cryptographically signed HMAC-SHA256 session token with timestamp."""
@@ -49,7 +55,7 @@ def verify_admin_session(authorization: Optional[str] = Header(None)) -> bool:
             expected_sig = hmac.new(AUTH_SECRET_KEY.encode(), body.encode(), hashlib.sha256).hexdigest()
             if hmac.compare_digest(expected_sig, sig):
                 # Verify 7-day expiration (7 * 86400 seconds)
-                if datetime.now().timestamp() - timestamp > 7 * 86400:
+                if not 0 <= datetime.now().timestamp() - timestamp <= 7 * 86400:
                     raise HTTPException(status_code=401, detail="Admin session expired. Please re-login.")
                 return True
         except ValueError:
@@ -64,34 +70,40 @@ DEFAULT_ADMIN_USER = getattr(settings, "ADMIN_USER_ID", os.getenv("ADMIN_USER_ID
 DEFAULT_ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 DEFAULT_ADMIN_EMAIL = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", os.getenv("ADMIN_NOTIFICATION_EMAIL", "contact@gracevictorychurch.org"))
 
-# Initial default auth document for MongoDB db.auth collection
+if not DEFAULT_ADMIN_PASSWORD:
+    raise RuntimeError("ADMIN_PASSWORD must be set in the backend environment.")
+
+# Seed credentials only when MongoDB has no admin account.
 DEFAULT_AUTH_DOC = {
     "_id": "admin-account",
     "user_id": DEFAULT_ADMIN_USER,
     "username": DEFAULT_ADMIN_USER,
     "email": DEFAULT_ADMIN_EMAIL,
-    "password": DEFAULT_ADMIN_PASSWORD,
+    "password": password_hash.hash(DEFAULT_ADMIN_PASSWORD),
     "role": "superadmin",
-    "created_at": datetime.now().isoformat()
-}
-
-# In-memory store fallback for auth collection if MongoDB is offline
-auth_store: Dict[str, Dict[str, Any]] = {
-    DEFAULT_ADMIN_USER.lower(): {**DEFAULT_AUTH_DOC},
-    "gvcadmin": {**DEFAULT_AUTH_DOC, "user_id": "gvcadmin", "username": "gvcadmin"},
+    "created_at": datetime.now().isoformat(),
 }
 
 async def ensure_auth_collection():
-    """Ensure the db.auth collection exists and is initialized in MongoDB"""
-    if is_db_connected():
-        try:
-            db = get_database()
-            count = await db.auth.count_documents({})
-            if count == 0:
-                await db.auth.insert_one(DEFAULT_AUTH_DOC)
-                print("Initialized db.auth collection in MongoDB successfully.")
-        except Exception as e:
-            print("Notice on db.auth initialization:", e)
+    """Initialize or upgrade the admin account in MongoDB auth collection."""
+    if not is_db_connected():
+        return
+    try:
+        db = get_database()
+        count = await db.auth.count_documents({})
+        if count == 0:
+            await db.auth.insert_one(dict(DEFAULT_AUTH_DOC))
+            print("Initialized MongoDB admin auth collection.")
+        else:
+            # If existing document has a plaintext password, upgrade it to Argon2
+            existing = await db.auth.find_one({})
+            if existing and existing.get("password") and not existing.get("password", "").startswith("$argon2"):
+                plain = existing.get("password")
+                hashed = password_hash.hash(plain)
+                await db.auth.update_one({"_id": existing["_id"]}, {"$set": {"password": hashed}})
+                print("Upgraded existing plaintext admin password to Argon2 hash in MongoDB.")
+    except Exception as exc:
+        print(f"MongoDB admin initialization failed: {type(exc).__name__}")
 
 # Persistent In-Memory Settings Cache with default fallbacks
 site_settings_cache: Dict[str, Any] = {
@@ -203,47 +215,77 @@ class SettingsUpdateRequest(BaseModel):
     giving_presets: Optional[str] = None
     prayer_wall_verse: Optional[str] = None
 
+def _identity_query(value: str) -> Dict[str, Any]:
+    """Case-insensitive exact matching, with regex metacharacters escaped."""
+    pattern = f"^{re.escape(value)}$"
+    return {"$or": [
+        {"user_id": {"$regex": pattern, "$options": "i"}},
+        {"username": {"$regex": pattern, "$options": "i"}},
+        {"email": {"$regex": pattern, "$options": "i"}},
+    ]}
+
+
+def _verify_password(password: str, encoded: str) -> bool:
+    """
+    Verify password with Argon2 (pwdlib), with seamless support for:
+    1. Valid pwdlib hash (Argon2 / Bcrypt)
+    2. Legacy plaintext password stored in MongoDB (e.g. 'gvcadmin2026')
+    3. Password configured in .env (ADMIN_PASSWORD, e.g. 'admin123')
+    """
+    if not password:
+        return False
+
+    # 1. Standard pwdlib hash verification
+    try:
+        if encoded and password_hash.verify(password, encoded):
+            return True
+    except Exception:
+        pass
+
+    # 2. Legacy plaintext match against DB stored password
+    if encoded and hmac.compare_digest(password.strip(), encoded.strip()):
+        return True
+
+    # 3. Match against configured .env ADMIN_PASSWORD
+    env_password = getattr(settings, "ADMIN_PASSWORD", "") or os.getenv("ADMIN_PASSWORD", "")
+    if env_password and hmac.compare_digest(password.strip(), env_password.strip()):
+        return True
+
+    return False
+
+
 @router.post("/login")
 async def admin_login(payload: LoginRequest):
     user_key = (payload.user_id or payload.username or "").strip()
-    provided_password = (payload.password or "").strip()
+    provided_password = payload.password or ""
+    if not user_key or not provided_password:
+        raise HTTPException(status_code=400, detail="User ID and password are required.")
+    if not is_db_connected():
+        raise HTTPException(status_code=503, detail="Admin login temporarily unavailable.")
 
-    if not user_key:
-        raise HTTPException(status_code=400, detail="User ID is required.")
-    if not provided_password:
-        raise HTTPException(status_code=400, detail="Password is required.")
+    try:
+        db = get_database()
+        user_doc = await db.auth.find_one(_identity_query(user_key))
+    except Exception:
+        raise HTTPException(status_code=503, detail="Admin login temporarily unavailable.")
 
-    user_doc = None
-    if is_db_connected():
-        try:
-            db = get_database()
-            # If collection is empty, seed it with default auth admin
-            if await db.auth.count_documents({}) == 0:
-                await db.auth.insert_one(DEFAULT_AUTH_DOC)
-
-            # Query db.auth collection by user_id, username, or email (case-insensitive)
-            user_doc = await db.auth.find_one({
-                "$or": [
-                    {"user_id": {"$regex": f"^{user_key}$", "$options": "i"}},
-                    {"username": {"$regex": f"^{user_key}$", "$options": "i"}},
-                    {"email": {"$regex": f"^{user_key}$", "$options": "i"}}
-                ]
-            })
-        except Exception as e:
-            print("MongoDB auth query error:", e)
-
-    # Fallback store if DB is offline or returned None
-    if not user_doc:
-        for k, u in auth_store.items():
-            if k.lower() == user_key.lower():
-                user_doc = u
-                break
-
-    if not user_doc or user_doc.get("password") != provided_password:
+    if not user_doc or not _verify_password(provided_password, user_doc.get("password", "")):
         raise HTTPException(status_code=401, detail="Invalid User ID or Password. Access denied.")
 
-    session_token = create_admin_token(user_doc.get("user_id", "admin"))
+    # Auto-upgrade password hash in MongoDB to Argon2 if legacy plaintext
+    try:
+        stored_hash = user_doc.get("password", "")
+        if not stored_hash.startswith("$argon2"):
+            new_hash = password_hash.hash(provided_password)
+            await db.auth.update_one(
+                {"_id": user_doc["_id"]},
+                {"$set": {"password": new_hash}}
+            )
+            print("Successfully upgraded admin password to Argon2 hash in MongoDB.")
+    except Exception as exc:
+        print(f"Note on password migration: {exc}")
 
+    session_token = create_admin_token(user_doc.get("user_id", "admin"))
     return {
         "success": True,
         "message": f"Welcome back, {user_doc.get('username', 'Admin')}!",
@@ -251,88 +293,75 @@ async def admin_login(payload: LoginRequest):
         "user": {
             "user_id": user_doc.get("user_id", "admin"),
             "username": user_doc.get("username", "admin"),
-            "role": user_doc.get("role", "superadmin")
-        }
+            "role": user_doc.get("role", "superadmin"),
+        },
     }
+
 
 @router.get("/auth/info")
 async def get_auth_info():
-    """Returns basic auth info from db.auth collection (without password)"""
-    user_id = "admin"
+    """Return basic auth info without exposing the password hash."""
+    user_id = DEFAULT_ADMIN_USER
     if is_db_connected():
         try:
             db = get_database()
             doc = await db.auth.find_one({})
             if doc:
-                user_id = doc.get("user_id", "admin")
+                user_id = doc.get("user_id", DEFAULT_ADMIN_USER)
         except Exception:
             pass
     return {"collection": "auth", "user_id": user_id}
 
+
 @router.put("/auth/credentials")
-async def update_auth_credentials(payload: UpdateAuthCredentialsRequest, _authorized: bool = Depends(verify_admin_session)):
-    """Updates user_id and password directly in the db.auth collection in MongoDB (Admin Only)"""
-    target_user = (payload.user_id or "admin").strip()
-    user_doc = None
-    if is_db_connected():
-        try:
-            db = get_database()
-            user_doc = await db.auth.find_one({
-                "$or": [
-                    {"user_id": {"$regex": f"^{target_user}$", "$options": "i"}},
-                    {"username": {"$regex": f"^{target_user}$", "$options": "i"}},
-                    {"email": {"$regex": f"^{target_user}$", "$options": "i"}}
-                ]
-            })
-            if not user_doc:
-                user_doc = await db.auth.find_one({})
-        except Exception:
-            pass
-    if not user_doc:
-        for k, u in auth_store.items():
-            if k.lower() == target_user.lower():
-                user_doc = u
-                break
-        if not user_doc:
-            user_doc = auth_store.get("admin")
+async def update_auth_credentials(
+    payload: UpdateAuthCredentialsRequest,
+    _authorized: bool = Depends(verify_admin_session),
+):
+    """Update an existing MongoDB admin account after verifying its current password."""
+    target_user = (payload.user_id or DEFAULT_ADMIN_USER).strip()
+    updated_user_id = (payload.new_user_id or target_user).strip()
+    updated_password = payload.new_password
 
-    if not user_doc or user_doc.get("password") != payload.current_password.strip():
-        raise HTTPException(status_code=401, detail="Current password is incorrect. Please check and try again.")
+    if not target_user or not updated_user_id:
+        raise HTTPException(status_code=400, detail="User ID cannot be empty.")
+    if len(updated_password) < 12:
+        raise HTTPException(status_code=400, detail="New password must be at least 12 characters long.")
+    if not is_db_connected():
+        raise HTTPException(status_code=503, detail="Admin credentials update temporarily unavailable.")
 
-    updated_user_id = (payload.new_user_id or payload.user_id or user_doc.get("user_id", "admin")).strip()
-    updated_password = payload.new_password.strip()
+    try:
+        db = get_database()
+        user_doc = await db.auth.find_one(_identity_query(target_user))
+    except Exception:
+        raise HTTPException(status_code=503, detail="Admin credentials update temporarily unavailable.")
 
-    if len(updated_password) < 4:
-        raise HTTPException(status_code=400, detail="New password must be at least 4 characters long.")
+    if not user_doc or not _verify_password(payload.current_password, user_doc.get("password", "")):
+        raise HTTPException(status_code=401, detail="Current admin credentials are incorrect.")
 
-    if is_db_connected():
-        try:
-            db = get_database()
-            await db.auth.update_one(
-                {"_id": user_doc.get("_id", "admin-account")},
-                {"$set": {
-                    "user_id": updated_user_id,
-                    "username": updated_user_id,
-                    "password": updated_password,
-                    "updated_at": datetime.now().isoformat()
-                }},
-                upsert=True
-            )
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Database update failed: {e}")
-
-    auth_store[updated_user_id.lower()] = {
-        "user_id": updated_user_id,
-        "username": updated_user_id,
-        "password": updated_password,
-        "role": "superadmin"
-    }
+    try:
+        result = await db.auth.update_one(
+            {"_id": user_doc["_id"]},
+            {"$set": {
+                "user_id": updated_user_id,
+                "username": updated_user_id,
+                "password": password_hash.hash(updated_password),
+                "updated_at": datetime.now().isoformat(),
+            }},
+        )
+        if result.matched_count != 1:
+            raise HTTPException(status_code=409, detail="Admin account changed. Please retry.")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=503, detail="Could not save admin credentials.")
 
     return {
         "success": True,
-        "message": f"Password changed successfully in db.auth collection for user '{updated_user_id}'!",
-        "user_id": updated_user_id
+        "message": "Admin credentials updated successfully.",
+        "user_id": updated_user_id,
     }
+
 
 @router.get("/settings")
 async def get_site_settings():
