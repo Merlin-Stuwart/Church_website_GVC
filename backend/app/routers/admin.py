@@ -446,13 +446,20 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
     from app.services.email_service import send_password_reset_otp_email
     send_password_reset_otp_email(recipient_email, otp_code, user_identifier)
 
+    smtp_configured = bool(getattr(settings, "SMTP_USER", "") and getattr(settings, "SMTP_PASSWORD", ""))
     masked = _mask_email(recipient_email)
-    return {
+
+    response_data: Dict[str, Any] = {
         "success": True,
-        "message": f"Verification OTP sent successfully to {masked}.",
+        "message": f"Verification OTP sent successfully to {masked}." if smtp_configured else f"SMTP not configured in .env. Dev OTP is {otp_code} (also check backend terminal).",
         "masked_email": masked,
-        "user_id": user_identifier
+        "user_id": user_identifier,
+        "smtp_configured": smtp_configured
     }
+    if not smtp_configured:
+        response_data["dev_otp"] = otp_code
+
+    return response_data
 
 
 @router.post("/forgot-password/reset")

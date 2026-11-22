@@ -23,6 +23,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
   const [forgotUserId, setForgotUserId] = useState('admin');
   const [otpCode, setOtpCode] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
+  const [devOtp, setDevOtp] = useState('');
   const [otpNewPassword, setOtpNewPassword] = useState('');
   const [otpConfirmPassword, setOtpConfirmPassword] = useState('');
   const [showOtpPassword, setShowOtpPassword] = useState(false);
@@ -84,8 +85,15 @@ export default function AdminAuthModal({ isOpen, onClose }) {
     try {
       const res = await requestPasswordResetOTP(targetUser);
       setMaskedEmail(res.masked_email || 'super admin email');
-      setSuccessMsg(`✓ Verification code sent to ${res.masked_email || 'super admin email'}!`);
-      setOtpCode('');
+      if (res.dev_otp) {
+        setDevOtp(res.dev_otp);
+        setOtpCode(res.dev_otp);
+        setSuccessMsg(`⚠️ SMTP is not configured in .env yet. Your OTP code is ${res.dev_otp} (also check backend terminal).`);
+      } else {
+        setDevOtp('');
+        setOtpCode('');
+        setSuccessMsg(`✓ Verification code sent to ${res.masked_email || 'super admin email'}!`);
+      }
       setOtpNewPassword('');
       setOtpConfirmPassword('');
       setMode('otp_reset');
@@ -430,15 +438,30 @@ export default function AdminAuthModal({ isOpen, onClose }) {
              ============================================================= */}
           {mode === 'otp_reset' && (
             <form onSubmit={handleResetWithOtpSubmit} className="space-y-3.5">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-xs text-emerald-900">
-                <div className="font-bold flex items-center gap-1.5 text-emerald-800 mb-0.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Check Super Admin Mailbox</span>
+              {devOtp ? (
+                <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 text-xs text-amber-950 font-medium animate-in fade-in">
+                  <div className="font-bold flex items-center gap-1.5 text-amber-900 mb-1">
+                    <AlertCircle className="w-4 h-4 text-amber-700" />
+                    <span>SMTP Unconfigured in .env (Dev Mode)</span>
+                  </div>
+                  <p className="text-amber-900/90 text-[11px] leading-relaxed mb-2">
+                    Your generated OTP is <strong className="font-mono text-sm px-1.5 py-0.5 rounded bg-amber-200/90 border border-amber-400">{devOtp}</strong> (automatically filled &amp; printed in your backend terminal).
+                  </p>
+                  <p className="text-[10px] text-amber-800/80">
+                    To receive real emails in Gmail, configure <code className="font-mono font-bold">SMTP_USER</code> and <code className="font-mono font-bold">SMTP_PASSWORD</code> in <code className="font-mono">backend/.env</code>.
+                  </p>
                 </div>
-                <p className="text-emerald-800/90 text-[11px] leading-relaxed">
-                  Enter the 6-digit code sent to <strong>{maskedEmail || 'super admin email'}</strong> (valid for 10 mins).
-                </p>
-              </div>
+              ) : (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-xs text-emerald-900">
+                  <div className="font-bold flex items-center gap-1.5 text-emerald-800 mb-0.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Check Super Admin Mailbox</span>
+                  </div>
+                  <p className="text-emerald-800/90 text-[11px] leading-relaxed">
+                    Enter the 6-digit code sent to <strong>{maskedEmail || 'super admin email'}</strong> (valid for 10 mins).
+                  </p>
+                </div>
+              )}
 
               {/* 6-Digit OTP */}
               <div>
