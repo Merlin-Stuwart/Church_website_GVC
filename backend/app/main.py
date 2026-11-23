@@ -66,25 +66,33 @@ async def root():
 
 @app.get("/api/status")
 async def get_system_status():
+    from app.routers.admin import site_settings_cache
+    cfg = dict(site_settings_cache)
+    if is_db_connected():
+        try:
+            db = get_database()
+            saved = await db.site_settings.find_one({"_id": "global_config"})
+            if saved:
+                cfg.update(saved)
+        except Exception:
+            pass
+
     return {
         "status": "healthy",
-        "church_name": settings.CHURCH_NAME,
-        "email": settings.CHURCH_EMAIL,
-        "phone": settings.CHURCH_PHONE,
-        "address": settings.CHURCH_ADDRESS,
+        "church_name": cfg.get("church_name") or settings.CHURCH_NAME,
+        "email": cfg.get("email") or settings.CHURCH_EMAIL,
+        "phone": cfg.get("phone") or settings.CHURCH_PHONE,
+        "address": cfg.get("address") or settings.CHURCH_ADDRESS,
         "database": {
             "type": "MongoDB",
             "connected": is_db_connected()
         },
         "service_schedule": [
-            {"service": "Sunday Worship Service", "time": "09:30 AM - 11:30 AM"},
-            {"service": "Wednesday Mid-Week Bible Study", "time": "07:00 PM - 08:30 PM"},
-            {"service": "Friday Fasting Prayer", "time": "10:30 AM - 01:30 PM"},
-            {"service": "Saturday Youth Fellowship", "time": "06:00 PM - 08:00 PM"}
+            {"service": "Sunday Worship Service", "time": cfg.get("service_timings") or "09:30 AM – 11:30 AM"},
+            {"service": "Wednesday Mid-Week Bible Study", "time": cfg.get("wednesday_timing") or "07:00 PM – 08:30 PM"},
+            {"service": "Friday Fasting Prayer", "time": cfg.get("friday_timing") or "10:30 AM – 01:30 PM"},
         ],
         "daily_verse": {
-            "verse": "Now thanks be unto God, which always causeth us to triumph in Christ!",
-            "tamil_verse": "எப்பொழுதும் கிறிஸ்துவுக்குள் எங்களை வெற்றிபெறச் செய்கிற தேவனுக்கு ஸ்தோத்திரம்!",
-            "reference": "2 Corinthians 2:14"
+            "verse": cfg.get("verse") or "“Thanks be unto God, which always causeth us to triumph in Christ!” — 2 Cor 2:14",
         }
     }

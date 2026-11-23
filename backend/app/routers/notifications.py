@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+import html
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
+from app.auth import verify_admin_session
 from app.services.email_service import (
     notify_prayer_request,
     notify_testimony,
@@ -17,14 +19,18 @@ class NotificationRequest(BaseModel):
     recipient: Optional[str] = None
 
 @router.get("/config")
-async def get_notification_config():
+async def get_notification_config(_authorized: bool = Depends(verify_admin_session)):
     return {
         "admin_notification_email": get_notification_recipient(),
         "status": "active"
     }
 
 @router.post("/notify")
-async def trigger_notification(payload: NotificationRequest, background_tasks: BackgroundTasks):
+async def trigger_notification(
+    payload: NotificationRequest,
+    background_tasks: BackgroundTasks,
+    _authorized: bool = Depends(verify_admin_session)
+):
     recip = payload.recipient or get_notification_recipient()
     t = payload.type.lower()
 
@@ -37,7 +43,8 @@ async def trigger_notification(payload: NotificationRequest, background_tasks: B
     else:
         subject = f"[GVC NOTIFICATION] New Submission ({t})"
         body = str(payload.data)
-        background_tasks.add_task(send_notification_email, subject, f"<pre>{body}</pre>", body, recip)
+        safe_body = html.escape(body)
+        background_tasks.add_task(send_notification_email, subject, f"<pre>{safe_body}</pre>", body, recip)
 
     return {
         "success": True,

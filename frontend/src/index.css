@@ -354,11 +354,9 @@ input[type="date"].admin-date-input::-webkit-calendar-picker-indicator:hover {
   color: #B91C1C !important;
 }
 
-/* Event notices & highlight pills (Fellowship, Mentorship etc) */
-.admin-bright-portal [class*="bg-slate-900"][class*="rounded"]:not(input):not(select):not(textarea) {
-  background-color: #FFFBEB !important;
-  border-color: #FDE68A !important;
-  color: #92400E !important;
+.admin-bright-portal .text-red-300,
+.admin-bright-portal .text-red-200 {
+  color: #B91C1C !important;
 }
 
 .admin-bright-portal .bg-slate-800\/90,
@@ -449,31 +447,5 @@ input[type="date"].admin-date-input::-webkit-calendar-picker-indicator:hover {
 .admin-bright-portal .overflow-x-auto {
   background-color: #FFFFFF !important;
   border-color: #E2E8F0 !important;
-}
-
-.admin-bright-portal .text-white:not([class*="bg-amber"]):not([class*="bg-gradient"]):not([class*="bg-emerald"]):not([class*="bg-slate"]) {
-  color: #0F172A !important;
-}
-
-.admin-bright-portal [class*="bg-amber"] .text-white,
-.admin-bright-portal [class*="bg-gradient"] .text-white,
-.admin-bright-portal .keep-text-white {
-  color: #FFFFFF !important;
-}
-
-.admin-bright-portal .text-slate-400 {
-  color: #64748B !important;
-}
-
-.admin-bright-portal .text-slate-300 {
-  color: #334155 !important;
-}
-
-.admin-bright-portal .border-slate-800 {
-  border-color: #E2E8F0 !important;
-}
-
-.admin-bright-portal .border-slate-700 {
-  border-color: #CBD5E1 !important;
 }
 

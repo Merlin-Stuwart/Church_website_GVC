@@ -135,7 +135,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
     <div className="relative w-full overflow-hidden bg-[#020B14] select-none shadow-2xl">
       
       {/* Viewport: Controlled cinematic height with comfortable layout breathing room across all screen sizes */}
-      <div className="relative min-h-[580px] sm:min-h-[560px] md:h-[580px] lg:h-[620px] xl:h-[650px] 2xl:h-[720px] 3xl:h-[800px] overflow-hidden">
+      <div className="relative min-h-[580px] sm:min-h-[560px] md:h-[580px] lg:h-[620px] xl:h-[650px] 2xl:h-[720px] overflow-hidden">
         
         {/* =========================================================================
             TRUE HORIZONTAL CAROUSEL TRACK: WHOLE SLIDE (BG + CONTENT) MOVES TOGETHER!
@@ -371,7 +371,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                       {/* Established Crest Badge */}
                       <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-amber-400/40 text-amber-300 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest shadow-md">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                        <span>Established 1998 • Vattamalai, India</span>
+                        <span>Established {settings.foundedYear || '1998'} • {(settings.address || 'Vattamalai, India').replace(/^Grace Victory Church,\s*/i, '')}</span>
                       </div>
 
                       {/* Main Church Title */}
@@ -445,11 +445,11 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                       <div className="relative flex items-end justify-center gap-2 sm:gap-4">
                         
                         {/* 1. YOUTH PASTOR R. FRANKLIN RAJENDRAN */}
-                        <div className="relative w-24 xs:w-28 sm:w-36 xl:w-44 mb-1 z-10 transition-transform hover:scale-105 duration-300">
+                        <div className="relative w-24 sm:w-36 xl:w-44 mb-1 z-10 transition-transform hover:scale-105 duration-300">
                           <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.85)] aspect-[3/4] bg-slate-950 border border-amber-400/40">
                             <img 
                               src={s.associatePastorImg || '/images/franklin.jpg'} 
-                              alt="Pastor R. Franklin Rajendran" 
+                              alt={s.associatePastorName || 'Associate Pastor'} 
                               className="w-full h-full object-cover object-top filter brightness-105"
                               onError={(e) => { e.target.src = '/images/franklin.jpg'; }}
                             />
@@ -466,12 +466,12 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                           </div>
                         </div>
 
-                        {/* 2. SENIOR PASTOR P. RAJENDRAN (PROMINENT & MAJESTIC) */}
-                        <div className="relative w-36 xs:w-44 sm:w-56 xl:w-64 z-20 transition-transform hover:scale-105 duration-300">
+                        {/* 2. SENIOR PASTOR (PROMINENT & MAJESTIC) */}
+                        <div className="relative w-36 sm:w-56 xl:w-64 z-20 transition-transform hover:scale-105 duration-300">
                           <div className="relative rounded-3xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.95)] aspect-[3/4] bg-slate-950 border-2 border-amber-400/50">
                             <img 
                               src={s.pastorImg || '/images/pastor.jpg'} 
-                              alt="Pastor P. Rajendran - Senior Pastor" 
+                              alt={s.pastorName || 'Senior Pastor'} 
                               className="w-full h-full object-cover object-top filter brightness-105"
                               onError={(e) => { e.target.src = '/images/pastor.jpg'; }}
                             />
@@ -485,7 +485,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                                 {s.pastorName}
                               </h3>
                               <span className="text-[8px] sm:text-[9px] text-slate-300 block mt-0.5">
-                                Grace Victory Church, Vattamalai
+                                {settings.churchName || 'Grace Victory Church'}
                               </span>
                             </div>
                           </div>

@@ -1,27 +1,26 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Heart, Shield, BookOpen, Users, Compass, CheckCircle, 
   Sparkles, Award, ArrowRight, ChevronRight, Calendar, Flag
 } from 'lucide-react';
-import { CHURCH_INFO, CORE_BELIEFS, LEADERSHIP_TEAM, CHURCH_STATS, DEFAULT_MILESTONES } from '../data/mockData';
 import { useChurch } from '../context/ChurchContext';
 
 export default function About({ onOpenPlanVisit }) {
   const { settings } = useChurch();
-  const [activeBeliefTab, setActiveBeliefTab] = useState(0);
+  const churchName = settings?.churchName || 'Grace Victory Church';
 
-  const churchStats = settings?.churchStats && settings.churchStats.length > 0 
-    ? settings.churchStats 
-    : CHURCH_STATS;
+  const churchStats = Array.isArray(settings?.churchStats)
+    ? settings.churchStats
+    : [];
 
-  const milestones = settings?.milestones && settings.milestones.length > 0 
-    ? settings.milestones 
-    : DEFAULT_MILESTONES;
+  const milestones = Array.isArray(settings?.milestones)
+    ? settings.milestones
+    : [];
 
-  const coreBeliefs = settings?.coreBeliefs && settings.coreBeliefs.length > 0 
-    ? settings.coreBeliefs 
-    : CORE_BELIEFS;
+  const coreBeliefs = Array.isArray(settings?.coreBeliefs)
+    ? settings.coreBeliefs
+    : [];
 
   const leadershipTeam = Array.isArray(settings?.leadershipTeam)
     ? settings.leadershipTeam
@@ -46,7 +45,7 @@ export default function About({ onOpenPlanVisit }) {
               </h1>
 
               <p className="text-slate-600 text-sm sm:text-lg leading-relaxed max-w-2xl">
-                Grace Victory Church exists to build whole disciples of Jesus Christ who manifest God’s love, walk in supernatural power, and bring transforming hope to their families, workplace, and world.
+                {churchName} exists to build whole disciples of Jesus Christ who manifest God’s love, walk in supernatural power, and bring transforming hope to their families, workplace, and world.
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-3 sm:gap-4">
@@ -139,7 +138,7 @@ export default function About({ onOpenPlanVisit }) {
               Milestones of God’s Faithfulness
             </h2>
             <p className="text-slate-600 text-sm max-w-xl mx-auto">
-              From a small prayer gathering in 1998 to a global family today, every step has been guided by God’s grace.
+              From a small prayer gathering in {settings?.foundedYear || '1998'} to a global family today, every step has been guided by God’s grace.
             </p>
           </div>
 

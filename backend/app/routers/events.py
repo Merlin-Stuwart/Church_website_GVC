@@ -27,6 +27,7 @@ async def get_all_events(
         cursor = db.events.find(query).sort("created_at", -1)
         async for doc in cursor:
             doc["id"] = str(doc.get("_id", doc.get("id")))
+            doc.pop("_id", None)
             results.append(doc)
         return results
 
@@ -66,6 +67,8 @@ async def create_event(event: EventCreate, _authorized: bool = Depends(verify_ad
 @router.put("/{event_id}", response_model=EventResponse)
 async def update_event(event_id: str, event: EventUpdate, _authorized: bool = Depends(verify_admin_session)):
     update_data = {k: v for k, v in event.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided to update")
     
     if is_db_connected():
         db = get_database()
@@ -132,6 +135,7 @@ async def get_all_rsvps(_authorized: bool = Depends(verify_admin_session)):
         cursor = db.event_rsvps.find({}).sort("created_at", -1)
         async for doc in cursor:
             doc["id"] = str(doc.get("_id", doc.get("id")))
+            doc.pop("_id", None)
             results.append(doc)
         return results
     return rsvps_store

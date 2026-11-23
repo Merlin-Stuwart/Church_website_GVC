@@ -10,14 +10,23 @@ import {
 import ChurchHeroSlider from '../components/ChurchHeroSlider';
 import ServiceCountdown from '../components/ServiceCountdown';
 import SermonPlayerModal from '../components/SermonPlayerModal';
-import { CHURCH_INFO, CHURCH_STATS, TESTIMONIES, FAQ_LIST } from '../data/mockData';
-import { fetchSermons, fetchEvents, fetchTestimonies, getStoredTestimonies } from '../api/client';
+import { fetchSermons, fetchTestimonies, getStoredTestimonies } from '../api/client';
 import { useChurch } from '../context/ChurchContext';
+
+function getHomeSermonThumb(sermon) {
+  if (sermon?.thumbnail && !sermon.thumbnail.includes('unsplash.com')) {
+    return sermon.thumbnail;
+  }
+  const match = sermon?.video_url?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|live\/|watch\?.+&v=))([\w-]{11})/);
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+  }
+  return sermon?.thumbnail || 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=800&q=80';
+}
 
 export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimonyModal }) {
   const { settings } = useChurch();
   const [sermons, setSermons] = useState([]);
-  const [events, setEvents] = useState([]);
   const [testimonies, setTestimonies] = useState([]);
   const [selectedSermon, setSelectedSermon] = useState(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
@@ -35,15 +44,12 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
       const sData = await fetchSermons();
       if (Array.isArray(sData)) setSermons(sData);
 
-      const eData = await fetchEvents();
-      if (Array.isArray(eData)) setEvents(eData);
-
       const tData = await fetchTestimonies();
       if (Array.isArray(tData)) setTestimonies(tData);
     }
     loadData();
 
-    // Listen for instant real-time updates when testimonies are added or deleted anywhere
+    // Listen for instant real-time updates when testimonies or sermons change
     const handleTestimoniesUpdated = (e) => {
       if (e?.detail && Array.isArray(e.detail)) {
         setTestimonies(e.detail);
@@ -51,8 +57,17 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
         setTestimonies(getStoredTestimonies());
       }
     };
+    const handleSermonsUpdated = () => {
+      fetchSermons().then(sData => {
+        if (Array.isArray(sData)) setSermons(sData);
+      });
+    };
     window.addEventListener('gvc_testimonies_updated', handleTestimoniesUpdated);
-    return () => window.removeEventListener('gvc_testimonies_updated', handleTestimoniesUpdated);
+    window.addEventListener('gvc_sermons_updated', handleSermonsUpdated);
+    return () => {
+      window.removeEventListener('gvc_testimonies_updated', handleTestimoniesUpdated);
+      window.removeEventListener('gvc_sermons_updated', handleSermonsUpdated);
+    };
   }, []);
 
   const handlePlaySermon = (sermon) => {
@@ -98,13 +113,13 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8 text-white text-left">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-slate-950 text-xs font-bold uppercase tracking-wider mb-2 w-fit">
                 <Camera className="w-3.5 h-3.5" />
-                <span>Our Sanctuary in Vattamalai</span>
+                <span>Our Sanctuary</span>
               </div>
               <h3 className="font-serif font-bold text-xl sm:text-2xl text-white">
-                Main Worship Sanctuary • Victory Hall
+                {settings.churchName || 'Grace Victory Church'} Sanctuary
               </h3>
               <p className="text-xs sm:text-sm text-slate-200 mt-1">
-                {settings.churchName || 'Grace Victory Church'}, Vattamalai — Filled with prayer, worship, and joy every week.
+                {settings.address || 'Vattamalai, Tamil Nadu'} — Filled with prayer, worship, and joy every week.
               </p>
             </div>
           </div>
@@ -132,7 +147,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
               </div>
               <div className="flex items-center gap-2.5">
                 <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Dedicated nursery & Champions Kids church during Sunday 09:30 AM service</span>
+                <span>Dedicated nursery & Champions Kids church during Sunday {settings.serviceTimings || '09:30 AM'} service</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -280,8 +295,8 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
           <div className="lg:col-span-7 bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden flex flex-col justify-between">
             <div className="relative aspect-video bg-slate-950 overflow-hidden">
               <img 
-                src={sermons[0]?.thumbnail || "https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=1200&q=80"} 
-                alt="Sermon Thumbnail" 
+                src={getHomeSermonThumb(sermons[0])} 
+                alt={sermons[0]?.title || "Sermon Thumbnail"} 
                 className="w-full h-full object-cover opacity-90"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
@@ -291,7 +306,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
                 className="absolute inset-0 flex items-center justify-center group"
                 aria-label="Play Featured Message"
               >
-                <div className="w-18 h-18 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:bg-amber-600 transition-all p-5">
+                <div className="w-16 h-16 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:bg-amber-600 transition-all p-4">
                   <Play className="w-8 h-8 fill-white ml-1" />
                 </div>
               </button>
@@ -354,7 +369,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
               >
                 <div className="relative w-28 h-20 rounded-xl overflow-hidden bg-slate-900 shrink-0">
                   <img 
-                    src={sermon.thumbnail || "https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=400&q=80"} 
+                    src={getHomeSermonThumb(sermon)} 
                     alt={sermon.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
                   />
@@ -404,7 +419,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
                 Real Stories of God's Grace
               </h2>
               <p className="text-slate-600 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
-                Read how Jesus is miraculously healing bodies, restoring broken families, and breaking financial chains in Grace Victory Church.
+                Read how Jesus is miraculously healing bodies, restoring broken families, and breaking financial chains in {settings.churchName || 'Grace Victory Church'}.
               </p>
             </div>
 
@@ -431,9 +446,9 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
 
           {/* Testimonies Grid (Only 3 Testimonies Shown on Home Page - Admin Selected & Equal Height) */}
           {(() => {
-            const featuredIds = Array.isArray(settings?.featuredHomeTestimonyIds) && settings.featuredHomeTestimonyIds.length > 0
+            const featuredIds = Array.isArray(settings?.featuredHomeTestimonyIds)
               ? settings.featuredHomeTestimonyIds
-              : ['testimony-1', 'testimony-2', 'testimony-3'];
+              : [];
 
             const featuredSelected = featuredIds
               .map(id => testimonies.find(t => String(t.id) === String(id) || String(t._id) === String(id)))
@@ -562,7 +577,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {(Array.isArray(settings?.faqList) && settings.faqList.length > 0 ? settings.faqList : FAQ_LIST).map((faq, idx) => (
+            {(Array.isArray(settings?.faqList) ? settings.faqList : []).map((faq, idx) => (
               <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
                 <div>
                   <h4 className="font-serif font-bold text-slate-900 text-base mb-2 flex items-center gap-2">

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, Heart, CheckCircle, Shield, Lock, Mail } from 'lucide-react';
-import { submitPrayer, triggerNotification, getGmailComposeUrl } from '../api/client';
+import React, { useState, useEffect } from 'react';
+import { X, Heart, CheckCircle, Shield, Lock, Mail, AlertCircle } from 'lucide-react';
+import { submitPrayer, getGmailComposeUrl } from '../api/client';
 import { useChurch } from '../context/ChurchContext';
 
 export default function PrayerModal({ isOpen, onClose, onPrayerAdded }) {
@@ -18,25 +18,34 @@ export default function PrayerModal({ isOpen, onClose, onPrayerAdded }) {
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setSubmitted(false);
+      setError('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleClose = () => {
+    setSubmitted(false);
+    setError('');
+    onClose();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
       const res = await submitPrayer(formData);
       if (onPrayerAdded) onPrayerAdded(res);
-      await triggerNotification({
-        type: 'prayer',
-        data: formData,
-        recipient: adminNotificationEmail
-      });
       setSubmitted(true);
     } catch (err) {
-      console.warn('API error, showing confirmation', err);
-      setSubmitted(true);
+      setError(err.message || 'Could not submit prayer request. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -48,8 +57,8 @@ export default function PrayerModal({ isOpen, onClose, onPrayerAdded }) {
         
         {/* Close button */}
         <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          onClick={handleClose}
+          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -69,6 +78,12 @@ export default function PrayerModal({ isOpen, onClose, onPrayerAdded }) {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 p-3 rounded-xl border border-red-200 font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Your Name *</label>
                 <input
@@ -117,7 +132,7 @@ export default function PrayerModal({ isOpen, onClose, onPrayerAdded }) {
                   <Lock className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                   <div className="leading-relaxed">
                     <span className="font-bold block text-amber-900">100% Confidential Pastoral Care</span>
-                    Your prayer request will not be shown publicly on the website. It goes directly to Pastor P. Rajendran and our intercessory prayer team.
+                    Your prayer request will not be shown publicly on the website. It goes directly to {settings.seniorPastor || 'Senior Pastor'} and our intercessory prayer team.
                   </div>
                 </div>
 

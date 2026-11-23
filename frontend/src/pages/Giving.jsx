@@ -34,7 +34,11 @@ export default function Giving() {
   const effectiveSwift = settings.swiftCode || details.bank_details?.swift_code || "SBININBB492";
   const effectiveGivingVerse = settings.givingVerse || details.giving_verse || "“Bring ye all the tithes into the storehouse, that there may be meat in mine house, and prove me now herewith, saith the Lord of hosts, if I will not open you the windows of heaven, and pour you out a blessing, that there shall not be room enough to receive it.” — Malachi 3:10";
 
-  const [amount, setAmount] = useState('1000');
+  const initialPreset = (settings?.givingPresets || '500, 1000, 2500, 5000, 10000')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)[0] || '1000';
+  const [amount, setAmount] = useState(initialPreset);
   const [customAmount, setCustomAmount] = useState('');
   const [cause, setCause] = useState('Tithes & General Offerings');
   const [customMessage, setCustomMessage] = useState('');
@@ -69,20 +73,18 @@ export default function Giving() {
 
   // 5-Minute Countdown Timer for QR Modal
   useEffect(() => {
-    let timer;
-    if (isQrModalOpen && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    if (!isQrModalOpen) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(timer);
-  }, [isQrModalOpen, timeLeft]);
+  }, [isQrModalOpen]);
 
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -91,7 +93,9 @@ export default function Giving() {
   };
 
   const handleCopy = (text, fieldName) => {
-    navigator.clipboard.writeText(text);
+    try {
+      navigator.clipboard?.writeText(text)?.catch(() => {});
+    } catch {}
     setCopiedField(fieldName);
     setTimeout(() => setCopiedField(''), 2000);
   };
@@ -162,8 +166,7 @@ export default function Giving() {
       // 2. Check if using the test simulator dummy key or real Razorpay merchant keys
       const isDummyTestKey = !orderData.key_id || 
         orderData.is_test_mode ||
-        orderData.key_id.endsWith('Testing') || 
-        orderData.key_id === 'rzp_test_GVC1024Testing' ||
+        orderData.key_id.includes('Testing') ||
         !orderData.order_id ||
         !orderData.order_id.startsWith('order_');
 
@@ -192,7 +195,7 @@ export default function Giving() {
         key: orderData.key_id,
         amount: orderData.amount,
         currency: orderData.currency || 'INR',
-        name: orderData.church_name || 'Grace Victory Church (GVC)',
+        name: orderData.church_name || effectiveChurchName,
         description: `${cause} — Tithes & Offerings`,
         order_id: orderData.order_id,
         prefill: {
@@ -315,63 +318,34 @@ export default function Giving() {
     setIsQrModalOpen(true);
   };
 
-  // Confirm and Generate Official 80G Receipt
+  // Confirm and Generate Pending Receipt (verified by admin in dashboard)
   const handleConfirmPayment = async () => {
     setLoading(true);
     const donationPayload = {
       donor_name: donorName.trim() || 'Faithful Giver',
-      email: email.trim() || 'giver@gracevictorychurch.org',
+      email: email.trim() || settings.email || 'contact@gracevictorychurch.org',
       phone: phone.trim() || '',
       amount: finalAmount,
       cause: cause + (customMessage.trim() ? ` (${customMessage.trim()})` : ''),
       payment_method: 'UPI (Scan & Pay)',
       notes: customMessage.trim() || cause,
-      status: 'Completed',
+      status: 'Pending',
       transaction_id: `TXN-${Math.floor(10000000 + Math.random() * 90000000)}`
     };
 
     try {
       const res = await submitDonation(donationPayload);
       setIsQrModalOpen(false);
-      setReceipt(res || {
-        ...donationPayload,
-        receipt_number: `GVC-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}-${Math.random().toString(36).substring(2,8).toUpperCase()}`
-      });
+      setReceipt(res);
     } catch (err) {
-      console.warn('API error, recording local receipt', err);
-      setIsQrModalOpen(false);
-      setReceipt({
-        id: `don-${Date.now()}`,
-        receipt_number: `GVC-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}-${Math.random().toString(36).substring(2,8).toUpperCase()}`,
-        donor_name: donorName || 'Faithful Giver',
-        amount: finalAmount,
-        cause: cause + (customMessage ? ` (${customMessage})` : ''),
-        payment_method: 'UPI (Scan & Pay)',
-        notes: customMessage,
-        status: 'Completed'
-      });
+      alert('Could not record donation on server: ' + (err.message || 'Please try again.'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMobileAppClick = async (appName) => {
-    try {
-      const payload = {
-        donor_name: donorName.trim() || 'Faithful Giver',
-        email: email.trim() || 'giver@gracevictorychurch.org',
-        phone: phone.trim() || '',
-        amount: finalAmount,
-        cause: cause + (customMessage.trim() ? ` (${customMessage.trim()})` : ''),
-        payment_method: `UPI (${appName})`,
-        notes: customMessage.trim() || cause,
-        status: 'Initiated',
-        transaction_id: `TXN-${Math.floor(10000000 + Math.random() * 90000000)}`
-      };
-      await submitDonation(payload);
-    } catch (e) {
-      console.warn('Mobile app auto-log error', e);
-    }
+  const handleMobileAppClick = () => {
+    // Deep link opens the user's UPI app; do not create a DB donation before payment completes.
   };
 
   const presetAmounts = (settings?.givingPresets || details?.giving_presets || '500, 1000, 2500, 5000, 10000')
@@ -761,7 +735,7 @@ export default function Giving() {
                 <span>Financial Transparency & Section 80G</span>
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Grace Victory Church Trust is committed to biblical stewardship and complete transparency. All tithes and ministry gifts are deployed directly towards gospel outreach, pastoral care, and community benevolent missions.
+                {effectiveChurchName} is committed to biblical stewardship and complete transparency. All tithes and ministry gifts are deployed directly towards gospel outreach, pastoral care, and community benevolent missions.
               </p>
               <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />

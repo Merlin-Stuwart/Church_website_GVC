@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Radio, Play } from 'lucide-react';
+import { useChurch } from '../context/ChurchContext';
 
 export default function ServiceCountdown({ onWatchLive }) {
+  const { settings } = useChurch();
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -94,7 +96,7 @@ export default function ServiceCountdown({ onWatchLive }) {
               Next Sunday Service Begins In
             </span>
             <h4 className="text-sm sm:text-base font-bold text-slate-900">
-              Sunday Worship Service: 09:30 AM – 11:30 AM
+              Sunday Worship Service: {settings?.serviceTimings || '09:30 AM – 11:30 AM'}
             </h4>
           </div>
         </div>

@@ -3,7 +3,6 @@ import {
   Heart, Sparkles, Plus, BookOpen, Quote, Lock, CheckCircle, ShieldCheck,
   ChevronDown, ChevronUp
 } from 'lucide-react';
-import { TESTIMONIES } from '../data/mockData';
 import { fetchTestimonies, getStoredTestimonies } from '../api/client';
 import { useChurch } from '../context/ChurchContext';
 
@@ -40,7 +39,15 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
     return () => window.removeEventListener('gvc_testimonies_updated', handleUpdate);
   }, []);
 
-  const types = ['All', 'Miraculous Healing', 'Life Transformation', 'Financial Breakthrough'];
+  const types = [
+    'All',
+    'Miraculous Healing',
+    'Life Transformation',
+    'Financial Breakthrough',
+    'Family Peace',
+    'Deliverance',
+    'Thanksgiving'
+  ];
 
   const filteredTestimonies = selectedType === 'All'
     ? testimonies
@@ -118,7 +125,7 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
             Real Stories of God's Power
           </h2>
           <p className="text-slate-600 text-sm">
-            Read how God answered prayer and supernaturally transformed lives at Grace Victory Church.
+            Read how God answered prayer and supernaturally transformed lives at {settings?.churchName || 'Grace Victory Church'}.
           </p>
         </div>
 

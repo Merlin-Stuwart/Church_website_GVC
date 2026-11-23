@@ -1,11 +1,19 @@
 import os
 import hmac
 import hashlib
+import logging
 from datetime import datetime
 from typing import Optional
 from fastapi import HTTPException, Header
 
-AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "your_long_random_secret_key_here_gvc_church_2026")
+logger = logging.getLogger("uvicorn")
+
+_raw_secret = os.getenv("AUTH_SECRET_KEY", "").strip()
+if not _raw_secret:
+    logger.warning("AUTH_SECRET_KEY environment variable is not set; using fallback signing key. Set AUTH_SECRET_KEY in production.")
+    _raw_secret = "your_long_random_secret_key_here_gvc_church_2026"
+
+AUTH_SECRET_KEY = _raw_secret
 if len(AUTH_SECRET_KEY) < 32:
     AUTH_SECRET_KEY = AUTH_SECRET_KEY.ljust(32, "x")
 
@@ -33,8 +41,8 @@ def verify_admin_session(authorization: Optional[str] = Header(None)) -> bool:
     if not raw:
         raise HTTPException(status_code=401, detail="Session token required.")
 
-    # Validate HMAC signed token format: user_id.timestamp.signature
-    parts = raw.split(".")
+    # Validate HMAC signed token format: user_id.timestamp.signature (rsplit handles dots in email user_ids)
+    parts = raw.rsplit(".", 2)
     if len(parts) == 3:
         user_id, timestamp_str, sig = parts
         try:

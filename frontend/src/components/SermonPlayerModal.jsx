@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Play, Volume2, BookOpen, Share2, Check, Download, Video, ExternalLink } from 'lucide-react';
 
 export function getYouTubeEmbedUrl(url) {
@@ -16,10 +16,19 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('video');
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab('video');
+      setCopied(false);
+    }
+  }, [isOpen, sermon?.id]);
+
   if (!isOpen || !sermon) return null;
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.origin + `/sermons?id=${sermon.id}`);
+    try {
+      navigator.clipboard?.writeText(window.location.origin + `/sermons?id=${sermon.id}`)?.catch(() => {});
+    } catch {}
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

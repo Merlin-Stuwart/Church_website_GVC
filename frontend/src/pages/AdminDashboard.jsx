@@ -14,7 +14,7 @@ import {
   fetchSermons, createSermon, deleteSermon, clearAllSermons, 
   fetchEvents, createEvent, updateEvent, deleteEvent, clearAllEvents, getEventNotices,
   formatDateForInput, formatEventDisplayDate, isEventActive,
-  fetchPrayers, fetchAllPrayersAdmin, deletePrayer, clearAllPrayers, 
+  fetchPrayers, fetchAllPrayersAdmin, togglePrayerInterceded, deletePrayer, clearAllPrayers, 
   fetchTestimonies, submitTestimony, deleteTestimony, clearAllTestimonies, getStoredTestimonies,
   toggleTestimonyHomeFeature, changeAdminPassword,
   fetchMinistries, createMinistry, updateMinistry, deleteMinistry, clearAllMinistries,
@@ -42,6 +42,15 @@ function splitNoticeEmoji(raw) {
   return { emoji: match[1], text: str.slice(match[0].length) };
 }
 
+function getAdminSermonThumb(sermon) {
+  if (sermon?.thumbnail) return sermon.thumbnail;
+  const match = sermon?.video_url?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|live\/|watch\?.+&v=))([\w-]{11})/);
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+  }
+  return 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=800&q=80';
+}
+
 export default function AdminDashboard() {
   const church = useChurch();
   const settings = church?.settings || {};
@@ -67,11 +76,21 @@ export default function AdminDashboard() {
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   // Auth management state (db.auth collection)
-  const [authForm, setAuthForm] = useState({
-    currentPassword: '',
-    newUserId: 'admin',
-    newPassword: '',
-    confirmPassword: ''
+  const [authForm, setAuthForm] = useState(() => {
+    let savedUserId = '';
+    try {
+      const raw = typeof window !== 'undefined' && window.localStorage?.getItem('gvc_admin_user');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        savedUserId = parsed?.user_id || parsed?.username || '';
+      }
+    } catch (e) {}
+    return {
+      currentPassword: '',
+      newUserId: savedUserId,
+      newPassword: '',
+      confirmPassword: ''
+    };
   });
   const [authSaveStatus, setAuthSaveStatus] = useState(null);
   const [authSaveLoading, setAuthSaveLoading] = useState(false);
@@ -163,7 +182,7 @@ export default function AdminDashboard() {
     category: 'Weekly Prayer Gatherings',
     badge: 'Open to All',
     meeting_time: 'Fridays 10:00 AM – 02:00 PM',
-    leader: 'Pastor P. Rajendran',
+    leader: settings.seniorPastor || '',
     tagline: 'Miracle & Healing Breakthrough',
     desc: '',
     image: 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=800&q=80'
@@ -195,17 +214,17 @@ export default function AdminDashboard() {
   const [isSermonModalOpen, setIsSermonModalOpen] = useState(false);
   const [newSermon, setNewSermon] = useState({
     title: '',
-    speaker: siteForm.seniorPastor,
+    speaker: siteForm.seniorPastor || '',
     date: new Date().toISOString().split('T')[0],
-    series: 'Victorious Living Series',
+    series: '',
     scripture: '',
-    video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    video_url: '',
     audio_url: '',
     duration: '45 mins',
     category: 'Sunday Worship',
     language: 'Tamil & English',
     summary: '',
-    thumbnail: 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=800&q=80'
+    thumbnail: ''
   });
 
   // Event Modal State (Add & Edit)
@@ -295,7 +314,10 @@ export default function AdminDashboard() {
       if (Array.isArray(e)) setEvents(e);
 
       const p = await fetchAllPrayersAdmin();
-      if (Array.isArray(p)) setPrayers(p);
+      if (Array.isArray(p)) {
+        setPrayers(p);
+        setIntercededPrayerIds(new Set(p.filter(item => item.interceded).map(item => item.id)));
+      }
 
       const t = await fetchTestimonies();
       if (Array.isArray(t)) setTestimonies(t);
@@ -389,7 +411,8 @@ export default function AdminDashboard() {
   };
 
   const handleToggleDonationStatus = async (id, currentStatus) => {
-    const nextStatus = currentStatus === 'Verified' ? 'Pending' : 'Verified';
+    const isCurrentlyVerified = ['verified', 'completed'].includes(String(currentStatus || '').toLowerCase());
+    const nextStatus = isCurrentlyVerified ? 'Pending' : 'Verified';
     try {
       await updateDonationStatus(id, nextStatus);
       setDonations(prev => prev.map(item => item.id === id ? { ...item, status: nextStatus } : item));
@@ -438,7 +461,7 @@ export default function AdminDashboard() {
     try {
       const created = await submitDonation({
         donor_name: manualDonationForm.donor_name.trim(),
-        email: manualDonationForm.email.trim() || 'church.office@gracevictorychurch.org',
+        email: manualDonationForm.email.trim() || siteForm.email || 'contact@gracevictorychurch.org',
         phone: manualDonationForm.phone.trim(),
         amount: parseFloat(manualDonationForm.amount),
         cause: manualDonationForm.cause,
@@ -447,6 +470,12 @@ export default function AdminDashboard() {
         status: 'Verified',
         transaction_id: `OFFLINE-${Date.now().toString().slice(-6)}`
       });
+      if (created?.id) {
+        try {
+          await updateDonationStatus(created.id, 'Verified');
+          created.status = 'Verified';
+        } catch {}
+      }
       setDonations(prev => [created, ...prev.filter(d => d.id !== created.id)]);
       setIsManualDonationModalOpen(false);
       setManualDonationForm({
@@ -459,7 +488,7 @@ export default function AdminDashboard() {
         notes: ''
       });
     } catch (err) {
-      alert('Failed to record offering. Please try again.');
+      alert('Failed to record offering: ' + (err.message || 'Please try again.'));
     } finally {
       setIsSubmittingManualDonation(false);
     }
@@ -470,12 +499,14 @@ export default function AdminDashboard() {
     const donorName = donation.donor_name || 'Beloved in Christ';
     const amount = donation.amount ? `₹${parseFloat(donation.amount).toLocaleString('en-IN')}` : '';
     const cause = donation.cause || 'the Lord\'s ministry';
+    const churchLabel = siteForm.churchName || 'Grace Victory Church';
+    const pastorLabel = siteForm.seniorPastor || 'Senior Pastor';
     const text = encodeURIComponent(
       `Dear ${donorName},\n\nGreetings in the precious name of our Lord and Saviour Jesus Christ! ✨\n\n` +
-      `We gratefully acknowledge your generous offering of ${amount} towards ${cause} at Grace Victory Church (GVC).\n\n` +
+      `We gratefully acknowledge your generous offering of ${amount} towards ${cause} at ${churchLabel}.\n\n` +
       `Receipt No: ${donation.receipt_number || 'Official Record'}\n\n` +
       `"The Lord bless you and keep you; The Lord make His face shine upon you!" — Numbers 6:24-26\n\n` +
-      `With prayers and blessings,\nPastor P. Rajendran & GVC Pastoral Team`
+      `With prayers and blessings,\n${pastorLabel} & ${churchLabel} Pastoral Team`
     );
     window.open(`https://wa.me/${cleanPhone ? (cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone) : ''}?text=${text}`, '_blank');
   };
@@ -496,21 +527,36 @@ export default function AdminDashboard() {
       return;
     }
 
+    let currentStoredUserId = '';
+    try {
+      const raw = typeof window !== 'undefined' && window.localStorage?.getItem('gvc_admin_user');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        currentStoredUserId = parsed?.user_id || parsed?.username || '';
+      }
+    } catch {}
+    const targetUserId = currentStoredUserId || authForm.newUserId.trim();
+
     setAuthSaveLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/auth/credentials`, {
         method: 'PUT',
         headers: getAdminHeaders(),
         body: JSON.stringify({
+          user_id: targetUserId,
           current_password: authForm.currentPassword,
-          new_user_id: authForm.newUserId,
+          new_user_id: authForm.newUserId.trim() || targetUserId,
           new_password: authForm.newPassword
         })
       });
       const data = await res.json();
       if (res.ok) {
+        const savedUser = data.user_id || authForm.newUserId.trim() || targetUserId;
+        try {
+          window.localStorage?.setItem('gvc_admin_user', JSON.stringify({ user_id: savedUser, username: savedUser }));
+        } catch {}
         setAuthSaveStatus({ success: true, message: data.message || 'Credentials updated successfully in db.auth collection!' });
-        setAuthForm({ currentPassword: '', newUserId: authForm.newUserId, newPassword: '', confirmPassword: '' });
+        setAuthForm({ currentPassword: '', newUserId: savedUser, newPassword: '', confirmPassword: '' });
       } else {
         setAuthSaveStatus({ success: false, message: data.detail || 'Failed to update credentials in db.auth' });
       }
@@ -522,20 +568,29 @@ export default function AdminDashboard() {
   };
 
   const handleFaqChange = (index, field, value) => {
-    const list = [...(siteForm.faqList || FAQ_LIST)];
-    list[index] = { ...list[index], [field]: value };
-    setSiteForm({ ...siteForm, faqList: list });
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.faqList) ? [...prev.faqList] : [];
+      if (!list[index]) return prev;
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, faqList: list };
+    });
   };
 
   const handleAddFaq = () => {
-    const list = [...(siteForm.faqList || FAQ_LIST)];
-    list.push({ q: 'New Question for Church Visitors?', a: 'Provide the helpful answer here.' });
-    setSiteForm({ ...siteForm, faqList: list });
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.faqList) ? [...prev.faqList] : [];
+      return {
+        ...prev,
+        faqList: [...list, { q: 'New Question for Church Visitors?', a: 'Provide the helpful answer here.' }]
+      };
+    });
   };
 
   const handleRemoveFaq = (index) => {
-    const list = (siteForm.faqList || FAQ_LIST).filter((_, i) => i !== index);
-    setSiteForm({ ...siteForm, faqList: list });
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.faqList) ? prev.faqList : [];
+      return { ...prev, faqList: list.filter((_, i) => i !== index) };
+    });
   };
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -593,15 +648,15 @@ export default function AdminDashboard() {
       setIsSermonModalOpen(false);
       setNewSermon({
         title: '',
-        speaker: siteForm.seniorPastor,
+        speaker: siteForm.seniorPastor || '',
         date: new Date().toISOString().split('T')[0],
-        series: 'கூடாரப் பண்டிகை பெருவிழா',
+        series: '',
         scripture: '',
         video_url: '',
         audio_url: '',
         duration: '45 mins',
-        category: 'கூடாரப் பண்டிகை',
-        language: 'Tamil',
+        category: 'Sunday Worship',
+        language: 'Tamil & English',
         summary: '',
         thumbnail: ''
       });
@@ -698,45 +753,53 @@ export default function AdminDashboard() {
   };
 
   const handleUpdateNotice = (idx, value) => {
-    const list = [...(newEvent.extra_notices || [''])];
-    list[idx] = value;
-    setNewEvent(prev => ({
-      ...prev,
-      extra_notices: list,
-      extra_info: list.filter(Boolean).join(' • ')
-    }));
+    setNewEvent(prev => {
+      const list = [...(prev.extra_notices || [''])];
+      list[idx] = value;
+      return {
+        ...prev,
+        extra_notices: list,
+        extra_info: list.filter(Boolean).join(' • ')
+      };
+    });
   };
 
   const handleSelectNoticeEmoji = (idx, selectedEmoji) => {
-    const list = [...(newEvent.extra_notices || [''])];
-    const { text } = splitNoticeEmoji(list[idx]);
-    list[idx] = selectedEmoji ? (text ? `${selectedEmoji} ${text}` : `${selectedEmoji} `) : text;
-    setNewEvent(prev => ({
-      ...prev,
-      extra_notices: list,
-      extra_info: list.filter(Boolean).join(' • ')
-    }));
+    setNewEvent(prev => {
+      const list = [...(prev.extra_notices || [''])];
+      const { text } = splitNoticeEmoji(list[idx]);
+      list[idx] = selectedEmoji ? (text ? `${selectedEmoji} ${text}` : `${selectedEmoji} `) : text;
+      return {
+        ...prev,
+        extra_notices: list,
+        extra_info: list.filter(Boolean).join(' • ')
+      };
+    });
     setOpenNoticeEmojiIdx(null);
   };
 
   const handleRemoveNotice = (idx) => {
-    const list = (newEvent.extra_notices || ['']).filter((_, i) => i !== idx);
-    const finalList = list.length > 0 ? list : [''];
     setOpenNoticeEmojiIdx(null);
-    setNewEvent(prev => ({
-      ...prev,
-      extra_notices: finalList,
-      extra_info: finalList.filter(Boolean).join(' • ')
-    }));
+    setNewEvent(prev => {
+      const list = (prev.extra_notices || ['']).filter((_, i) => i !== idx);
+      const finalList = list.length > 0 ? list : [''];
+      return {
+        ...prev,
+        extra_notices: finalList,
+        extra_info: finalList.filter(Boolean).join(' • ')
+      };
+    });
   };
 
   const handleSaveEvent = async (e) => {
     e.preventDefault();
     const cleanedNotices = (newEvent.extra_notices || []).map(s => (s || '').trim()).filter(Boolean);
+    const cleanedHighlights = (newEvent.highlights || []).map(h => (h || '').trim()).filter(Boolean);
     const payload = {
       ...newEvent,
       extra_notices: cleanedNotices,
-      extra_info: cleanedNotices.join(' • ')
+      extra_info: cleanedNotices.join(' • '),
+      highlights: cleanedHighlights
     };
 
     try {
@@ -801,7 +864,7 @@ export default function AdminDashboard() {
     if (!window.confirm('Delete this testimony? / இந்த சாட்சியை நீக்க வேண்டுமா?')) return;
     try {
       await deleteTestimony(id);
-      setTestimonies(prev => prev.filter(t => t.id !== id));
+      setTestimonies(prev => prev.filter(t => String(t.id) !== String(id)));
     } catch (err) {
       console.warn('Error deleting testimony', err);
       alert('Delete failed: ' + (err.message || 'Check backend connection'));
@@ -810,7 +873,7 @@ export default function AdminDashboard() {
     const currentFeatured = siteForm.featuredHomeTestimonyIds || settings.featuredHomeTestimonyIds || [];
     if (currentFeatured.map(String).includes(String(id))) {
       const updated = currentFeatured.filter(fid => String(fid) !== String(id));
-      setSiteForm(prev => ({ ...prev, featuredHomeTestimonyIds: updated }));
+      setSiteFormRaw(prev => ({ ...prev, featuredHomeTestimonyIds: updated }));
       updateSettings({ featuredHomeTestimonyIds: updated }).catch(err => alert('Could not save: ' + err.message));
     }
   };
@@ -836,7 +899,7 @@ export default function AdminDashboard() {
   };
 
   const toggleFeatureTestimonyOnHome = async (testimonyId) => {
-    const currentFeatured = siteForm.featuredHomeTestimonyIds || settings.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'];
+    const currentFeatured = siteForm.featuredHomeTestimonyIds || settings.featuredHomeTestimonyIds || [];
     const idStr = String(testimonyId);
     let updated;
     if (currentFeatured.map(String).includes(idStr)) {
@@ -850,8 +913,7 @@ export default function AdminDashboard() {
         updated = [...currentFeatured, idStr];
       }
     }
-    const updatedForm = { ...siteForm, featuredHomeTestimonyIds: updated };
-    setSiteForm(updatedForm);
+    setSiteFormRaw(prev => ({ ...prev, featuredHomeTestimonyIds: updated }));
     try {
       await updateSettings({ featuredHomeTestimonyIds: updated });
     } catch (err) {
@@ -1009,51 +1071,72 @@ export default function AdminDashboard() {
 
   // About Page Customizer Handlers
   const updateChurchStat = (index, field, value) => {
-    const list = [...(siteForm.churchStats || CHURCH_STATS)];
-    list[index] = { ...list[index], [field]: value };
-    setSiteForm(prev => ({ ...prev, churchStats: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.churchStats) ? [...prev.churchStats] : [];
+      if (!list[index]) return prev;
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, churchStats: list };
+    });
   };
 
   const addChurchStat = () => {
-    const list = [...(siteForm.churchStats || CHURCH_STATS), { value: '100+', label: 'New Metric', desc: 'Description of ministry impact.' }];
-    setSiteForm(prev => ({ ...prev, churchStats: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.churchStats) ? prev.churchStats : [];
+      return { ...prev, churchStats: [...list, { value: '100+', label: 'New Metric', desc: 'Description of ministry impact.' }] };
+    });
   };
 
   const deleteChurchStat = (index) => {
-    const list = (siteForm.churchStats || CHURCH_STATS).filter((_, i) => i !== index);
-    setSiteForm(prev => ({ ...prev, churchStats: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.churchStats) ? prev.churchStats : [];
+      return { ...prev, churchStats: list.filter((_, i) => i !== index) };
+    });
   };
 
   const updateMilestone = (index, field, value) => {
-    const list = [...(siteForm.milestones || DEFAULT_MILESTONES)];
-    list[index] = { ...list[index], [field]: value };
-    setSiteForm(prev => ({ ...prev, milestones: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.milestones) ? [...prev.milestones] : [];
+      if (!list[index]) return prev;
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, milestones: list };
+    });
   };
 
   const addMilestone = () => {
-    const list = [...(siteForm.milestones || DEFAULT_MILESTONES), { year: '2026', title: 'New Milestone Title', desc: "Description of God's faithfulness." }];
-    setSiteForm(prev => ({ ...prev, milestones: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.milestones) ? prev.milestones : [];
+      return { ...prev, milestones: [...list, { year: '2026', title: 'New Milestone Title', desc: "Description of God's faithfulness." }] };
+    });
   };
 
   const deleteMilestone = (index) => {
-    const list = (siteForm.milestones || DEFAULT_MILESTONES).filter((_, i) => i !== index);
-    setSiteForm(prev => ({ ...prev, milestones: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.milestones) ? prev.milestones : [];
+      return { ...prev, milestones: list.filter((_, i) => i !== index) };
+    });
   };
 
   const updateCoreBelief = (index, field, value) => {
-    const list = [...(siteForm.coreBeliefs || CORE_BELIEFS)];
-    list[index] = { ...list[index], [field]: value };
-    setSiteForm(prev => ({ ...prev, coreBeliefs: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.coreBeliefs) ? [...prev.coreBeliefs] : [];
+      if (!list[index]) return prev;
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, coreBeliefs: list };
+    });
   };
 
   const addCoreBelief = () => {
-    const list = [...(siteForm.coreBeliefs || CORE_BELIEFS), { title: 'New Core Belief', verse: 'John 3:16', desc: 'Summary of Biblical doctrine and belief.' }];
-    setSiteForm(prev => ({ ...prev, coreBeliefs: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.coreBeliefs) ? prev.coreBeliefs : [];
+      return { ...prev, coreBeliefs: [...list, { title: 'New Core Belief', verse: 'John 3:16', desc: 'Summary of Biblical doctrine and belief.' }] };
+    });
   };
 
   const deleteCoreBelief = (index) => {
-    const list = (siteForm.coreBeliefs || CORE_BELIEFS).filter((_, i) => i !== index);
-    setSiteForm(prev => ({ ...prev, coreBeliefs: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.coreBeliefs) ? prev.coreBeliefs : [];
+      return { ...prev, coreBeliefs: list.filter((_, i) => i !== index) };
+    });
   };
 
   const updateLeader = (index, field, value) => {
@@ -1152,8 +1235,8 @@ export default function AdminDashboard() {
         leadershipTeam: compressedLeaders,
       };
 
-      setSiteFormRaw(payload);
       await updateSettings(payload);
+      setSiteFormRaw(payload);
       isSiteFormDirtyRef.current = false;
       setHasUnsavedSiteChanges(false);
 
@@ -3461,7 +3544,12 @@ export default function AdminDashboard() {
                 <div key={s.id} className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-lg flex flex-col justify-between">
                   <div>
                     <div className="relative aspect-video bg-slate-900">
-                      <img src={s.thumbnail} alt={s.title} className="w-full h-full object-cover" />
+                      <img
+                        src={getAdminSermonThumb(s)}
+                        alt={s.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=800&q=80'; }}
+                      />
                       <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] font-bold text-amber-400">
                         {s.duration}
                       </span>
@@ -3695,7 +3783,7 @@ export default function AdminDashboard() {
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                       prayerCategoryFilter === cat
                         ? 'bg-amber-500 text-slate-950 shadow'
-                        : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-850'
+                        : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'
                     }`}
                   >
                     {cat}
@@ -3798,13 +3886,26 @@ export default function AdminDashboard() {
 
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => {
+                              onClick={async () => {
+                                const nextVal = !isInterceded;
                                 setIntercededPrayerIds(prev => {
                                   const next = new Set(prev);
-                                  if (next.has(p.id)) next.delete(p.id);
-                                  else next.add(p.id);
+                                  if (nextVal) next.add(p.id);
+                                  else next.delete(p.id);
                                   return next;
                                 });
+                                try {
+                                  await togglePrayerInterceded(p.id, nextVal);
+                                  setPrayers(prev => prev.map(item => item.id === p.id ? { ...item, interceded: nextVal } : item));
+                                } catch (err) {
+                                  setIntercededPrayerIds(prev => {
+                                    const revert = new Set(prev);
+                                    if (nextVal) revert.delete(p.id);
+                                    else revert.add(p.id);
+                                    return revert;
+                                  });
+                                  alert('Could not save status: ' + (err.message || 'Check backend connection'));
+                                }
                               }}
                               className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                                 isInterceded
@@ -4176,8 +4277,11 @@ export default function AdminDashboard() {
             const matchesCause = donationCauseFilter === 'all' || 
               (d.cause && d.cause.toLowerCase().includes(donationCauseFilter.toLowerCase()));
 
-            const matchesStatus = donationStatusFilter === 'all' || 
-              (d.status && d.status.toLowerCase() === donationStatusFilter.toLowerCase());
+            const normalizedStatus = String(d.status || '').toLowerCase();
+            const matchesStatus = donationStatusFilter === 'all' ||
+              (donationStatusFilter.toLowerCase() === 'verified'
+                ? (normalizedStatus === 'verified' || normalizedStatus === 'completed')
+                : normalizedStatus === donationStatusFilter.toLowerCase());
 
             return matchesSearch && matchesCause && matchesStatus;
           });
@@ -5358,8 +5462,12 @@ export default function AdminDashboard() {
                     className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="https://... or upload image"
                   />
-                  <label className="h-11 px-4 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors">
-                    <Upload className="w-3.5 h-3.5 text-amber-400" />
+                  <label className={`h-11 px-4 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors ${
+                    isDarkMode
+                      ? 'bg-slate-800 hover:bg-slate-700 text-white'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                  }`}>
+                    <Upload className="w-3.5 h-3.5 text-amber-500" />
                     <span>Upload</span>
                     <input
                       type="file"
@@ -5438,7 +5546,7 @@ export default function AdminDashboard() {
                                 : 'bg-white border-slate-200 text-slate-800'
                             }`}
                           >
-                            <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
+                            <div className={`flex items-center justify-between gap-2 pb-2 mb-2 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
                               <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
                                 Choose Emoji
                               </span>
@@ -5534,9 +5642,13 @@ export default function AdminDashboard() {
                         type="text"
                         value={currentHighlights[idx] || ''}
                         onChange={(e) => {
-                          const updated = [...currentHighlights];
-                          updated[idx] = e.target.value;
-                          setNewEvent({ ...newEvent, highlights: updated.filter(Boolean) });
+                          const val = e.target.value;
+                          setNewEvent(prev => {
+                            const updated = Array.isArray(prev.highlights) ? [...prev.highlights] : [];
+                            while (updated.length <= idx) updated.push('');
+                            updated[idx] = val;
+                            return { ...prev, highlights: updated };
+                          });
                         }}
                         className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                         placeholder={
@@ -5812,8 +5924,12 @@ export default function AdminDashboard() {
                     className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="https://... or upload photo"
                   />
-                  <label className="h-11 px-4 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors">
-                    <Upload className="w-3.5 h-3.5" />
+                  <label className={`h-11 px-4 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors ${
+                    isDarkMode
+                      ? 'bg-slate-800 hover:bg-slate-700 text-white'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                  }`}>
+                    <Upload className="w-3.5 h-3.5 text-amber-500" />
                     <span>Upload</span>
                     <input
                       type="file"

@@ -11,16 +11,17 @@ async function parseErrorMessage(res, fallback) {
 }
 
 export function getAdminHeaders() {
-  let token = 'gvc-admin-session-active';
+  let token = '';
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      token = window.localStorage.getItem('gvc_admin_token') || token;
+      token = window.localStorage.getItem('gvc_admin_token') || '';
     }
   } catch (e) {}
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  };
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
 export async function fetchSystemStatus() {
@@ -61,7 +62,9 @@ export async function createSermon(sermonData) {
     body: JSON.stringify(sermonData)
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to create sermon'));
-  return await res.json();
+  const data = await res.json();
+  try { window.dispatchEvent(new Event('gvc_sermons_updated')); } catch (e) {}
+  return data;
 }
 
 export async function deleteSermon(id) {
@@ -70,7 +73,9 @@ export async function deleteSermon(id) {
     headers: getAdminHeaders()
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to delete sermon'));
-  return await res.json();
+  const data = await res.json();
+  try { window.dispatchEvent(new Event('gvc_sermons_updated')); } catch (e) {}
+  return data;
 }
 
 export async function clearAllSermons() {
@@ -79,7 +84,9 @@ export async function clearAllSermons() {
     headers: getAdminHeaders()
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to clear sermons'));
-  return await res.json();
+  const data = await res.json();
+  try { window.dispatchEvent(new Event('gvc_sermons_updated')); } catch (e) {}
+  return data;
 }
 
 // EVENTS
@@ -440,23 +447,26 @@ export async function clearAllPrayers() {
   return await res.json();
 }
 
+export async function togglePrayerInterceded(prayerId, interceded) {
+  const res = await fetch(`${API_BASE_URL}/api/prayers/${prayerId}/interceded`, {
+    method: 'PATCH',
+    headers: getAdminHeaders(),
+    body: JSON.stringify({ interceded: Boolean(interceded) })
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to update prayer status'));
+  return await res.json();
+}
+
 export async function submitPrayer(prayerData) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/prayers`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(prayerData)
-    });
-    if (res.ok) return await res.json();
-  } catch (err) {
-    console.warn('Backend unavailable, saving prayer locally', err);
+  const res = await fetch(`${API_BASE_URL}/api/prayers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(prayerData)
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to submit prayer request'));
   }
-  return {
-    ...prayerData,
-    id: `prayer-${Date.now()}`,
-    prayer_count: 1,
-    created_at: new Date().toISOString()
-  };
+  return await res.json();
 }
 
 export async function clickPrayCount(prayerId) {
@@ -753,27 +763,15 @@ export async function deleteInquiry(id) {
 }
 
 export async function submitContact(messageData) {
-  let created = null;
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/contact`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(messageData)
-    });
-    if (res.ok) {
-      created = await res.json();
-    }
-  } catch (err) {
-    console.warn('Backend offline, saving inquiry locally', err);
+  const res = await fetch(`${API_BASE_URL}/api/contact`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(messageData)
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to submit contact inquiry'));
   }
-
-  if (!created) {
-    created = {
-      ...messageData,
-      id: `msg-${Date.now()}`,
-      created_at: new Date().toISOString()
-    };
-  }
+  const created = await res.json();
 
   const existing = getStoredInquiries();
   const updated = [created, ...existing.filter(m => m.id !== created.id)];
@@ -855,29 +853,15 @@ export async function verifyPayment(verificationData) {
 }
 
 export async function submitDonation(donationData) {
-  let created = null;
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/donations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(donationData)
-    });
-    if (res.ok) {
-      created = await res.json();
-    }
-  } catch (err) {
-    console.warn('API error recording donation to backend', err);
+  const res = await fetch(`${API_BASE_URL}/api/donations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(donationData)
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to record donation'));
   }
-
-  if (!created) {
-    created = {
-      id: `don-${Date.now()}`,
-      receipt_number: `GVC-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}-${Math.random().toString(36).substring(2,8).toUpperCase()}`,
-      created_at: new Date().toISOString(),
-      status: 'Completed',
-      ...donationData
-    };
-  }
+  const created = await res.json();
 
   const existing = getStoredDonations();
   const updated = [created, ...existing.filter(d => d.id !== created.id)];

@@ -56,7 +56,7 @@ export default function Footer({ onOpenAdminAuth }) {
             </div>
 
             <p className="text-slate-400 text-[11px] leading-relaxed line-clamp-2">
-              Apostolic, Bible-believing family rooted in the gospel of grace. Established {settings?.foundedYear || '1998'} in Vattamalai.
+              Apostolic, Bible-believing family rooted in the gospel of grace. Established {settings?.foundedYear || '1998'} • {(settings?.address || 'Vattamalai, Tamil Nadu').replace(/^Grace Victory Church,\s*/i, '')}.
             </p>
 
             <div className="flex items-center gap-2 pt-0.5">

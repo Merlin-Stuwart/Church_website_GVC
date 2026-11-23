@@ -16,13 +16,13 @@ async def get_testimonies():
     results = []
     if is_db_connected():
         db = get_database()
-        cursor = db.testimonies.find({}).sort("created_at", -1)
+        cursor = db.testimonies.find({"is_active": {"$ne": False}}).sort("created_at", -1)
         async for doc in cursor:
             doc["id"] = str(doc.get("_id", doc.get("id")))
             results.append(doc)
         return results
 
-    return list(testimonies_store.values())
+    return [t for t in testimonies_store.values() if t.get("is_active", True)]
 
 @router.post("", response_model=TestimonyResponse, status_code=201)
 async def create_testimony(testimony: TestimonyCreate, background_tasks: BackgroundTasks):
@@ -47,8 +47,10 @@ async def create_testimony(testimony: TestimonyCreate, background_tasks: Backgro
 
 @router.put("/{testimony_id}/toggle-home")
 async def toggle_home_testimony(testimony_id: str, _authorized: bool = Depends(verify_admin_session)):
+    found = False
     new_state = True
     if testimony_id in testimonies_store:
+        found = True
         current = testimonies_store[testimony_id].get("featured_home", False)
         new_state = not current
         testimonies_store[testimony_id]["featured_home"] = new_state
@@ -56,12 +58,30 @@ async def toggle_home_testimony(testimony_id: str, _authorized: bool = Depends(v
         db = get_database()
         doc = await db.testimonies.find_one({"$or": [{"_id": testimony_id}, {"id": testimony_id}]})
         if doc:
+            found = True
             current = doc.get("featured_home", False)
             new_state = not current
             await db.testimonies.update_one(
                 {"_id": doc["_id"]},
                 {"$set": {"featured_home": new_state}}
             )
+            # Sync site_settings.featured_home_testimony_ids so saving settings never clobbers this toggle
+            try:
+                from app.routers.admin import site_settings_cache
+                featured_cursor = db.testimonies.find({"featured_home": True})
+                featured_ids = []
+                async for fdoc in featured_cursor:
+                    featured_ids.append(str(fdoc.get("id") or fdoc.get("_id")))
+                site_settings_cache["featured_home_testimony_ids"] = featured_ids
+                await db.site_settings.update_one(
+                    {"_id": "global_config"},
+                    {"$set": {"featured_home_testimony_ids": featured_ids}},
+                    upsert=True
+                )
+            except Exception:
+                pass
+    if not found:
+        raise HTTPException(status_code=404, detail="Testimony not found")
     return {"id": testimony_id, "featured_home": new_state}
 
 @router.delete("")

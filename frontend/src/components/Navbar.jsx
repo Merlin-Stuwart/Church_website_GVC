@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, X, Heart, Sparkles, Phone, MapPin, ChevronRight, Clock, Shield, Lock
 } from 'lucide-react';
@@ -9,6 +9,7 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const church = useChurch();
   const settings = church?.settings || {};
   const isAdminLoggedIn = Boolean(church?.isAdminLoggedIn);
@@ -130,7 +131,7 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
               <div 
                 onClick={handleLogoSecretTap}
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#0B192C] to-[#162D4A] p-1.5 sm:p-2 flex items-center justify-center shadow-md border border-amber-400/30 shrink-0 group-hover:scale-105 transition-transform duration-300 cursor-pointer select-none"
-                title="Grace Victory Church"
+                title={settings.churchName || 'Grace Victory Church'}
               >
                 <svg className="w-4 h-4 sm:w-6 sm:h-6 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M11 2h2v7h7v2h-7v11h-2V11H4V9h7V2z"/>
@@ -154,8 +155,8 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
                     </div>
                   );
                 })()}
-                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.10em] sm:tracking-[0.18em] text-slate-400 uppercase mt-0.5 truncate hidden xs:block">
-                  Vattamalai • Established {settings.foundedYear || '1998'}
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.10em] sm:tracking-[0.18em] text-slate-400 uppercase mt-0.5 truncate hidden sm:block">
+                  {(settings.address || 'Vattamalai').replace(/^Grace Victory Church,\s*/i, '').split(',')[0].trim() || 'Vattamalai'} • Established {settings.foundedYear || '1998'}
                 </span>
               </div>
             </Link>
@@ -252,7 +253,7 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    window.location.href = '/admin';
+                    navigate('/admin');
                   }}
                   className="w-full py-2.5 rounded-xl text-center text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >

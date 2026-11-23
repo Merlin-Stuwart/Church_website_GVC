@@ -52,7 +52,7 @@ async def delete_contact_message(msg_id: str, _authorized: bool = Depends(verify
     messages_store = [m for m in messages_store if m.get("id") != msg_id and m.get("_id") != msg_id]
     if is_db_connected():
         db = get_database()
-        await db.contact_messages.delete_one({"_id": msg_id})
+        await db.contact_messages.delete_one({"$or": [{"_id": msg_id}, {"id": msg_id}]})
     return {"success": True, "message": "Inquiry deleted"}
 
 @router.post("/plan-visit", response_model=PlanVisitResponse, status_code=201)

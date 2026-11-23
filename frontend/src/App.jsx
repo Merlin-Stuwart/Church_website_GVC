@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import PrayerModal from './components/PrayerModal';
@@ -31,6 +31,7 @@ export default function App() {
   const [isTestimonyModalOpen, setIsTestimonyModalOpen] = useState(false);
   const [isAdminAuthOpen, setIsAdminAuthOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isAdminRoute = location.pathname.startsWith('/admin');
 
@@ -53,7 +54,7 @@ export default function App() {
       {/* Show Church Navbar unless on pure admin page */}
       {!isAdminRoute && (
         <Navbar 
-          onOpenPlanVisit={() => setIsPlanVisitOpen(true)} 
+          onOpenPlanVisit={() => navigate('/contact')} 
           onOpenAdminAuth={() => setIsAdminAuthOpen(true)}
         />
       )}
@@ -65,7 +66,7 @@ export default function App() {
             path="/" 
             element={
               <Home 
-                onOpenPlanVisit={() => setIsPlanVisitOpen(true)}
+                onOpenPlanVisit={() => navigate('/contact')}
                 onOpenPrayerModal={() => setIsPrayerModalOpen(true)}
                 onOpenTestimonyModal={() => setIsTestimonyModalOpen(true)}
               />
@@ -73,11 +74,11 @@ export default function App() {
           />
           <Route 
             path="/about" 
-            element={<About onOpenPlanVisit={() => setIsPlanVisitOpen(true)} />} 
+            element={<About onOpenPlanVisit={() => navigate('/contact')} />} 
           />
           <Route 
             path="/ministries" 
-            element={<Ministries onOpenPlanVisit={() => setIsPlanVisitOpen(true)} />} 
+            element={<Ministries onOpenPlanVisit={() => navigate('/contact')} />} 
           />
           <Route path="/sermons" element={<Sermons />} />
           <Route path="/events" element={<Events />} />
@@ -93,9 +94,9 @@ export default function App() {
           <Route path="/giving" element={<Giving />} />
           <Route 
             path="/contact" 
-            element={<Contact onOpenPlanVisit={() => setIsPlanVisitOpen(true)} />} 
+            element={<Contact onOpenPlanVisit={() => navigate('/contact')} />} 
           />
-          <Route path="/admin" element={<AdminDashboard onOpenAdminAuth={() => setIsAdminAuthOpen(true)} />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

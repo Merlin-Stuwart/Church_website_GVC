@@ -23,7 +23,7 @@ async def get_all_ministries():
             return results
         except Exception as e:
             print("MongoDB fetch ministries error:", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
     return list(ministries_store.values())
 
 @router.post("", response_model=MinistryResponse, status_code=status.HTTP_201_CREATED)
@@ -39,7 +39,7 @@ async def create_ministry(ministry: MinistryCreate, _authorized: bool = Depends(
             await db.ministries.insert_one({**item_dict, "_id": new_id})
         except Exception as e:
             print("MongoDB insert ministry error:", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
 
     ministries_store[new_id] = item_dict
     return item_dict
@@ -50,26 +50,30 @@ async def update_ministry(ministry_id: str, payload: MinistryUpdate, _authorized
     if not updates:
         raise HTTPException(status_code=400, detail="No fields provided to update")
 
-    existing = ministries_store.get(ministry_id, {})
-    updated_item = {**existing, **updates, "id": ministry_id}
-
     if is_db_connected():
         try:
             db = get_database()
-            await db.ministries.update_one(
+            res = await db.ministries.update_one(
                 {"$or": [{"_id": ministry_id}, {"id": ministry_id}]},
-                {"$set": updates, "$setOnInsert": {"id": ministry_id, "created_at": datetime.now()}},
-                upsert=True
+                {"$set": updates}
             )
+            if res.matched_count == 0:
+                raise HTTPException(status_code=404, detail="Ministry not found")
             saved = await db.ministries.find_one({"$or": [{"_id": ministry_id}, {"id": ministry_id}]})
             if saved:
                 saved["id"] = str(saved.get("_id", saved.get("id")))
+                saved.pop("_id", None)
                 ministries_store[ministry_id] = saved
                 return saved
+        except HTTPException:
+            raise
         except Exception as e:
             print("MongoDB update ministry error:", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
 
+    if ministry_id not in ministries_store:
+        raise HTTPException(status_code=404, detail="Ministry not found")
+    updated_item = {**ministries_store[ministry_id], **updates, "id": ministry_id}
     ministries_store[ministry_id] = updated_item
     return updated_item
 
@@ -83,7 +87,7 @@ async def clear_all_ministries(_authorized: bool = Depends(verify_admin_session)
             deleted_count = res.deleted_count
         except Exception as e:
             print("MongoDB clear ministries error:", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
 
     ministries_store.clear()
     return {"success": True, "deleted_count": deleted_count, "message": "All ministries cleared"}
@@ -99,7 +103,7 @@ async def delete_ministry(ministry_id: str, _authorized: bool = Depends(verify_a
                 deleted = True
         except Exception as e:
             print("MongoDB delete ministry error:", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
 
     if ministry_id in ministries_store:
         del ministries_store[ministry_id]

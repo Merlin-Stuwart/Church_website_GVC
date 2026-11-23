@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Play, Volume2, Search, Filter, BookOpen, Clock, 
-  Calendar, Share2, Sparkles, Video, ArrowRight 
+import { useSearchParams } from 'react-router-dom';
+import {
+  Play, Volume2, Search, Filter, BookOpen, Clock,
+  Calendar, Share2, Sparkles, Video, ArrowRight
 } from 'lucide-react';
 import SermonPlayerModal from '../components/SermonPlayerModal';
 import { fetchSermons } from '../api/client';
@@ -18,6 +19,7 @@ function getSermonThumbnail(sermon) {
 }
 
 export default function Sermons() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sermons, setSermons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +38,14 @@ export default function Sermons() {
       });
       if (Array.isArray(data)) {
         setSermons(data);
+        const sharedId = searchParams.get('id');
+        if (sharedId) {
+          const found = data.find(s => String(s.id) === String(sharedId));
+          if (found) {
+            setActiveSermon(found);
+            setIsPlayerOpen(true);
+          }
+        }
       }
       setLoading(false);
     }
@@ -44,20 +54,30 @@ export default function Sermons() {
       loadSermons();
     }, 250);
 
-    return () => clearTimeout(timer);
-  }, [searchTerm, selectedCategory, selectedSeries]);
+    const handleSync = () => loadSermons();
+    window.addEventListener('gvc_sermons_updated', handleSync);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('gvc_sermons_updated', handleSync);
+    };
+  }, [searchTerm, selectedCategory, selectedSeries, searchParams]);
 
   const handleOpenSermon = (sermon) => {
     setActiveSermon(sermon);
     setIsPlayerOpen(true);
   };
 
-  const categories = ['All', 'கூடாரப் பண்டிகை', 'Sunday Worship', 'Revival Night', 'Family Sunday', 'Bible Study'];
-  const seriesList = ['All', 'கூடாரப் பண்டிகை பெருவிழா', 'Victorious Living Series', 'Grace Unveiled', 'Holy Spirit Empowerment', 'Kingdom Family'];
+  const baseCategories = ['கூடாரப் பண்டிகை', 'Sunday Worship', 'Youth Service', 'Revival Night', 'Family Sunday', 'Bible Study'];
+  const dynamicCats = Array.from(new Set([...baseCategories, ...sermons.map(s => s.category).filter(Boolean)]));
+  const categories = ['All', ...dynamicCats];
+
+  const baseSeries = ['கூடாரப் பண்டிகை பெருவிழா', 'Victorious Living Series', 'Grace Unveiled', 'Holy Spirit Empowerment', 'Kingdom Family'];
+  const dynamicSeries = Array.from(new Set([...baseSeries, ...sermons.map(s => s.series).filter(Boolean)]));
+  const seriesList = ['All', ...dynamicSeries];
 
   return (
     <div className="bg-[#FAF9F6] text-slate-800">
-      
+
       {/* PAGE HEADER - LIGHT THEME */}
       <section className="bg-gradient-to-b from-amber-50/70 via-white to-[#FAF9F6] py-10 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 border-b border-slate-200/80 relative overflow-hidden">
         <div className="relative max-w-7xl mx-auto text-center">
@@ -76,7 +96,7 @@ export default function Sermons() {
       {/* SEARCH & FILTERS BAR */}
       <section className="sticky top-[60px] sm:top-[73px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-6 lg:px-8 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-4">
-          
+
           {/* Search box */}
           <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -92,7 +112,7 @@ export default function Sermons() {
           {/* Filter Dropdowns - Clean 2-column grid on mobile, inline on desktop */}
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3 w-full md:w-auto">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-[11px] text-slate-500 font-bold shrink-0 hidden xs:inline">Category:</span>
+              <span className="text-[11px] text-slate-500 font-bold shrink-0 hidden sm:inline">Category:</span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -105,7 +125,7 @@ export default function Sermons() {
             </div>
 
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-[11px] text-slate-500 font-bold shrink-0 hidden xs:inline">Series:</span>
+              <span className="text-[11px] text-slate-500 font-bold shrink-0 hidden sm:inline">Series:</span>
               <select
                 value={selectedSeries}
                 onChange={(e) => setSelectedSeries(e.target.value)}
@@ -125,15 +145,15 @@ export default function Sermons() {
       {sermons.length > 0 && !searchTerm && selectedCategory === 'All' && selectedSeries === 'All' && (
         <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="bg-white text-slate-900 rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
+
             <div className="lg:col-span-7 relative aspect-video bg-slate-950">
-              <img 
-                src={getSermonThumbnail(sermons[0])} 
+              <img
+                src={getSermonThumbnail(sermons[0])}
                 alt={sermons[0].title}
-                className="w-full h-full object-cover opacity-90" 
+                className="w-full h-full object-cover opacity-90"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
-              
+
               <button
                 onClick={() => handleOpenSermon(sermons[0])}
                 className="absolute inset-0 flex items-center justify-center group"
@@ -230,19 +250,19 @@ export default function Sermons() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {sermons.map((sermon) => (
-              <div 
-                key={sermon.id} 
+              <div
+                key={sermon.id}
                 className="bg-white rounded-3xl border border-slate-200/80 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group"
               >
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-slate-950 overflow-hidden">
-                  <img 
-                    src={getSermonThumbnail(sermon)} 
+                  <img
+                    src={getSermonThumbnail(sermon)}
                     alt={sermon.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
-                  
+
                   <button
                     onClick={() => handleOpenSermon(sermon)}
                     className="absolute inset-0 flex items-center justify-center"
@@ -304,7 +324,7 @@ export default function Sermons() {
       </section>
 
       {/* Sermon Player Modal */}
-      <SermonPlayerModal 
+      <SermonPlayerModal
         sermon={activeSermon}
         isOpen={isPlayerOpen}
         onClose={() => setIsPlayerOpen(false)}

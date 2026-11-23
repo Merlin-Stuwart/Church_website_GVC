@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, Sparkles, CheckCircle, Quote, Heart, Mail } from 'lucide-react';
-import { submitTestimony, triggerNotification, getGmailComposeUrl } from '../api/client';
+import React, { useState, useEffect } from 'react';
+import { X, Sparkles, CheckCircle, Quote, Heart, Mail, AlertCircle } from 'lucide-react';
+import { submitTestimony, getGmailComposeUrl } from '../api/client';
 import { useChurch } from '../context/ChurchContext';
 
 export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
@@ -13,18 +13,33 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
   const [formData, setFormData] = useState({
     story: '',
     type: 'Miraculous Healing',
-    location: 'Vattamalai'
+    location: ''
   });
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
   const [lastSubmittedPayload, setLastSubmittedPayload] = useState(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      setSubmitted(false);
+      setError('');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const handleClose = () => {
+    setSubmitted(false);
+    setError('');
+    onClose();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     const cleanName = name.trim();
     const formattedName = cleanName.toLowerCase().startsWith(prefix.toLowerCase())
@@ -40,21 +55,9 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
     try {
       const res = await submitTestimony(submissionPayload);
       if (onTestimonyAdded) onTestimonyAdded(res);
-      await triggerNotification({
-        type: 'testimony',
-        data: submissionPayload,
-        recipient: adminNotificationEmail
-      });
       setSubmitted(true);
     } catch (err) {
-      console.warn('API error, showing confirmation', err);
-      if (onTestimonyAdded) {
-        onTestimonyAdded({
-          ...submissionPayload,
-          id: `testimony-${Date.now()}`
-        });
-      }
-      setSubmitted(true);
+      setError(err.message || 'Could not submit testimony right now. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -66,8 +69,8 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
         
         {/* Close button */}
         <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          onClick={handleClose}
+          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -87,6 +90,12 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 p-3 rounded-xl border border-red-200 font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Your Name & Title *</label>
                 <div className="flex gap-2">
@@ -212,7 +221,7 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
                 onClick={() => {
                   setSubmitted(false);
                   setName('');
-                  setFormData({ story: '', type: 'Miraculous Healing', location: 'Vattamalai' });
+                  setFormData({ story: '', type: 'Miraculous Healing', location: '' });
                   onClose();
                 }}
                 className="px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-white transition-colors cursor-pointer"

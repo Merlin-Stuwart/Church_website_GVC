@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS = {
   accountNumber: "921020038472910",
   branch: "Vattamalai Branch",
   ifscCode: "SBIN0004921",
-  razorpayKeyId: "rzp_test_GVC1024Testing",
+  razorpayKeyId: "",
   razorpaySecretConfigured: false,
   churchStats: CHURCH_STATS,
   milestones: DEFAULT_MILESTONES,
@@ -113,7 +113,7 @@ function persistSettings(next) {
 }
 
 export function sanitizeFranklinName(name) {
-  if (!name || typeof name !== 'string') return 'Pastor R. Franklin Rajendran';
+  if (typeof name !== 'string') return '';
   let cleaned = name.replace(/(?:Rajendran){2,}/gi, 'Rajendran');
   cleaned = cleaned.replace(/(?:endran){2,}/gi, 'endran');
   return cleaned.trim();
@@ -174,56 +174,57 @@ export function ChurchProvider({ children }) {
       const remote = await res.json();
       if (remote && typeof remote === 'object') {
         setSettings(prev => {
+          const pick = (val, fallback) => (val !== undefined && val !== null ? val : fallback);
           const next = {
             ...prev,
-            churchName: remote.church_name || prev.churchName,
-            tamilName: remote.tamil_name || prev.tamilName,
-            seniorPastor: remote.senior_pastor || prev.seniorPastor,
-            seniorPastorTitle: remote.senior_pastor_title || prev.seniorPastorTitle,
-            associatePastor: sanitizeFranklinName(remote.associate_pastor || prev.associatePastor),
-            associatePastorTitle: remote.associate_pastor_title || prev.associatePastorTitle,
-            associatePastorImage: remote.associate_pastor_image || prev.associatePastorImage,
-            phone: remote.phone || prev.phone,
-            whatsappNumber: remote.whatsapp_number || prev.whatsappNumber,
-            email: remote.email || prev.email,
-            adminNotificationEmail: remote.admin_notification_email || prev.adminNotificationEmail,
-            address: remote.address || prev.address,
-            googleMapsEmbedUrl: remote.google_maps_embed_url || prev.googleMapsEmbedUrl,
-            googleMapsLink: remote.google_maps_link || prev.googleMapsLink,
-            serviceTimings: remote.service_timings || prev.serviceTimings,
-            wednesdayTiming: remote.wednesday_timing || prev.wednesdayTiming,
-            fridayTiming: remote.friday_timing || prev.fridayTiming,
-            yearBadge: remote.year_badge || prev.yearBadge,
-            themeBadge: remote.theme_badge || prev.themeBadge,
-            tamilTheme: remote.tamil_theme || prev.tamilTheme,
-            tagline: remote.tagline || prev.tagline,
-            verse: remote.verse || prev.verse,
-            pastorImage: remote.pastor_image || prev.pastorImage,
-            churchHallImage: remote.church_hall_image || prev.churchHallImage,
-            upiId: remote.upi_id || prev.upiId,
-            bankName: remote.bank_name || prev.bankName,
-            accountNumber: remote.account_number || prev.accountNumber,
-            branch: remote.branch || prev.branch,
-            ifscCode: remote.ifsc_code || prev.ifscCode,
-            razorpayKeyId: remote.razorpay_key_id || prev.razorpayKeyId,
+            churchName: pick(remote.church_name, prev.churchName),
+            tamilName: pick(remote.tamil_name, prev.tamilName),
+            seniorPastor: pick(remote.senior_pastor, prev.seniorPastor),
+            seniorPastorTitle: pick(remote.senior_pastor_title, prev.seniorPastorTitle),
+            associatePastor: sanitizeFranklinName(pick(remote.associate_pastor, prev.associatePastor)),
+            associatePastorTitle: pick(remote.associate_pastor_title, prev.associatePastorTitle),
+            associatePastorImage: pick(remote.associate_pastor_image, prev.associatePastorImage),
+            phone: pick(remote.phone, prev.phone),
+            whatsappNumber: pick(remote.whatsapp_number, prev.whatsappNumber),
+            email: pick(remote.email, prev.email),
+            adminNotificationEmail: pick(remote.admin_notification_email, prev.adminNotificationEmail),
+            address: pick(remote.address, prev.address),
+            googleMapsEmbedUrl: pick(remote.google_maps_embed_url, prev.googleMapsEmbedUrl),
+            googleMapsLink: pick(remote.google_maps_link, prev.googleMapsLink),
+            serviceTimings: pick(remote.service_timings, prev.serviceTimings),
+            wednesdayTiming: pick(remote.wednesday_timing, prev.wednesdayTiming),
+            fridayTiming: pick(remote.friday_timing, prev.fridayTiming),
+            yearBadge: pick(remote.year_badge, prev.yearBadge),
+            themeBadge: pick(remote.theme_badge, prev.themeBadge),
+            tamilTheme: pick(remote.tamil_theme, prev.tamilTheme),
+            tagline: pick(remote.tagline, prev.tagline),
+            verse: pick(remote.verse, prev.verse),
+            pastorImage: pick(remote.pastor_image, prev.pastorImage),
+            churchHallImage: pick(remote.church_hall_image, prev.churchHallImage),
+            upiId: pick(remote.upi_id, prev.upiId),
+            bankName: pick(remote.bank_name, prev.bankName),
+            accountNumber: pick(remote.account_number, prev.accountNumber),
+            branch: pick(remote.branch, prev.branch),
+            ifscCode: pick(remote.ifsc_code, prev.ifscCode),
+            razorpayKeyId: pick(remote.razorpay_key_id, prev.razorpayKeyId),
             razorpaySecretConfigured: Boolean(remote.razorpay_secret_configured),
             churchStats: Array.isArray(remote.church_stats) ? remote.church_stats : prev.churchStats,
             milestones: Array.isArray(remote.milestones) ? remote.milestones : prev.milestones,
             coreBeliefs: Array.isArray(remote.core_beliefs) ? remote.core_beliefs : prev.coreBeliefs,
             leadershipTeam: Array.isArray(remote.leadership_team) ? normalizeLeadershipTeam(remote.leadership_team) : prev.leadershipTeam,
             sliderSpeedSeconds: remote.slider_speed_seconds || prev.sliderSpeedSeconds || 3,
-            featuredHomeTestimonyIds: remote.featured_home_testimony_ids || prev.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
-            foundedYear: remote.founded_year || prev.foundedYear || "1998",
-            pastorWelcomeBadge: remote.pastor_welcome_badge || prev.pastorWelcomeBadge,
-            pastorWelcomeTitle: remote.pastor_welcome_title || prev.pastorWelcomeTitle,
-            pastorWelcomeP1: remote.pastor_welcome_p1 || prev.pastorWelcomeP1,
-            pastorWelcomeP2: remote.pastor_welcome_p2 || prev.pastorWelcomeP2,
-            pastorWelcomeQuote: remote.pastor_welcome_quote || prev.pastorWelcomeQuote,
+            featuredHomeTestimonyIds: Array.isArray(remote.featured_home_testimony_ids) ? remote.featured_home_testimony_ids : prev.featuredHomeTestimonyIds,
+            foundedYear: pick(remote.founded_year, prev.foundedYear || "1998"),
+            pastorWelcomeBadge: pick(remote.pastor_welcome_badge, prev.pastorWelcomeBadge),
+            pastorWelcomeTitle: pick(remote.pastor_welcome_title, prev.pastorWelcomeTitle),
+            pastorWelcomeP1: pick(remote.pastor_welcome_p1, prev.pastorWelcomeP1),
+            pastorWelcomeP2: pick(remote.pastor_welcome_p2, prev.pastorWelcomeP2),
+            pastorWelcomeQuote: pick(remote.pastor_welcome_quote, prev.pastorWelcomeQuote),
             faqList: Array.isArray(remote.faq_list) ? remote.faq_list : prev.faqList,
-            swiftCode: remote.swift_code || prev.swiftCode || "SBININBB492",
-            givingVerse: remote.giving_verse || prev.givingVerse,
-            givingPresets: remote.giving_presets || prev.givingPresets,
-            prayerWallVerse: remote.prayer_wall_verse || prev.prayerWallVerse,
+            swiftCode: pick(remote.swift_code, prev.swiftCode),
+            givingVerse: pick(remote.giving_verse, prev.givingVerse),
+            givingPresets: pick(remote.giving_presets, prev.givingPresets),
+            prayerWallVerse: pick(remote.prayer_wall_verse, prev.prayerWallVerse),
           };
           try {
             if (JSON.stringify(next) === JSON.stringify(prev)) {
@@ -496,6 +497,7 @@ export function ChurchProvider({ children }) {
 
   const logoutAdmin = () => {
     safeStorage.removeItem('gvc_admin_token');
+    safeStorage.removeItem('gvc_admin_user');
     setIsAdminLoggedIn(false);
   };
 
@@ -525,6 +527,7 @@ export function useChurch() {
     return {
       settings: DEFAULT_SETTINGS,
       updateSettings: async () => DEFAULT_SETTINGS,
+      refreshSettings: async () => false,
       resetSettings: () => { },
       isAdminLoggedIn: false,
       loginAdmin: async () => ({ success: false }),

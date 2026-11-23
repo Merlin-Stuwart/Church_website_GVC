@@ -10,8 +10,13 @@ import {
   getSortedActiveEvents, 
   formatEventDisplayDate 
 } from '../api/client';
+import { useChurch } from '../context/ChurchContext';
 
 export default function Events() {
+  const { settings } = useChurch();
+  const churchPhone = settings?.phone || '+91 93605 88397';
+  const sundayTiming = settings?.serviceTimings || '09:30 AM – 11:30 AM';
+
   const [events, setEvents] = useState(() => {
     const cached = getStoredEvents();
     return Array.isArray(cached) ? cached : [];
@@ -101,7 +106,7 @@ export default function Events() {
                 There are no special conferences or retreats scheduled at the moment. Please join us for our regular weekly worship services!
               </p>
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold">
-                <span>Sunday Worship: Every Sunday 09:30 AM – 11:30 AM</span>
+                <span>Sunday Worship: Every Sunday {sundayTiming}</span>
               </div>
             </div>
           ) : (
@@ -177,7 +182,7 @@ export default function Events() {
                         <span>Special:</span>
                       </span>
                       {getEventNotices(evt).map((notice, nIdx) => (
-                        <span key={nIdx} className="inline-flex items-center gap-1.5 font-semibold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-amber-300/60 shadow-2xs text-xs">
+                        <span key={nIdx} className="inline-flex items-center gap-1.5 font-semibold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-amber-300/60 shadow-sm text-xs">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
                           <span>{notice}</span>
                         </span>
@@ -206,11 +211,11 @@ export default function Events() {
                   </span>
 
                   <a
-                    href="tel:+919360588397"
+                    href={`tel:${churchPhone.replace(/[^0-9+]/g, '')}`}
                     className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
                   >
                     <Phone className="w-3 h-3" />
-                    <span>Helpline: +91 93605 88397</span>
+                    <span>Helpline: {churchPhone}</span>
                   </a>
                 </div>
               </div>

@@ -1,15 +1,15 @@
 import os
 import hmac
-import hashlib
 import secrets
 import re
-from fastapi import APIRouter, HTTPException, Depends, Header
+import asyncio
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from app.config import settings
 from app.database import get_database, is_db_connected
-from app.auth import AUTH_SECRET_KEY, create_admin_token, verify_admin_session
+from app.auth import create_admin_token, verify_admin_session
 from app.routers.contact import visits_store
 from app.routers.donations import donations_store
 from app.routers.sermons import sermons_store
@@ -92,8 +92,8 @@ site_settings_cache: Dict[str, Any] = {
     "account_number": "921020038472910",
     "branch": "Vattamalai Branch",
     "ifsc_code": "SBIN0004921",
-    "razorpay_key_id": "rzp_test_GVC1024Testing",
-    "razorpay_key_secret": "gvcSecretKeyForTesting1024",
+    "razorpay_key_id": "",
+    "razorpay_key_secret": "",
     "church_stats": None,
     "milestones": None,
     "core_beliefs": None,
@@ -137,7 +137,7 @@ class ResetPasswordWithOTPRequest(BaseModel):
 password_resets_store: Dict[str, Dict[str, Any]] = {}
 
 def _mask_email(email: str) -> str:
-    """Mask email for privacy e.g. madara05112001@gmail.com -> m*****1@gmail.com"""
+    """Mask email for privacy e.g. admin@example.com -> a***n@example.com"""
     if not email or "@" not in email:
         return "super admin email"
     name, domain = email.split("@", 1)
@@ -207,44 +207,35 @@ def _identity_query(value: str) -> Dict[str, Any]:
     ]}
 
 
-def _verify_password(password: str, encoded: str) -> bool:
+def _verify_password(password: str, encoded: str, allow_env_fallback: bool = False) -> bool:
     """
-    Verify password with Argon2 (pwdlib), with seamless support for:
-    1. Valid pwdlib hash (Argon2 / Bcrypt)
-    2. Legacy plaintext password stored in MongoDB (e.g. 'gvcadmin2026')
-    3. Password configured in .env (ADMIN_PASSWORD, e.g. 'admin123')
-    4. Server ADMIN_PASSWORD environment variable
+    Verify password with Argon2 (pwdlib).
+    Allows legacy plaintext comparison only when `encoded` is non-hashed, and
+    optionally checks server ADMIN_PASSWORD during initial empty-DB seeding.
     """
     if not password:
         return False
 
     clean_pass = password.strip()
 
-    # 1. Standard pwdlib hash verification
-    try:
-        if encoded and password_hash.verify(clean_pass, encoded):
-            return True
-    except Exception:
-        pass
+    # 1. Standard pwdlib hash verification (Argon2 / Bcrypt)
+    if encoded and encoded.startswith("$"):
+        try:
+            if password_hash.verify(clean_pass, encoded):
+                return True
+        except Exception:
+            pass
+        return False
 
-    # 2. Legacy plaintext match against DB stored password
+    # 2. Legacy non-hashed plaintext match in DB
     if encoded and hmac.compare_digest(clean_pass, encoded.strip()):
         return True
 
-    # 3. Dynamic reload from BASE_DIR / .env if present
-    try:
-        from dotenv import load_dotenv
-        from app.config import BASE_DIR
-        env_file = BASE_DIR / ".env"
-        if env_file.is_file():
-            load_dotenv(env_file, override=True)
-    except Exception:
-        pass
-
-    # 4. Match against configured .env ADMIN_PASSWORD
-    env_password = (os.getenv("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "")).strip()
-    if env_password and hmac.compare_digest(clean_pass, env_password):
-        return True
+    # 3. Initial seeding fallback ONLY when explicitly allowed (empty db.auth)
+    if allow_env_fallback:
+        env_password = (os.getenv("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "")).strip()
+        if env_password and hmac.compare_digest(clean_pass, env_password):
+            return True
 
     return False
 
@@ -261,20 +252,17 @@ async def admin_login(payload: LoginRequest):
     try:
         db = get_database()
         user_doc = await db.auth.find_one(_identity_query(user_key))
-        if not user_doc:
-            user_doc = await db.auth.find_one({"_id": "admin-account"})
-            if not user_doc:
-                user_doc = await db.auth.find_one({})
+        total_accounts = await db.auth.count_documents({}) if not user_doc else 1
     except Exception:
         raise HTTPException(status_code=503, detail="Admin login temporarily unavailable.")
 
-    # If DB collection is empty, auto-seed with provided credentials if valid
-    if not user_doc and _verify_password(provided_password, ""):
+    # Auto-seed ONLY when db.auth has zero accounts and env password matches
+    if not user_doc and total_accounts == 0 and _verify_password(provided_password, "", allow_env_fallback=True):
         new_hash = password_hash.hash(provided_password.strip())
         user_doc = {
             "_id": "admin-account",
-            "user_id": user_key or "admin",
-            "username": user_key or "admin",
+            "user_id": user_key or DEFAULT_ADMIN_USER,
+            "username": user_key or DEFAULT_ADMIN_USER,
             "email": DEFAULT_ADMIN_EMAIL,
             "password": new_hash,
             "role": "superadmin",
@@ -288,15 +276,17 @@ async def admin_login(payload: LoginRequest):
     if not user_doc or not _verify_password(provided_password, user_doc.get("password", "")):
         raise HTTPException(status_code=401, detail="Invalid User ID or Password. Access denied.")
 
-    # Auto-sync & upgrade password in MongoDB to Argon2
-    try:
-        new_hash = password_hash.hash(provided_password.strip())
-        await db.auth.update_one(
-            {"_id": user_doc["_id"]},
-            {"$set": {"password": new_hash}}
-        )
-    except Exception as exc:
-        print(f"Note on password migration: {exc}")
+    # Upgrade legacy plaintext password to Argon2 only if not already hashed
+    stored_pw = user_doc.get("password", "")
+    if stored_pw and not stored_pw.startswith("$argon2"):
+        try:
+            new_hash = password_hash.hash(provided_password.strip())
+            await db.auth.update_one(
+                {"_id": user_doc["_id"]},
+                {"$set": {"password": new_hash}}
+            )
+        except Exception as exc:
+            print(f"Note on password migration: {exc}")
 
     session_token = create_admin_token(user_doc.get("user_id", "admin"))
     return {
@@ -312,7 +302,7 @@ async def admin_login(payload: LoginRequest):
 
 
 @router.get("/auth/info")
-async def get_auth_info():
+async def get_auth_info(_authorized: bool = Depends(verify_admin_session)):
     """Return basic auth info without exposing the password hash."""
     user_id = DEFAULT_ADMIN_USER
     if is_db_connected():
@@ -327,14 +317,11 @@ async def get_auth_info():
 
 
 @router.put("/auth/credentials")
-async def update_auth_credentials(
-    payload: UpdateAuthCredentialsRequest,
-    _authorized: bool = Depends(verify_admin_session),
-):
-    """Update an existing MongoDB admin account after verifying its current password."""
-    target_user = (payload.user_id or DEFAULT_ADMIN_USER).strip()
+async def update_auth_credentials(payload: UpdateAuthCredentialsRequest):
+    """Update an existing MongoDB admin account after verifying its User ID & current password."""
+    target_user = (payload.user_id or "").strip()
     updated_user_id = (payload.new_user_id or target_user).strip()
-    updated_password = payload.new_password
+    updated_password = (payload.new_password or "").strip()
 
     if not target_user or not updated_user_id:
         raise HTTPException(status_code=400, detail="User ID cannot be empty.")
@@ -346,10 +333,6 @@ async def update_auth_credentials(
     try:
         db = get_database()
         user_doc = await db.auth.find_one(_identity_query(target_user))
-        if not user_doc:
-            user_doc = await db.auth.find_one({"_id": "admin-account"})
-            if not user_doc:
-                user_doc = await db.auth.find_one({})
     except Exception:
         raise HTTPException(status_code=503, detail="Admin credentials update temporarily unavailable.")
 
@@ -386,35 +369,30 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
     Sends a 6-digit OTP to the church super admin notification email.
     Allows resetting admin password without needing the old password.
     """
-    user_key = (payload.user_id or "admin").strip()
+    user_key = (payload.user_id or "").strip()
     if not user_key:
-        user_key = "admin"
+        raise HTTPException(status_code=400, detail="Admin User ID is required.")
+    if not is_db_connected():
+        raise HTTPException(status_code=503, detail="Password reset temporarily unavailable.")
 
-    # Find the admin user doc in MongoDB
-    user_doc = None
-    if is_db_connected():
-        try:
-            db = get_database()
-            user_doc = await db.auth.find_one(_identity_query(user_key))
-            if not user_doc:
-                user_doc = await db.auth.find_one({"_id": "admin-account"})
-                if not user_doc:
-                    user_doc = await db.auth.find_one({})
-        except Exception as e:
-            print("DB lookup for forgot-password:", e)
+    # Find the exact admin user doc in MongoDB
+    try:
+        db = get_database()
+        user_doc = await db.auth.find_one(_identity_query(user_key))
+    except Exception:
+        raise HTTPException(status_code=503, detail="Password reset temporarily unavailable.")
+
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="Admin User ID not found.")
 
     # Determine recipient super admin email
-    recipient_email = None
-    if user_doc and user_doc.get("email"):
-        recipient_email = user_doc.get("email")
-    if not recipient_email:
-        recipient_email = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", os.getenv("ADMIN_NOTIFICATION_EMAIL", "madara05112001@gmail.com"))
+    recipient_email = user_doc.get("email") or site_settings_cache.get("admin_notification_email") or DEFAULT_ADMIN_EMAIL
 
     # Generate cryptographically secure 6-digit numeric OTP
     otp_code = f"{secrets.randbelow(900000) + 100000}"
     expires_at = datetime.now().timestamp() + (10 * 60)  # 10 minutes
 
-    user_identifier = (user_doc.get("user_id") if user_doc else user_key).lower()
+    user_identifier = (user_doc.get("user_id") or user_key).lower()
     reset_data = {
         "user_id": user_identifier,
         "otp": otp_code,
@@ -425,31 +403,20 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
     password_resets_store[user_identifier] = reset_data
 
     # Save to MongoDB password_resets collection
-    if is_db_connected():
-        try:
-            db = get_database()
-            await db.password_resets.update_one(
-                {"user_id": user_identifier},
-                {"$set": reset_data},
-                upsert=True
-            )
-        except Exception as exc:
-            print(f"Failed to save reset OTP to mongo: {exc}")
-
-    # Dispatch email via email_service
-    from dotenv import load_dotenv
-    from app.config import BASE_DIR
-    env_file = BASE_DIR / ".env"
-    if env_file.is_file():
-        load_dotenv(env_file, override=True)
+    try:
+        await db.password_resets.update_one(
+            {"user_id": user_identifier},
+            {"$set": reset_data},
+            upsert=True
+        )
+    except Exception as exc:
+        print(f"Failed to save reset OTP to mongo: {exc}")
 
     smtp_user = (os.getenv("SMTP_USER") or getattr(settings, "SMTP_USER", "")).strip()
     smtp_pass = (os.getenv("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "").strip()
 
-    # Check MongoDB site_settings fallback
-    if (not smtp_user or not smtp_pass) and is_db_connected():
+    if not smtp_user or not smtp_pass:
         try:
-            db = get_database()
             saved_settings = await db.site_settings.find_one({"_id": "global_config"})
             if saved_settings:
                 smtp_user = smtp_user or str(saved_settings.get("smtp_user") or "").strip()
@@ -460,34 +427,15 @@ async def request_password_reset_otp(payload: ForgotPasswordRequest):
     if not smtp_user or not smtp_pass:
         raise HTTPException(
             status_code=400,
-            detail="SMTP is not configured on this server. Please add SMTP_USER and SMTP_PASSWORD in your hosting dashboard's Environment Variables (e.g. Render / Railway / Vercel settings)."
+            detail="SMTP is not configured on this server. Please add SMTP_USER and SMTP_PASSWORD in Environment Variables."
         )
 
     from app.services.email_service import send_password_reset_otp_email
-    sent_successfully, err_msg = send_password_reset_otp_email(recipient_email, otp_code, user_identifier, return_error=True)
-
-    # Always log clearly in server console (accessible via Render Dashboard -> Logs)
-    print(f"\n=======================================================")
-    print(f"🔑 [GVC ADMIN PASSWORD RESET OTP CODE]: >>> {otp_code} <<<")
-    print(f"=======================================================\n")
+    sent_successfully, err_msg = await asyncio.to_thread(
+        send_password_reset_otp_email, recipient_email, otp_code, user_identifier, True
+    )
 
     if not sent_successfully:
-        # Catch any cloud provider raw socket blocking (Render Errno 101, timeout, etc.)
-        err_lower = str(err_msg).lower()
-        is_cloud_network_block = any(k in err_lower for k in [
-            "network is unreachable", "errno 101", "timed out", "connectionrefused", 
-            "timeout", "errno", "socket", "unreachable", "refused", "oserror"
-        ])
-        if is_cloud_network_block or not settings.DEBUG:
-            masked = _mask_email(recipient_email)
-            return {
-                "success": True,
-                "message": "Cloud host blocked raw SMTP socket ([Errno 101]). Your recovery OTP has been securely logged in Render Dashboard ➔ Logs and auto-filled below.",
-                "masked_email": masked,
-                "user_id": user_identifier,
-                "dev_otp": otp_code
-            }
-
         raise HTTPException(
             status_code=502,
             detail=f"Email delivery failed: {err_msg}. Please check your server SMTP settings."
@@ -508,34 +456,28 @@ async def reset_password_with_otp(payload: ResetPasswordWithOTPRequest):
     Validates the 6-digit OTP and updates the admin password with Argon2 hash.
     Does NOT require the old password.
     """
-    user_key = (payload.user_id or "admin").strip().lower()
+    user_key = (payload.user_id or "").strip().lower()
     provided_otp = (payload.otp or "").strip()
     new_password = (payload.new_password or "").strip()
 
+    if not user_key:
+        raise HTTPException(status_code=400, detail="Admin User ID is required.")
     if not provided_otp:
         raise HTTPException(status_code=400, detail="6-digit OTP is required.")
     if len(new_password) < 4:
         raise HTTPException(status_code=400, detail="New password must be at least 4 characters long.")
 
-    # Find reset record in MongoDB or memory
+    # Find reset record strictly for this user_id
     record = None
     if is_db_connected():
         try:
             db = get_database()
             record = await db.password_resets.find_one({"user_id": user_key})
-            if not record:
-                # Also try finding by OTP
-                record = await db.password_resets.find_one({"otp": provided_otp})
         except Exception as e:
             print("DB lookup for OTP reset:", e)
 
     if not record:
         record = password_resets_store.get(user_key)
-        if not record:
-            for k, r in password_resets_store.items():
-                if r.get("otp") == provided_otp:
-                    record = r
-                    break
 
     if not record:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP. Please request a new OTP.")
@@ -563,19 +505,13 @@ async def reset_password_with_otp(payload: ResetPasswordWithOTPRequest):
                 }}
             )
             if res.matched_count == 0:
-                # Update default or first admin record
-                await db.auth.update_one(
-                    {},
-                    {"$set": {
-                        "password": new_hash,
-                        "updated_at": datetime.now().isoformat()
-                    }}
-                )
-            # Remove used OTP record
-            await db.password_resets.delete_many({"otp": provided_otp})
-            print("Admin password reset with OTP successfully in MongoDB.")
+                raise HTTPException(status_code=404, detail="Admin user account not found.")
+            await db.password_resets.delete_many({"user_id": user_key})
+        except HTTPException:
+            raise
         except Exception as exc:
             print("Error saving reset password to MongoDB:", exc)
+            raise HTTPException(status_code=500, detail="Could not update password in database.")
 
     # Invalidate OTP in memory
     password_resets_store.pop(user_key, None)
@@ -587,11 +523,16 @@ async def reset_password_with_otp(payload: ResetPasswordWithOTPRequest):
     }
 
 
+def _is_real_secret(val: Any) -> bool:
+    s = str(val or "").strip()
+    return bool(s) and "Testing" not in s
+
+
 @router.get("/settings")
 async def get_site_settings():
     """
     Returns public church configuration.
-    CRITICAL SECURITY: Strips razorpay_key_secret completely so secrets NEVER leave the server.
+    CRITICAL SECURITY: Strips razorpay_key_secret and smtp_password completely.
     """
     settings_data = dict(site_settings_cache)
     if is_db_connected():
@@ -605,9 +546,9 @@ async def get_site_settings():
             pass
 
     safe_copy = dict(settings_data)
-    has_secret = bool(safe_copy.get("razorpay_key_secret") and not str(safe_copy.get("razorpay_key_secret")).endswith("Testing"))
-    safe_copy["razorpay_secret_configured"] = has_secret
+    safe_copy["razorpay_secret_configured"] = _is_real_secret(safe_copy.get("razorpay_key_secret"))
     safe_copy.pop("razorpay_key_secret", None)
+    safe_copy.pop("smtp_password", None)
     return safe_copy
 
 @router.post("/settings")
@@ -627,13 +568,10 @@ async def update_site_settings(payload: SettingsUpdateRequest, _authorized: bool
             updates[k] = v
 
     updates["updated_at"] = datetime.now().isoformat()
-    site_settings_cache.update(updates)
 
     if is_db_connected():
         try:
             db = get_database()
-            # Only write the fields that changed. Writing the whole in-memory cache
-            # would overwrite saved values with defaults after a server restart.
             await db.site_settings.update_one(
                 {"_id": "global_config"},
                 {"$set": updates},
@@ -643,7 +581,7 @@ async def update_site_settings(payload: SettingsUpdateRequest, _authorized: bool
             if saved:
                 saved.pop("_id", None)
                 site_settings_cache.update(saved)
-            # Sync featured_home flag in testimonies collection
+            # Sync featured_home flag in testimonies collection when provided
             if "featured_home_testimony_ids" in updates and isinstance(updates["featured_home_testimony_ids"], list):
                 f_ids = updates["featured_home_testimony_ids"]
                 await db.testimonies.update_many(
@@ -657,10 +595,13 @@ async def update_site_settings(payload: SettingsUpdateRequest, _authorized: bool
         except Exception as e:
             print("Failed to persist settings to mongo:", e)
             raise HTTPException(status_code=500, detail="Could not save settings to the database. Please try again.")
+    else:
+        site_settings_cache.update(updates)
 
     response_settings = dict(site_settings_cache)
-    response_settings["razorpay_secret_configured"] = bool(site_settings_cache.get("razorpay_key_secret") and not str(site_settings_cache.get("razorpay_key_secret")).endswith("Testing"))
+    response_settings["razorpay_secret_configured"] = _is_real_secret(site_settings_cache.get("razorpay_key_secret"))
     response_settings.pop("razorpay_key_secret", None)
+    response_settings.pop("smtp_password", None)
 
     return {
         "success": True,
@@ -673,7 +614,7 @@ async def get_vip_visitors(_authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         try:
             db = get_database()
-            cursor = db.vip_visits.find().sort("created_at", -1)
+            cursor = db.planned_visits.find().sort("created_at", -1)
             results = await cursor.to_list(length=100)
             for r in results:
                 r["id"] = str(r.get("_id", r.get("id")))
@@ -684,7 +625,19 @@ async def get_vip_visitors(_authorized: bool = Depends(verify_admin_session)):
     return visits_store
 
 @router.get("/stats")
-async def get_admin_stats():
+async def get_admin_stats(_authorized: bool = Depends(verify_admin_session)):
+    if is_db_connected():
+        try:
+            db = get_database()
+            return {
+                "sermons_count": await db.sermons.count_documents({}),
+                "events_count": await db.events.count_documents({}),
+                "prayers_count": await db.prayers.count_documents({}),
+                "visitors_count": await db.planned_visits.count_documents({}),
+                "donations_count": await db.donations.count_documents({}),
+            }
+        except Exception:
+            pass
     return {
         "sermons_count": len(sermons_store),
         "events_count": len(events_store),

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request, Depends
 from typing import List, Optional, Tuple
+import os
 import uuid
 import logging
 import hmac
@@ -22,14 +23,20 @@ router = APIRouter(prefix="/api/donations", tags=["Donations & Giving"])
 donations_store = []
 
 async def get_active_razorpay_keys() -> Tuple[str, str]:
-    """Retrieve Razorpay API credentials securely from Environment, MongoDB, or cache."""
-    key_id = os.getenv("RAZORPAY_KEY_ID", "rzp_test_GVC1024Testing")
-    key_secret = os.getenv("RAZORPAY_KEY_SECRET", "gvcSecretKeyForTesting1024")
+    """Retrieve Razorpay API credentials securely from MongoDB, cache, or Environment."""
+    env_key_id = (os.getenv("RAZORPAY_KEY_ID") or "").strip()
+    env_key_secret = (os.getenv("RAZORPAY_KEY_SECRET") or "").strip()
+    key_id = ""
+    key_secret = ""
 
     try:
         from app.routers.admin import site_settings_cache
-        key_id = site_settings_cache.get("razorpay_key_id") or key_id
-        key_secret = site_settings_cache.get("razorpay_key_secret") or key_secret
+        c_id = (site_settings_cache.get("razorpay_key_id") or "").strip()
+        c_sec = (site_settings_cache.get("razorpay_key_secret") or "").strip()
+        if c_id and "Testing" not in c_id:
+            key_id = c_id
+        if c_sec and "Testing" not in c_sec:
+            key_secret = c_sec
     except Exception:
         pass
 
@@ -38,12 +45,16 @@ async def get_active_razorpay_keys() -> Tuple[str, str]:
             db = get_database()
             saved = await db.site_settings.find_one({"_id": "global_config"})
             if saved:
-                key_id = saved.get("razorpay_key_id") or key_id
-                key_secret = saved.get("razorpay_key_secret") or key_secret
+                db_id = (saved.get("razorpay_key_id") or "").strip()
+                db_sec = (saved.get("razorpay_key_secret") or "").strip()
+                if db_id and "Testing" not in db_id:
+                    key_id = db_id
+                if db_sec and "Testing" not in db_sec:
+                    key_secret = db_sec
         except Exception:
             pass
 
-    return (key_id.strip() if key_id else "rzp_test_GVC1024Testing"), (key_secret.strip() if key_secret else "gvcSecretKeyForTesting1024")
+    return (key_id or env_key_id), (key_secret or env_key_secret)
 
 @router.get("/details")
 async def get_giving_details():
@@ -86,7 +97,7 @@ async def get_giving_details():
         "church_name": church_name,
         "upi_id": upi_id,
         "razorpay_key_id": key_id,
-        "razorpay_enabled": True,
+        "razorpay_enabled": bool(key_id and "Testing" not in key_id),
         "giving_verse": giving_verse,
         "giving_presets": giving_presets,
         "bank_details": {
@@ -150,7 +161,14 @@ async def create_payment_order(order_req: PaymentOrderCreate):
         logger.warning("Razorpay API order error: %s. Using secure test order token.", e)
 
     # If real order was not created on Razorpay API, enable test/simulator mode so client doesn't crash with 400
-    is_test = not real_razorpay_order or key_id.endswith("Testing") or not (key_id.startswith("rzp_test_") or key_id.startswith("rzp_live_"))
+    is_test = not real_razorpay_order or not key_id or "Testing" in key_id or not (key_id.startswith("rzp_test_") or key_id.startswith("rzp_live_"))
+
+    church_name = "Grace Victory Church"
+    try:
+        from app.routers.admin import site_settings_cache
+        church_name = site_settings_cache.get("church_name") or church_name
+    except Exception:
+        pass
 
     return {
         "order_id": order_id,
@@ -158,7 +176,7 @@ async def create_payment_order(order_req: PaymentOrderCreate):
         "currency": "INR",
         "key_id": key_id,
         "is_test_mode": is_test,
-        "church_name": "Grace Victory Church"
+        "church_name": church_name
     }
 
 @router.post("/verify-payment", response_model=DonationResponse)
@@ -168,40 +186,45 @@ async def verify_payment(verify_req: PaymentVerifyRequest):
     ONLY IF SIGNATURE IS VALID: Saves to MongoDB 'donations' collection and issues receipt.
     IF INVALID: Rejects and creates NO database records.
     """
+    if verify_req.amount <= 0:
+        raise HTTPException(status_code=400, detail="Donation amount must be greater than zero.")
+
     key_id, key_secret = await get_active_razorpay_keys()
+    is_test_config = (not key_id) or ("Testing" in key_id)
 
-    # Cryptographic HMAC-SHA256 Signature Verification
-    body = f"{verify_req.razorpay_order_id}|{verify_req.razorpay_payment_id}"
-    expected_signature = hmac.new(
-        key_secret.encode(),
-        body.encode(),
-        hashlib.sha256
-    ).hexdigest()
+    is_signature_valid = False
+    if key_secret and verify_req.razorpay_signature:
+        body = f"{verify_req.razorpay_order_id}|{verify_req.razorpay_payment_id}"
+        expected_signature = hmac.new(
+            key_secret.encode(),
+            body.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        is_signature_valid = hmac.compare_digest(expected_signature, verify_req.razorpay_signature)
 
-    is_signature_valid = hmac.compare_digest(expected_signature, verify_req.razorpay_signature)
-    is_test_mode = key_id.endswith("Testing") or verify_req.razorpay_payment_id.startswith("pay_sim_") or verify_req.razorpay_order_id.startswith("order_")
+    is_simulated_test = is_test_config and verify_req.razorpay_payment_id.startswith("pay_sim_")
 
-    if not is_signature_valid and not is_test_mode:
+    if not is_signature_valid and not is_simulated_test:
         logger.error("Payment verification FAILED! Order: %s, Payment: %s", verify_req.razorpay_order_id, verify_req.razorpay_payment_id)
         raise HTTPException(
             status_code=400,
             detail="Payment verification failed: The bank transaction signature could not be verified. No donation was recorded."
         )
 
-    # 100% VERIFIED: Store in MongoDB collection 'donations'
+    # Store in MongoDB collection 'donations'
     receipt_no = f"GVC-{datetime.now().strftime('%Y%m')}-{uuid.uuid4().hex[:6].upper()}"
     donation_dict = {
         "id": f"don-{uuid.uuid4().hex[:8]}",
         "receipt_number": receipt_no,
         "donor_name": verify_req.donor_name.strip() or "Faithful Giver",
-        "email": verify_req.email.strip() or "donor@gracevictorychurch.org",
+        "email": verify_req.email.strip() or "",
         "phone": verify_req.phone.strip() if verify_req.phone else "",
         "amount": verify_req.amount,
         "cause": verify_req.cause or "Tithes & General Offerings",
-        "payment_method": "Razorpay / Bank UPI (100% Verified)",
+        "payment_method": "Razorpay / Bank UPI (Test Simulation)" if is_simulated_test else "Razorpay / Bank UPI (100% Verified)",
         "transaction_id": verify_req.razorpay_payment_id,
         "notes": verify_req.notes.strip() if verify_req.notes else "",
-        "status": "Verified",
+        "status": "Pending" if is_simulated_test else "Verified",
         "created_at": datetime.now()
     }
 
@@ -209,9 +232,10 @@ async def verify_payment(verify_req: PaymentVerifyRequest):
         try:
             db = get_database()
             await db.donations.insert_one({**donation_dict, "_id": donation_dict["id"]})
-            logger.info("Bank-verified donation %s (₹%s) saved to MongoDB 'donations'", donation_dict["id"], donation_dict["amount"])
+            logger.info("Donation %s (₹%s) saved to MongoDB 'donations'", donation_dict["id"], donation_dict["amount"])
         except Exception as e:
             logger.error("Failed to insert verified donation to MongoDB: %s", e)
+            raise HTTPException(status_code=500, detail="Database error while saving verified donation.")
 
     donations_store.insert(0, donation_dict)
     return donation_dict
@@ -219,17 +243,22 @@ async def verify_payment(verify_req: PaymentVerifyRequest):
 @router.post("/webhook")
 async def razorpay_webhook(request: Request):
     """Direct Server-to-Server Webhook from Razorpay Bank Event."""
+    raw_body = await request.body()
+    signature = (request.headers.get("X-Razorpay-Signature") or "").strip()
+    if not signature:
+        raise HTTPException(status_code=400, detail="Missing X-Razorpay-Signature header")
+
+    _, key_secret = await get_active_razorpay_keys()
+    webhook_secret = (os.getenv("RAZORPAY_WEBHOOK_SECRET") or key_secret or "").strip()
+    if not webhook_secret:
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
+
+    expected_sig = hmac.new(webhook_secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected_sig, signature):
+        logger.warning("Razorpay Webhook: Invalid Signature")
+        raise HTTPException(status_code=400, detail="Invalid webhook signature")
+
     try:
-        raw_body = await request.body()
-        signature = request.headers.get("X-Razorpay-Signature", "")
-        _, key_secret = await get_active_razorpay_keys()
-
-        if signature:
-            expected_sig = hmac.new(key_secret.encode(), raw_body, hashlib.sha256).hexdigest()
-            if not hmac.compare_digest(expected_sig, signature):
-                logger.warning("Razorpay Webhook: Invalid Signature")
-                return {"status": "ignored", "reason": "invalid_signature"}
-
         event_data = json.loads(raw_body.decode())
         event_name = event_data.get("event")
 
@@ -280,12 +309,15 @@ async def razorpay_webhook(request: Request):
 
 @router.post("", response_model=DonationResponse, status_code=201)
 async def record_donation(donation: DonationCreate):
+    if donation.amount <= 0:
+        raise HTTPException(status_code=400, detail="Donation amount must be greater than zero.")
     receipt_no = f"GVC-{datetime.now().strftime('%Y%m')}-{uuid.uuid4().hex[:6].upper()}"
     donation_dict = donation.model_dump()
     donation_dict["id"] = f"don-{uuid.uuid4().hex[:8]}"
     donation_dict["receipt_number"] = receipt_no
     donation_dict["created_at"] = datetime.now()
-    donation_dict["status"] = getattr(donation, "status", None) or "Completed"
+    # Public manual submissions always start as Pending until verified by Admin
+    donation_dict["status"] = "Pending"
 
     if is_db_connected():
         try:
@@ -295,6 +327,7 @@ async def record_donation(donation: DonationCreate):
             logger.info("Donation %s recorded in MongoDB collection 'donations'", donation_dict["id"])
         except Exception as e:
             logger.error("Failed to insert donation into MongoDB: %s", e)
+            raise HTTPException(status_code=500, detail="Database error while saving donation.")
 
     donations_store.insert(0, donation_dict)
     return donation_dict
@@ -314,7 +347,7 @@ async def get_all_donations(_authorized: bool = Depends(verify_admin_session)):
             return results
         except Exception as e:
             logger.error("Failed to fetch donations from MongoDB: %s", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
 
     return donations_store
 
@@ -328,7 +361,7 @@ async def clear_all_donations(_authorized: bool = Depends(verify_admin_session))
             deleted_count = res.deleted_count
         except Exception as e:
             logger.error("Failed to clear donations from MongoDB: %s", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
 
     donations_store.clear()
     return {"success": True, "deleted_count": deleted_count, "message": "All donation records cleared"}
@@ -342,7 +375,7 @@ async def delete_donation(donation_id: str, _authorized: bool = Depends(verify_a
             await db.donations.delete_one({"$or": [{"_id": donation_id}, {"id": donation_id}]})
         except Exception as e:
             logger.error("Failed to delete donation from MongoDB: %s", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
 
     donations_store = [d for d in donations_store if d.get("id") != donation_id]
     return {"status": "success", "message": f"Donation {donation_id} removed"}
@@ -359,7 +392,7 @@ async def update_donation_status(donation_id: str, payload: dict, _authorized: b
             )
         except Exception as e:
             logger.error("Failed to update donation status in MongoDB: %s", e)
-            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database error occurred.")
 
     for d in donations_store:
         if d.get("id") == donation_id:

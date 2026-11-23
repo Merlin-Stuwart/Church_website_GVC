@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { 
-  MapPin, Phone, Mail, Clock, Send, CheckCircle, 
+  MapPin, Phone, Mail, Clock, Send, CheckCircle, AlertCircle,
   HelpCircle, ChevronDown, MessageCircle, Sparkles, ExternalLink 
 } from 'lucide-react';
-import { submitContact, triggerNotification, getGmailComposeUrl, openGmailCompose } from '../api/client';
-import { FAQ_LIST } from '../data/mockData';
+import { submitContact, getGmailComposeUrl, openGmailCompose } from '../api/client';
 import { useChurch } from '../context/ChurchContext';
 
 export default function Contact() {
   const church = useChurch();
   const settings = church?.settings || {};
 
+  const churchName = settings.churchName || "Grace Victory Church";
   const churchAddress = settings.address || "Grace Victory Church, Vattamalai, Tamil Nadu, India";
   const churchPhone = settings.phone || "+91 93605 88397";
   const churchWhatsapp = settings.whatsappNumber || "+91 93605 88397";
@@ -26,42 +26,39 @@ export default function Contact() {
     name: '',
     email: '',
     phone: '',
-    subject: 'General Inquiry',
+    subject: 'General Church Inquiry',
     message: ''
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
   const [openFaq, setOpenFaq] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
       await submitContact({
         ...formData,
         sent_to_email: adminNotificationEmail
       });
-      await triggerNotification({
-        type: 'contact',
-        data: formData,
-        recipient: adminNotificationEmail
-      });
-    } catch (err) {
-      console.warn('API error, recorded locally', err);
-    } finally {
       setSubmitted(true);
-      setLoading(false);
 
-      // Open Gmail Web directly in browser with pre-filled message (bypasses Outlook)
+      // Open Gmail Web directly in browser with pre-filled message
       const mailSubject = `[GVC NOTIFICATION] ✉️ New Serve Message: ${formData.subject || 'General'} - from ${formData.name}`;
-      const mailBody = `Dear Grace Victory Church Pastoral & Admin Team,\n\nA new message was submitted on the website under "HOW CAN WE SERVE YOU?":\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone (WhatsApp): ${formData.phone || 'N/A'}\nSubject: ${formData.subject}\nDate: ${new Date().toLocaleString()}\n\nMessage Body:\n"${formData.message}"\n\n---\nSubmitted via Grace Victory Church Website`;
-      
+      const mailBody = `Dear ${churchName} Pastoral & Admin Team,\n\nA new message was submitted on the website under "HOW CAN WE SERVE YOU?":\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone (WhatsApp): ${formData.phone || 'N/A'}\nSubject: ${formData.subject}\nDate: ${new Date().toLocaleString()}\n\nMessage Body:\n"${formData.message}"\n\n---\nSubmitted via ${churchName} Website`;
+
       openGmailCompose({
         to: adminNotificationEmail,
         subject: mailSubject,
         body: mailBody
       });
+    } catch (err) {
+      setError(err.message || 'Could not send your message right now. Please try again or contact us on WhatsApp.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,6 +131,28 @@ export default function Contact() {
               </div>
             </div>
 
+            {/* SERVICE TIMINGS CARD (Synced with Admin Settings) */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm space-y-3">
+              <h4 className="font-serif font-bold text-base text-slate-950 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-600" />
+                <span>Weekly Service Schedule</span>
+              </h4>
+              <div className="space-y-2 text-xs">
+                <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between gap-2">
+                  <span className="font-bold text-amber-900">Sunday Worship Service</span>
+                  <span className="font-semibold text-slate-800">{sundayTiming}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                  <span className="font-bold text-slate-800">Wednesday Bible Study</span>
+                  <span className="font-semibold text-slate-600">{wednesdayTiming}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                  <span className="font-bold text-slate-800">Friday Fasting Prayer</span>
+                  <span className="font-semibold text-slate-600">{fridayTiming}</span>
+                </div>
+              </div>
+            </div>
+
             {/* INTERACTIVE GOOGLE MAP LOCATION (Managed via Admin Portal) */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm overflow-hidden space-y-4">
               <div className="flex items-center justify-between">
@@ -155,7 +174,7 @@ export default function Contact() {
               {/* Embedded Interactive Map */}
               <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-200 shadow-inner relative bg-slate-100">
                 <iframe
-                  title="Grace Victory Church Location"
+                  title={`${churchName} Location`}
                   src={googleMapsEmbedUrl}
                   width="100%"
                   height="100%"
@@ -169,7 +188,7 @@ export default function Contact() {
 
               <div className="pt-2 flex items-center justify-between gap-3">
                 <p className="text-xs text-slate-500 truncate">
-                  Vattamalai, Tamil Nadu
+                  {churchAddress}
                 </p>
                 <a
                   href={googleMapsLink}
@@ -202,6 +221,12 @@ export default function Contact() {
                   </p>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                      <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 p-3 rounded-xl border border-red-200 font-medium">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{error}</span>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">Your Name *</label>
@@ -300,7 +325,7 @@ export default function Contact() {
                       href={getGmailComposeUrl({
                         to: adminNotificationEmail,
                         subject: `[GVC NOTIFICATION] ✉️ New Serve Message: ${formData.subject} - from ${formData.name}`,
-                        body: `Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone || 'N/A'}\nSubject: ${formData.subject}\n\nMessage:\n"${formData.message}"\n\n---\nSubmitted via Grace Victory Church Website`
+                        body: `Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone || 'N/A'}\nSubject: ${formData.subject}\n\nMessage:\n"${formData.message}"\n\n---\nSubmitted via ${churchName} Website`
                       })}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -346,7 +371,7 @@ export default function Contact() {
           </div>
 
           <div className="space-y-4">
-            {(Array.isArray(settings?.faqList) && settings.faqList.length > 0 ? settings.faqList : FAQ_LIST).map((faq, idx) => {
+            {(Array.isArray(settings?.faqList) ? settings.faqList : []).map((faq, idx) => {
               const isOpen = openFaq === idx;
               return (
                 <div 

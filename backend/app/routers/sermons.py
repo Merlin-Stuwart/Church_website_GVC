@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
+import re
 import uuid
 from datetime import datetime
 from app.schemas.sermon import SermonCreate, SermonUpdate, SermonResponse
@@ -26,11 +27,12 @@ async def get_all_sermons(
         if series and series.lower() != "all":
             query["series"] = series
         if q:
+            escaped_q = re.escape(q)
             query["$or"] = [
-                {"title": {"$regex": q, "$options": "i"}},
-                {"speaker": {"$regex": q, "$options": "i"}},
-                {"scripture": {"$regex": q, "$options": "i"}},
-                {"summary": {"$regex": q, "$options": "i"}}
+                {"title": {"$regex": escaped_q, "$options": "i"}},
+                {"speaker": {"$regex": escaped_q, "$options": "i"}},
+                {"scripture": {"$regex": escaped_q, "$options": "i"}},
+                {"summary": {"$regex": escaped_q, "$options": "i"}}
             ]
         cursor = db.sermons.find(query).sort("date", -1)
         async for doc in cursor:
@@ -85,6 +87,8 @@ async def create_sermon(sermon: SermonCreate, _authorized: bool = Depends(verify
 @router.put("/{sermon_id}", response_model=SermonResponse)
 async def update_sermon(sermon_id: str, sermon: SermonUpdate, _authorized: bool = Depends(verify_admin_session)):
     update_data = {k: v for k, v in sermon.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided to update")
     
     if is_db_connected():
         db = get_database()

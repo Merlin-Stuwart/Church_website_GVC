@@ -41,6 +41,7 @@ async def submit_prayer(prayer: PrayerCreate, background_tasks: BackgroundTasks)
     new_id = f"prayer-{uuid.uuid4().hex[:8]}"
     prayer_dict = prayer.model_dump()
     prayer_dict["id"] = new_id
+    prayer_dict["interceded"] = False
     prayer_dict["prayer_count"] = 1
     prayer_dict["created_at"] = datetime.now()
 
@@ -58,12 +59,37 @@ async def submit_prayer(prayer: PrayerCreate, background_tasks: BackgroundTasks)
 
     return prayer_dict
 
+@router.patch("/{prayer_id}/interceded")
+async def set_prayer_interceded(
+    prayer_id: str,
+    payload: dict,
+    _authorized: bool = Depends(verify_admin_session)
+):
+    interceded = bool(payload.get("interceded", True))
+    if is_db_connected():
+        db = get_database()
+        res = await db.prayers.update_one(
+            {"$or": [{"_id": prayer_id}, {"id": prayer_id}]},
+            {"$set": {"interceded": interceded}}
+        )
+        if res.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Prayer request not found")
+        if prayer_id in prayers_store:
+            prayers_store[prayer_id]["interceded"] = interceded
+        return {"id": prayer_id, "interceded": interceded}
+
+    if prayer_id in prayers_store:
+        prayers_store[prayer_id]["interceded"] = interceded
+        return {"id": prayer_id, "interceded": interceded}
+
+    raise HTTPException(status_code=404, detail="Prayer request not found")
+
 @router.post("/{prayer_id}/pray")
 async def click_pray(prayer_id: str):
     if is_db_connected():
         db = get_database()
         res = await db.prayers.find_one_and_update(
-            {"$or": [{"_id": prayer_id}, {"id": prayer_id}]},
+            {"$and": [{"$or": [{"_id": prayer_id}, {"id": prayer_id}]}, {"is_public": True}]},
             {"$inc": {"prayer_count": 1}},
             return_document=True
         )
@@ -72,7 +98,7 @@ async def click_pray(prayer_id: str):
             prayers_store[prayer_id] = res
             return {"message": "You joined in prayer! God answers prayer.", "prayer_count": res.get("prayer_count", 0)}
 
-    if prayer_id in prayers_store:
+    if prayer_id in prayers_store and prayers_store[prayer_id].get("is_public"):
         prayers_store[prayer_id]["prayer_count"] = prayers_store[prayer_id].get("prayer_count", 0) + 1
         return {
             "message": "You joined in prayer! God answers prayer.",

@@ -19,5 +19,6 @@ class PrayerResponse(BaseModel):
     category: str
     is_public: bool
     is_anonymous: bool
+    interceded: bool = False
     prayer_count: int = 0
     created_at: Optional[datetime] = None
