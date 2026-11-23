@@ -616,6 +616,17 @@ export async function triggerNotification(payload) {
 }
 
 // MINISTRIES & PRAYER SERVICES
+function notifyMinistriesUpdated() {
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('gvc_ministries_updated'));
+      if (window.localStorage) {
+        window.localStorage.setItem('gvc_ministries_sync_ts', Date.now().toString());
+      }
+    }
+  } catch (e) {}
+}
+
 export async function fetchMinistries() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/ministries`, { cache: 'no-store' });
@@ -630,29 +641,47 @@ export async function fetchMinistries() {
 export async function createMinistry(ministryData) {
   const res = await fetch(`${API_BASE_URL}/api/ministries`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAdminHeaders(),
     body: JSON.stringify(ministryData)
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to create ministry'));
-  return await res.json();
+  const data = await res.json();
+  notifyMinistriesUpdated();
+  return data;
 }
 
 export async function updateMinistry(id, ministryData) {
   const res = await fetch(`${API_BASE_URL}/api/ministries/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAdminHeaders(),
     body: JSON.stringify(ministryData)
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to update ministry'));
-  return await res.json();
+  const data = await res.json();
+  notifyMinistriesUpdated();
+  return data;
 }
 
 export async function deleteMinistry(id) {
   const res = await fetch(`${API_BASE_URL}/api/ministries/${id}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: getAdminHeaders()
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to delete ministry'));
-  return await res.json();
+  const data = await res.json();
+  notifyMinistriesUpdated();
+  return data;
+}
+
+export async function clearAllMinistries() {
+  const res = await fetch(`${API_BASE_URL}/api/ministries`, {
+    method: 'DELETE',
+    headers: getAdminHeaders()
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to clear ministries'));
+  const data = await res.json();
+  notifyMinistriesUpdated();
+  return data;
 }
 
 // CONTACT & PLAN A VISIT

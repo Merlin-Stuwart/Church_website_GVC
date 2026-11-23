@@ -1,14 +1,14 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List
 import uuid
 from datetime import datetime
 from app.schemas.ministry import MinistryCreate, MinistryUpdate, MinistryResponse
 from app.database import get_database, is_db_connected
-from app.seed_data import INITIAL_MINISTRIES
+from app.routers.admin import verify_admin_session
 
 router = APIRouter(prefix="/api/ministries", tags=["Ministries & Prayer Services"])
 
-ministries_store = {m["id"]: {**m, "created_at": datetime.now()} for m in INITIAL_MINISTRIES}
+ministries_store = {}
 
 @router.get("", response_model=List[MinistryResponse])
 async def get_all_ministries():
@@ -20,29 +20,14 @@ async def get_all_ministries():
             async for doc in cursor:
                 doc["id"] = str(doc.get("_id", doc.get("id")))
                 results.append(doc)
-            if not results:
-                flags = await db.site_meta.find_one({"_id": "seed_flags"})
-                if not flags or not flags.get("ministries_seeded"):
-                    for m in INITIAL_MINISTRIES:
-                        doc_to_save = {**m, "_id": m["id"], "created_at": datetime.now()}
-                        await db.ministries.update_one(
-                            {"_id": m["id"]},
-                            {"$setOnInsert": doc_to_save},
-                            upsert=True
-                        )
-                    await db.site_meta.update_one(
-                        {"_id": "seed_flags"},
-                        {"$set": {"ministries_seeded": True}},
-                        upsert=True
-                    )
-                    return list(ministries_store.values())
             return results
         except Exception as e:
             print("MongoDB fetch ministries error:", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
     return list(ministries_store.values())
 
 @router.post("", response_model=MinistryResponse, status_code=status.HTTP_201_CREATED)
-async def create_ministry(ministry: MinistryCreate):
+async def create_ministry(ministry: MinistryCreate, _authorized: bool = Depends(verify_admin_session)):
     new_id = f"ministry-{uuid.uuid4().hex[:8]}"
     item_dict = ministry.model_dump()
     item_dict["id"] = new_id
@@ -60,7 +45,7 @@ async def create_ministry(ministry: MinistryCreate):
     return item_dict
 
 @router.put("/{ministry_id}", response_model=MinistryResponse)
-async def update_ministry(ministry_id: str, payload: MinistryUpdate):
+async def update_ministry(ministry_id: str, payload: MinistryUpdate, _authorized: bool = Depends(verify_admin_session)):
     updates = {k: v for k, v in payload.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(status_code=400, detail="No fields provided to update")
@@ -88,8 +73,23 @@ async def update_ministry(ministry_id: str, payload: MinistryUpdate):
     ministries_store[ministry_id] = updated_item
     return updated_item
 
+@router.delete("")
+async def clear_all_ministries(_authorized: bool = Depends(verify_admin_session)):
+    deleted_count = 0
+    if is_db_connected():
+        try:
+            db = get_database()
+            res = await db.ministries.delete_many({})
+            deleted_count = res.deleted_count
+        except Exception as e:
+            print("MongoDB clear ministries error:", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+    ministries_store.clear()
+    return {"success": True, "deleted_count": deleted_count, "message": "All ministries cleared"}
+
 @router.delete("/{ministry_id}")
-async def delete_ministry(ministry_id: str):
+async def delete_ministry(ministry_id: str, _authorized: bool = Depends(verify_admin_session)):
     deleted = False
     if is_db_connected():
         try:

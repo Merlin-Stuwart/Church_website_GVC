@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Users, Flame, HeartHandshake, ShieldCheck, Music, 
   Globe, Baby, Clock, CheckCircle, ArrowRight, Sparkles,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Layers
 } from 'lucide-react';
-import { MINISTRIES_DATA } from '../data/mockData';
+import { useChurch } from '../context/ChurchContext';
 import { fetchMinistries } from '../api/client';
 
 export default function Ministries({ onOpenPlanVisit }) {
-  const [ministries, setMinistries] = useState(MINISTRIES_DATA);
+  const church = useChurch();
+  const settings = church?.settings || {};
+  const [ministries, setMinistries] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedCardIds, setExpandedCardIds] = useState({});
 
@@ -19,15 +22,52 @@ export default function Ministries({ onOpenPlanVisit }) {
     }));
   };
 
+  const loadMinistries = useCallback(async () => {
+    const data = await fetchMinistries();
+    if (Array.isArray(data)) {
+      setMinistries(data);
+      setLoading(false);
+      return true;
+    }
+    setLoading(false);
+    return false;
+  }, []);
+
   useEffect(() => {
-    async function load() {
-      const data = await fetchMinistries();
-      if (Array.isArray(data)) {
-        setMinistries(data);
+    let isMounted = true;
+    let retryTimer;
+
+    async function init() {
+      const ok = await loadMinistries();
+      if (!ok && isMounted) {
+        retryTimer = setTimeout(() => {
+          if (isMounted) loadMinistries();
+        }, 4000);
       }
     }
-    load();
-  }, []);
+    init();
+
+    const handleSync = () => loadMinistries();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') loadMinistries();
+    };
+    const handleStorage = (e) => {
+      if (e.key === 'gvc_ministries_sync_ts') loadMinistries();
+    };
+
+    window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('gvc_ministries_updated', handleSync);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      isMounted = false;
+      clearTimeout(retryTimer);
+      window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('gvc_ministries_updated', handleSync);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [loadMinistries]);
 
   // Extract distinct category pills
   const categories = ['all', ...Array.from(new Set(ministries.map(m => m.category || m.age || 'General').filter(Boolean)))];
@@ -46,10 +86,10 @@ export default function Ministries({ onOpenPlanVisit }) {
             Get Connected & Grow
           </span>
           <h1 className="font-serif font-extrabold text-2xl sm:text-4xl md:text-5xl text-[#0B192C] mb-2.5 sm:mb-3 tracking-tight leading-tight">
-            Ministries & Services of <span className="gold-text-gradient">Grace Victory Church</span>
+            Ministries & Services of <span className="gold-text-gradient">{settings.churchName || 'Grace Victory Church'}</span>
           </h1>
           <p className="text-slate-600 text-xs sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Experience our Friday Fasting Prayers, Wednesday Intercessory Bible Study, vibrant Youth fellowship, Champions Kids Church, and anointed ministry teams to connect, intercede, and flourish in Christ.
+            Experience our prayer gatherings, Bible study fellowships, and departmental ministries to connect, intercede, and flourish in Christ.
           </p>
         </div>
       </section>
@@ -57,35 +97,60 @@ export default function Ministries({ onOpenPlanVisit }) {
       {/* MINISTRIES SHOWCASE */}
       <section className="pt-6 pb-14 sm:pt-8 sm:pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         
-        {/* Category Filter Pills */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-6 sm:mb-8">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-              selectedCategory === 'all'
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            All Ministries & Services ({ministries.length})
-          </button>
-
-          {categories.filter(c => c !== 'all').map((cat) => (
+        {/* Category Filter Pills (shown only when ministries exist) */}
+        {ministries.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-6 sm:mb-8">
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => setSelectedCategory('all')}
               className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                selectedCategory === cat
+                selectedCategory === 'all'
                   ? 'bg-amber-600 text-white shadow-md'
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
-              {cat}
+              All Ministries & Services ({ministries.length})
             </button>
-          ))}
-        </div>
 
-        {/* Ministries Grid */}
+            {categories.filter(c => c !== 'all').map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-white rounded-3xl border border-slate-200/80 p-6 space-y-4 animate-pulse">
+                <div className="aspect-video rounded-2xl bg-slate-200"></div>
+                <div className="h-5 bg-slate-200 rounded w-3/4"></div>
+                <div className="h-3 bg-slate-100 rounded w-full"></div>
+                <div className="h-3 bg-slate-100 rounded w-5/6"></div>
+              </div>
+            ))}
+          </div>
+        ) : filteredMinistries.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-10 sm:p-12 text-center max-w-lg mx-auto shadow-sm">
+            <Layers className="w-10 h-10 text-amber-500 mx-auto mb-3 opacity-80" />
+            <h3 className="font-serif font-bold text-lg text-slate-900 mb-1.5">
+              No Ministries or Prayer Services Listed Yet
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Ministries and prayer gatherings added through the Admin Portal will appear here automatically.
+            </p>
+          </div>
+        ) : (
+        /* Ministries Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredMinistries.map((m, idx) => {
             const cardId = m.id || `ministry-${idx}`;
@@ -165,6 +230,7 @@ export default function Ministries({ onOpenPlanVisit }) {
             );
           })}
         </div>
+        )}
 
       </section>
 

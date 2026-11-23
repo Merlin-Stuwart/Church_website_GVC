@@ -17,12 +17,12 @@ import {
   fetchPrayers, fetchAllPrayersAdmin, deletePrayer, 
   fetchTestimonies, submitTestimony, deleteTestimony, getStoredTestimonies,
   toggleTestimonyHomeFeature, changeAdminPassword,
-  fetchMinistries, createMinistry, updateMinistry, deleteMinistry,
+  fetchMinistries, createMinistry, updateMinistry, deleteMinistry, clearAllMinistries,
   fetchSystemStatus, fetchAllDonations, deleteDonation, updateDonationStatus, submitDonation, getStoredDonations,
   fetchInquiries, deleteInquiry, getStoredInquiries,
   getGmailComposeUrl, API_BASE_URL, getAdminHeaders 
 } from '../api/client';
-import { INITIAL_SERMONS, INITIAL_EVENTS, INITIAL_PRAYERS, TESTIMONIES, CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM, MINISTRIES_DATA, FAQ_LIST } from '../data/mockData';
+import { INITIAL_SERMONS, INITIAL_EVENTS, INITIAL_PRAYERS, TESTIMONIES, CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM, FAQ_LIST } from '../data/mockData';
 import { compressImage } from '../utils/imageCompressor';
 
 export default function AdminDashboard() {
@@ -128,8 +128,8 @@ export default function AdminDashboard() {
     location: 'Vattamalai'
   });
 
-  // Ministries & Services collection state
-  const [ministries, setMinistries] = useState(MINISTRIES_DATA);
+  // Ministries & Services collection state (100% Admin & DB driven)
+  const [ministries, setMinistries] = useState([]);
   const [isMinistryModalOpen, setIsMinistryModalOpen] = useState(false);
   const [editingMinistryId, setEditingMinistryId] = useState(null);
   const [isCustomCategory, setIsCustomCategory] = useState(false);
@@ -791,12 +791,12 @@ export default function AdminDashboard() {
     setMinistryForm({
       title: '',
       category: 'Weekly Prayer Gatherings',
-      badge: 'Open to All',
-      meeting_time: 'Every Friday 10:00 AM – 02:00 PM',
-      leader: 'Pastor P. Rajendran',
-      tagline: 'Miracle & Healing Breakthrough',
+      badge: '',
+      meeting_time: '',
+      leader: '',
+      tagline: '',
       desc: '',
-      image: 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=800&q=80'
+      image: ''
     });
     setIsMinistryModalOpen(true);
   };
@@ -861,6 +861,18 @@ export default function AdminDashboard() {
       setMinistries(prev => prev.filter(m => m.id !== id));
     } catch (err) {
       alert('Delete failed: ' + (err.message || 'Check backend connection'));
+    }
+  };
+
+  const handleClearAllMinistries = async () => {
+    if (!window.confirm('Remove ALL ministries from the live website and MongoDB? Only ministries you add manually after this will appear.')) return;
+    try {
+      await clearAllMinistries();
+      setMinistries([]);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3500);
+    } catch (err) {
+      alert('Clear all failed: ' + (err.message || 'Check backend connection'));
     }
   };
 
@@ -3785,16 +3797,43 @@ export default function AdminDashboard() {
                 </p>
               </div>
 
-              <button
-                onClick={handleOpenCreateMinistry}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-md flex items-center gap-2 self-start md:self-auto cursor-pointer"
-              >
-                <Plus className="w-4 h-4 text-slate-950" />
-                <span>Add Ministry / Prayer Service</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+                {ministries.length > 0 && (
+                  <button
+                    onClick={handleClearAllMinistries}
+                    className="px-4 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-600/30 text-red-300 hover:text-white border border-red-500/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Clear All</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleOpenCreateMinistry}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-md flex items-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 text-slate-950" />
+                  <span>Add Ministry / Prayer Service</span>
+                </button>
+              </div>
             </div>
 
-            {/* Ministries Grid */}
+            {/* Ministries Grid or Empty State */}
+            {ministries.length === 0 ? (
+              <div className="bg-slate-950 rounded-2xl border border-slate-800 p-12 text-center space-y-3">
+                <Layers className="w-10 h-10 text-amber-400 mx-auto opacity-80" />
+                <h3 className="font-serif font-bold text-lg text-white">No Ministries Added Yet</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  Hardcoded auto-generation is disabled. Click below to add ministries and prayer services that you want displayed on the live website.
+                </p>
+                <button
+                  onClick={handleOpenCreateMinistry}
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider inline-flex items-center gap-2 cursor-pointer mt-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Ministry / Prayer Service</span>
+                </button>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {ministries.map((m) => (
                 <div 
@@ -3870,6 +3909,7 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+            )}
 
           </div>
         )}
