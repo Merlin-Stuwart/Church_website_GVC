@@ -102,7 +102,7 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
                   <select
                     value={prefix}
                     onChange={(e) => setPrefix(e.target.value)}
-                    className="w-32 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-bold text-amber-900"
+                    className="w-32 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-bold text-amber-900"
                   >
                     <option value="Brother">Brother</option>
                     <option value="Sister">Sister</option>
