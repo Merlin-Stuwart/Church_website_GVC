@@ -173,57 +173,65 @@ export function ChurchProvider({ children }) {
       if (!res.ok) return false;
       const remote = await res.json();
       if (remote && typeof remote === 'object') {
-        setSettings(prev => persistSettings({
-          ...prev,
-          churchName: remote.church_name || prev.churchName,
-          tamilName: remote.tamil_name || prev.tamilName,
-          seniorPastor: remote.senior_pastor || prev.seniorPastor,
-          seniorPastorTitle: remote.senior_pastor_title || prev.seniorPastorTitle,
-          associatePastor: sanitizeFranklinName(remote.associate_pastor || prev.associatePastor),
-          associatePastorTitle: remote.associate_pastor_title || prev.associatePastorTitle,
-          associatePastorImage: remote.associate_pastor_image || prev.associatePastorImage,
-          phone: remote.phone || prev.phone,
-          whatsappNumber: remote.whatsapp_number || prev.whatsappNumber,
-          email: remote.email || prev.email,
-          adminNotificationEmail: remote.admin_notification_email || prev.adminNotificationEmail,
-          address: remote.address || prev.address,
-          googleMapsEmbedUrl: remote.google_maps_embed_url || prev.googleMapsEmbedUrl,
-          googleMapsLink: remote.google_maps_link || prev.googleMapsLink,
-          serviceTimings: remote.service_timings || prev.serviceTimings,
-          wednesdayTiming: remote.wednesday_timing || prev.wednesdayTiming,
-          fridayTiming: remote.friday_timing || prev.fridayTiming,
-          yearBadge: remote.year_badge || prev.yearBadge,
-          themeBadge: remote.theme_badge || prev.themeBadge,
-          tamilTheme: remote.tamil_theme || prev.tamilTheme,
-          tagline: remote.tagline || prev.tagline,
-          verse: remote.verse || prev.verse,
-          pastorImage: remote.pastor_image || prev.pastorImage,
-          churchHallImage: remote.church_hall_image || prev.churchHallImage,
-          upiId: remote.upi_id || prev.upiId,
-          bankName: remote.bank_name || prev.bankName,
-          accountNumber: remote.account_number || prev.accountNumber,
-          branch: remote.branch || prev.branch,
-          ifscCode: remote.ifsc_code || prev.ifscCode,
-          razorpayKeyId: remote.razorpay_key_id || prev.razorpayKeyId,
-          razorpaySecretConfigured: Boolean(remote.razorpay_secret_configured),
-          churchStats: remote.church_stats || prev.churchStats,
-          milestones: remote.milestones || prev.milestones,
-          coreBeliefs: remote.core_beliefs || prev.coreBeliefs,
-          leadershipTeam: normalizeLeadershipTeam(remote.leadership_team || prev.leadershipTeam),
-          sliderSpeedSeconds: remote.slider_speed_seconds || prev.sliderSpeedSeconds || 3,
-          featuredHomeTestimonyIds: remote.featured_home_testimony_ids || prev.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
-          foundedYear: remote.founded_year || prev.foundedYear || "1998",
-          pastorWelcomeBadge: remote.pastor_welcome_badge || prev.pastorWelcomeBadge,
-          pastorWelcomeTitle: remote.pastor_welcome_title || prev.pastorWelcomeTitle,
-          pastorWelcomeP1: remote.pastor_welcome_p1 || prev.pastorWelcomeP1,
-          pastorWelcomeP2: remote.pastor_welcome_p2 || prev.pastorWelcomeP2,
-          pastorWelcomeQuote: remote.pastor_welcome_quote || prev.pastorWelcomeQuote,
-          faqList: remote.faq_list || prev.faqList,
-          swiftCode: remote.swift_code || prev.swiftCode || "SBININBB492",
-          givingVerse: remote.giving_verse || prev.givingVerse,
-          givingPresets: remote.giving_presets || prev.givingPresets,
-          prayerWallVerse: remote.prayer_wall_verse || prev.prayerWallVerse,
-        }));
+        setSettings(prev => {
+          const next = {
+            ...prev,
+            churchName: remote.church_name || prev.churchName,
+            tamilName: remote.tamil_name || prev.tamilName,
+            seniorPastor: remote.senior_pastor || prev.seniorPastor,
+            seniorPastorTitle: remote.senior_pastor_title || prev.seniorPastorTitle,
+            associatePastor: sanitizeFranklinName(remote.associate_pastor || prev.associatePastor),
+            associatePastorTitle: remote.associate_pastor_title || prev.associatePastorTitle,
+            associatePastorImage: remote.associate_pastor_image || prev.associatePastorImage,
+            phone: remote.phone || prev.phone,
+            whatsappNumber: remote.whatsapp_number || prev.whatsappNumber,
+            email: remote.email || prev.email,
+            adminNotificationEmail: remote.admin_notification_email || prev.adminNotificationEmail,
+            address: remote.address || prev.address,
+            googleMapsEmbedUrl: remote.google_maps_embed_url || prev.googleMapsEmbedUrl,
+            googleMapsLink: remote.google_maps_link || prev.googleMapsLink,
+            serviceTimings: remote.service_timings || prev.serviceTimings,
+            wednesdayTiming: remote.wednesday_timing || prev.wednesdayTiming,
+            fridayTiming: remote.friday_timing || prev.fridayTiming,
+            yearBadge: remote.year_badge || prev.yearBadge,
+            themeBadge: remote.theme_badge || prev.themeBadge,
+            tamilTheme: remote.tamil_theme || prev.tamilTheme,
+            tagline: remote.tagline || prev.tagline,
+            verse: remote.verse || prev.verse,
+            pastorImage: remote.pastor_image || prev.pastorImage,
+            churchHallImage: remote.church_hall_image || prev.churchHallImage,
+            upiId: remote.upi_id || prev.upiId,
+            bankName: remote.bank_name || prev.bankName,
+            accountNumber: remote.account_number || prev.accountNumber,
+            branch: remote.branch || prev.branch,
+            ifscCode: remote.ifsc_code || prev.ifscCode,
+            razorpayKeyId: remote.razorpay_key_id || prev.razorpayKeyId,
+            razorpaySecretConfigured: Boolean(remote.razorpay_secret_configured),
+            churchStats: Array.isArray(remote.church_stats) ? remote.church_stats : prev.churchStats,
+            milestones: Array.isArray(remote.milestones) ? remote.milestones : prev.milestones,
+            coreBeliefs: Array.isArray(remote.core_beliefs) ? remote.core_beliefs : prev.coreBeliefs,
+            leadershipTeam: Array.isArray(remote.leadership_team) ? normalizeLeadershipTeam(remote.leadership_team) : prev.leadershipTeam,
+            sliderSpeedSeconds: remote.slider_speed_seconds || prev.sliderSpeedSeconds || 3,
+            featuredHomeTestimonyIds: remote.featured_home_testimony_ids || prev.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
+            foundedYear: remote.founded_year || prev.foundedYear || "1998",
+            pastorWelcomeBadge: remote.pastor_welcome_badge || prev.pastorWelcomeBadge,
+            pastorWelcomeTitle: remote.pastor_welcome_title || prev.pastorWelcomeTitle,
+            pastorWelcomeP1: remote.pastor_welcome_p1 || prev.pastorWelcomeP1,
+            pastorWelcomeP2: remote.pastor_welcome_p2 || prev.pastorWelcomeP2,
+            pastorWelcomeQuote: remote.pastor_welcome_quote || prev.pastorWelcomeQuote,
+            faqList: Array.isArray(remote.faq_list) ? remote.faq_list : prev.faqList,
+            swiftCode: remote.swift_code || prev.swiftCode || "SBININBB492",
+            givingVerse: remote.giving_verse || prev.givingVerse,
+            givingPresets: remote.giving_presets || prev.givingPresets,
+            prayerWallVerse: remote.prayer_wall_verse || prev.prayerWallVerse,
+          };
+          try {
+            if (JSON.stringify(next) === JSON.stringify(prev)) {
+              return prev;
+            }
+          } catch (e) {}
+          return persistSettings(next);
+        });
         return true;
       }
     } catch (err) {
@@ -284,7 +292,7 @@ export function ChurchProvider({ children }) {
   }, [loadRemoteSettings]);
 
   const updateSettings = async (newSettings) => {
-    let finalLeadership = newSettings.leadershipTeam || settings.leadershipTeam;
+    let finalLeadership = Array.isArray(newSettings.leadershipTeam) ? newSettings.leadershipTeam : settings.leadershipTeam;
     if (Array.isArray(finalLeadership)) {
       finalLeadership = await Promise.all(
         finalLeadership.map(async (leader) => {

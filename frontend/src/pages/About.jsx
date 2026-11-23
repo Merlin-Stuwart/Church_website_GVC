@@ -23,9 +23,9 @@ export default function About({ onOpenPlanVisit }) {
     ? settings.coreBeliefs 
     : CORE_BELIEFS;
 
-  const leadershipTeam = settings?.leadershipTeam && settings.leadershipTeam.length > 0 
-    ? settings.leadershipTeam 
-    : LEADERSHIP_TEAM;
+  const leadershipTeam = Array.isArray(settings?.leadershipTeam)
+    ? settings.leadershipTeam
+    : [];
 
   return (
     <div className="bg-[#FAF9F6] text-slate-800">
@@ -219,6 +219,11 @@ export default function About({ onOpenPlanVisit }) {
             </p>
           </div>
 
+          {leadershipTeam.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center text-slate-500 text-sm">
+              Leadership profiles are being updated. Check back soon.
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {leadershipTeam.map((leader, idx) => (
               <div 
@@ -258,6 +263,7 @@ export default function About({ onOpenPlanVisit }) {
               </div>
             ))}
           </div>
+          )}
 
           <div className="mt-16 text-center">
             <Link

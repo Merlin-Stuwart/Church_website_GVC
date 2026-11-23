@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   const [authSaveLoading, setAuthSaveLoading] = useState(false);
 
   // Form State for Live Site Settings
-  const [siteForm, setSiteForm] = useState({
+  const [siteForm, setSiteFormRaw] = useState({
     churchName: settings.churchName,
     tamilName: settings.tamilName,
     seniorPastor: settings.seniorPastor,
@@ -111,10 +111,10 @@ export default function AdminDashboard() {
     razorpayKeySecret: '',
     sliderSpeedSeconds: settings.sliderSpeedSeconds || 3,
     featuredHomeTestimonyIds: settings.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
-    churchStats: settings.churchStats || CHURCH_STATS,
-    milestones: settings.milestones || DEFAULT_MILESTONES,
-    coreBeliefs: settings.coreBeliefs || CORE_BELIEFS,
-    leadershipTeam: settings.leadershipTeam || LEADERSHIP_TEAM,
+    churchStats: Array.isArray(settings.churchStats) ? settings.churchStats : CHURCH_STATS,
+    milestones: Array.isArray(settings.milestones) ? settings.milestones : DEFAULT_MILESTONES,
+    coreBeliefs: Array.isArray(settings.coreBeliefs) ? settings.coreBeliefs : CORE_BELIEFS,
+    leadershipTeam: Array.isArray(settings.leadershipTeam) ? settings.leadershipTeam : LEADERSHIP_TEAM,
     foundedYear: settings.foundedYear || '1998',
     pastorWelcomeBadge: settings.pastorWelcomeBadge || 'A Personal Word from Our Pastoral Leadership',
     pastorWelcomeTitle: settings.pastorWelcomeTitle || '“You Were Born to Walk in Divine Favor and Supernatural Victory!”',
@@ -127,6 +127,14 @@ export default function AdminDashboard() {
     givingPresets: settings.givingPresets || '500, 1000, 2500, 5000, 10000',
     prayerWallVerse: settings.prayerWallVerse || '“Again I say unto you, That if two of you shall agree on earth as touching any thing that they shall ask, it shall be done for them of my Father which is in heaven.” — Matthew 18:19',
   });
+
+  const isSiteFormDirtyRef = React.useRef(false);
+  const [hasUnsavedSiteChanges, setHasUnsavedSiteChanges] = useState(false);
+  const setSiteForm = React.useCallback((updater) => {
+    isSiteFormDirtyRef.current = true;
+    setHasUnsavedSiteChanges(true);
+    setSiteFormRaw(updater);
+  }, []);
 
   // Data states (100% live DB driven)
   const [sermons, setSermons] = useState([]);
@@ -219,9 +227,10 @@ export default function AdminDashboard() {
     highlights: ['Anointed Praise & Intercession', 'Fellowship Refreshments Included', 'All Are Cordially Welcome']
   });
 
-  // Sync form with settings when settings change
+  // Sync form with settings when settings change (skip overwriting unsaved admin edits)
   useEffect(() => {
-    setSiteForm({
+    if (isSiteFormDirtyRef.current) return;
+    setSiteFormRaw({
       churchName: settings.churchName,
       tamilName: settings.tamilName,
       seniorPastor: settings.seniorPastor,
@@ -255,10 +264,10 @@ export default function AdminDashboard() {
       razorpayKeySecret: '',
       sliderSpeedSeconds: settings.sliderSpeedSeconds || 3,
       featuredHomeTestimonyIds: settings.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
-      churchStats: settings.churchStats || CHURCH_STATS,
-      milestones: settings.milestones || DEFAULT_MILESTONES,
-      coreBeliefs: settings.coreBeliefs || CORE_BELIEFS,
-      leadershipTeam: settings.leadershipTeam || LEADERSHIP_TEAM,
+      churchStats: Array.isArray(settings.churchStats) ? settings.churchStats : CHURCH_STATS,
+      milestones: Array.isArray(settings.milestones) ? settings.milestones : DEFAULT_MILESTONES,
+      coreBeliefs: Array.isArray(settings.coreBeliefs) ? settings.coreBeliefs : CORE_BELIEFS,
+      leadershipTeam: Array.isArray(settings.leadershipTeam) ? settings.leadershipTeam : LEADERSHIP_TEAM,
       foundedYear: settings.foundedYear || '1998',
       pastorWelcomeBadge: settings.pastorWelcomeBadge || 'A Personal Word from Our Pastoral Leadership',
       pastorWelcomeTitle: settings.pastorWelcomeTitle || '“You Were Born to Walk in Divine Favor and Supernatural Victory!”',
@@ -537,6 +546,8 @@ export default function AdminDashboard() {
     setIsSavingSettings(true);
     try {
       await updateSettings(siteForm);
+      isSiteFormDirtyRef.current = false;
+      setHasUnsavedSiteChanges(false);
       setSettingsSaved(true);
       setSaveSuccess(true);
       setTimeout(() => {
@@ -555,6 +566,8 @@ export default function AdminDashboard() {
     setIsSavingSettings(true);
     try {
       await updateSettings(siteForm);
+      isSiteFormDirtyRef.current = false;
+      setHasUnsavedSiteChanges(false);
       setSettingsSaved(true);
       setTimeout(() => {
         window.location.reload();
@@ -1044,24 +1057,29 @@ export default function AdminDashboard() {
   };
 
   const updateLeader = (index, field, value) => {
-    const list = [...(siteForm.leadershipTeam || LEADERSHIP_TEAM)];
-    list[index] = { ...list[index], [field]: value };
-    setSiteForm(prev => ({ ...prev, leadershipTeam: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.leadershipTeam) ? [...prev.leadershipTeam] : [];
+      if (!list[index]) return prev;
+      list[index] = { ...list[index], [field]: value };
+      return { ...prev, leadershipTeam: list };
+    });
   };
 
   const handleLeaderImageUpload = async (index, e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const compressed = await compressImage(file, 600, 0.8);
-        updateLeader(index, 'image', compressed);
-      } catch (err) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          updateLeader(index, 'image', reader.result);
-        };
-        reader.readAsDataURL(file);
-      }
+    const inputEl = e.target;
+    const file = inputEl.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file, 600, 0.8);
+      updateLeader(index, 'image', compressed);
+    } catch (err) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateLeader(index, 'image', reader.result);
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      inputEl.value = '';
     }
   };
 
@@ -1070,26 +1088,41 @@ export default function AdminDashboard() {
   };
 
   const addLeader = () => {
-    const list = [...(siteForm.leadershipTeam || LEADERSHIP_TEAM), {
-      name: 'New Pastor / Leader',
-      role: 'Associate Pastor',
-      bio: "Serving God's flock with dedication and grace.",
-      image: ''
-    }];
-    setSiteForm(prev => ({ ...prev, leadershipTeam: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.leadershipTeam) ? [...prev.leadershipTeam] : [];
+      return {
+        ...prev,
+        leadershipTeam: [
+          ...list,
+          {
+            name: 'New Pastor / Leader',
+            role: 'Associate Pastor',
+            bio: "Serving God's flock with dedication and grace.",
+            image: ''
+          }
+        ]
+      };
+    });
   };
 
   const deleteLeader = (index) => {
-    const list = (siteForm.leadershipTeam || LEADERSHIP_TEAM).filter((_, i) => i !== index);
-    setSiteForm(prev => ({ ...prev, leadershipTeam: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.leadershipTeam) ? prev.leadershipTeam : [];
+      return {
+        ...prev,
+        leadershipTeam: list.filter((_, i) => i !== index)
+      };
+    });
   };
 
   const moveLeader = (fromIndex, toIndex) => {
-    const list = [...(siteForm.leadershipTeam || LEADERSHIP_TEAM)];
-    if (toIndex < 0 || toIndex >= list.length) return;
-    const [moved] = list.splice(fromIndex, 1);
-    list.splice(toIndex, 0, moved);
-    setSiteForm(prev => ({ ...prev, leadershipTeam: list }));
+    setSiteForm(prev => {
+      const list = Array.isArray(prev.leadershipTeam) ? [...prev.leadershipTeam] : [];
+      if (toIndex < 0 || toIndex >= list.length || fromIndex < 0 || fromIndex >= list.length) return prev;
+      const [moved] = list.splice(fromIndex, 1);
+      list.splice(toIndex, 0, moved);
+      return { ...prev, leadershipTeam: list };
+    });
   };
 
   const handleSaveAboutSettings = async (e) => {
@@ -1099,8 +1132,9 @@ export default function AdminDashboard() {
 
     try {
       // Compress any large data URLs in leadership team before saving
+      const currentLeaders = Array.isArray(siteForm.leadershipTeam) ? siteForm.leadershipTeam : [];
       const compressedLeaders = await Promise.all(
-        (siteForm.leadershipTeam || []).map(async (leader) => {
+        currentLeaders.map(async (leader) => {
           if (leader.image && typeof leader.image === 'string' && leader.image.startsWith('data:image/') && leader.image.length > 50000) {
             try {
               const comp = await compressImage(leader.image, 600, 0.8);
@@ -1118,8 +1152,10 @@ export default function AdminDashboard() {
         leadershipTeam: compressedLeaders,
       };
 
-      setSiteForm(payload);
+      setSiteFormRaw(payload);
       await updateSettings(payload);
+      isSiteFormDirtyRef.current = false;
+      setHasUnsavedSiteChanges(false);
 
       setAboutSaveSuccess(true);
       setSaveSuccess(true);
@@ -3111,6 +3147,9 @@ export default function AdminDashboard() {
             </div>
 
             {/* 4. PASTORAL LEADERSHIP TEAM */}
+            {(() => {
+              const leadersList = Array.isArray(siteForm.leadershipTeam) ? siteForm.leadershipTeam : [];
+              return (
             <div className="space-y-6 border-t border-slate-800/80 pt-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
@@ -3118,21 +3157,52 @@ export default function AdminDashboard() {
                     <span>4. Pastoral Leadership Team (Add / Update / Delete Photos & Leaders)</span>
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Upload or delete photos, update names, designations, and bios for leadership members.
+                    Upload or delete photos, update names, designations, and bios for leadership members. Click Save Leaders to publish changes live.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={addLeader}
-                  className="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Leader</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                  {hasUnsavedSiteChanges && (
+                    <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 border border-amber-400/50 text-[11px] font-bold">
+                      Unsaved changes
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={addLeader}
+                    className="px-3.5 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Leader</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSavingAbout}
+                    onClick={handleSaveAboutSettings}
+                    className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-sm cursor-pointer transition-colors keep-text-white"
+                  >
+                    {isSavingAbout ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>{isSavingAbout ? 'Saving...' : 'Save Leaders'}</span>
+                  </button>
+                </div>
               </div>
 
+              {leadersList.length === 0 ? (
+                <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-3">
+                  <Users className="w-10 h-10 text-amber-500 mx-auto opacity-70" />
+                  <p className="text-sm font-bold text-white">No leaders in the Pastoral Leadership Team</p>
+                  <p className="text-xs text-slate-400">Click "Add Leader" to add a pastor, or click "Save Leaders" to publish the empty list.</p>
+                  <button
+                    type="button"
+                    onClick={addLeader}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add First Leader</span>
+                  </button>
+                </div>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(siteForm.leadershipTeam || LEADERSHIP_TEAM).map((leader, idx) => (
+                {leadersList.map((leader, idx) => (
                   <div key={idx} className="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 flex flex-col justify-between relative group">
                     <div className="space-y-4">
                       
@@ -3153,7 +3223,7 @@ export default function AdminDashboard() {
                               <ChevronUp className="w-4 h-4" />
                             </button>
                           )}
-                          {idx < (siteForm.leadershipTeam || LEADERSHIP_TEAM).length - 1 && (
+                          {idx < leadersList.length - 1 && (
                             <button
                               type="button"
                               onClick={() => moveLeader(idx, idx + 1)}
@@ -3163,16 +3233,14 @@ export default function AdminDashboard() {
                               <ChevronDown className="w-4 h-4" />
                             </button>
                           )}
-                          {(siteForm.leadershipTeam || LEADERSHIP_TEAM).length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => deleteLeader(idx)}
-                              className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ml-1"
-                              title="Remove leader"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => deleteLeader(idx)}
+                            className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ml-1"
+                            title="Remove leader"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
@@ -3283,7 +3351,10 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
+              );
+            })()}
 
             {/* Bottom Save Section with In-Place Feedback */}
             <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
