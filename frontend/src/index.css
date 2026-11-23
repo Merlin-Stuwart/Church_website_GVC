@@ -177,7 +177,9 @@
 }
 
 /* Cards & Containers across all tabs */
-.admin-bright-portal .bg-slate-950 {
+.admin-bright-portal .bg-slate-950,
+.admin-bright-portal .bg-slate-950\/70,
+.admin-bright-portal .bg-slate-950\/60 {
   background-color: #FFFFFF !important;
   border-color: #E2E8F0 !important;
   color: #0F172A !important;
@@ -190,6 +192,8 @@
   color: #0F172A !important;
 }
 
+.admin-bright-portal .bg-slate-900\/40,
+.admin-bright-portal .bg-slate-900\/50,
 .admin-bright-portal .bg-slate-900\/60,
 .admin-bright-portal .bg-slate-900\/80,
 .admin-bright-portal .bg-slate-900\/90 {
@@ -197,6 +201,7 @@
   border-color: #E2E8F0 !important;
 }
 
+.admin-bright-portal .border-slate-900,
 .admin-bright-portal .border-slate-800,
 .admin-bright-portal .border-slate-800\/80,
 .admin-bright-portal .border-slate-800\/90,
@@ -309,6 +314,7 @@ input[type="date"].admin-date-input::-webkit-calendar-picker-indicator:hover {
 
 /* Badges & Highlights */
 .admin-bright-portal .bg-amber-500\/20,
+.admin-bright-portal .bg-amber-500\/15,
 .admin-bright-portal .bg-amber-500\/10 {
   background-color: #FEF3C7 !important;
   border-color: #FCD34D !important;
@@ -330,8 +336,22 @@ input[type="date"].admin-date-input::-webkit-calendar-picker-indicator:hover {
   font-weight: 700 !important;
 }
 
-.admin-bright-portal .text-emerald-400 {
-  color: #047857 !important;
+.admin-bright-portal .bg-emerald-950\/60,
+.admin-bright-portal .bg-emerald-950\/40 {
+  background-color: #D1FAE5 !important;
+  border-color: #6EE7B7 !important;
+  color: #065F46 !important;
+}
+
+.admin-bright-portal .text-emerald-400,
+.admin-bright-portal .text-emerald-300 {
+  color: #065F46 !important;
+}
+
+.admin-bright-portal .bg-red-950\/40 {
+  background-color: #FEE2E2 !important;
+  border-color: #FCA5A5 !important;
+  color: #B91C1C !important;
 }
 
 /* Event notices & highlight pills (Fellowship, Mentorship etc) */

@@ -3634,7 +3634,7 @@ export default function AdminDashboard() {
                         key={p.id} 
                         className={`p-6 rounded-2xl border transition-all ${
                           isInterceded 
-                            ? 'bg-slate-950/70 border-emerald-900/40' 
+                            ? (isDarkMode ? 'bg-slate-950/70 border-emerald-900/40' : 'bg-emerald-50/70 border-emerald-200 shadow-sm')
                             : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                         }`}
                       >
@@ -3672,14 +3672,20 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* Prayer Request Body Quote */}
-                        <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 mb-4">
+                        <div className={`p-4 rounded-xl border mb-4 ${
+                          isDarkMode
+                            ? 'bg-slate-900/80 border-slate-800/80'
+                            : (isInterceded ? 'bg-white border-emerald-200/80' : 'bg-amber-50/70 border-amber-200/80')
+                        }`}>
                           <p className="text-sm text-slate-200 leading-relaxed italic">
                             “{p.request}”
                           </p>
                         </div>
 
                         {/* Actions Bar */}
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-900 text-xs">
+                        <div className={`flex items-center justify-between pt-3 border-t text-xs ${
+                          isDarkMode ? 'border-slate-900' : (isInterceded ? 'border-emerald-200/70' : 'border-slate-200')
+                        }`}>
                           <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
                             <Lock className="w-3 h-3 text-slate-500" />
                             <span>Confidential • Not visible on public website</span>
@@ -3695,19 +3701,27 @@ export default function AdminDashboard() {
                                   return next;
                                 });
                               }}
-                              className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
+                              className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                                 isInterceded
-                                  ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'
-                                  : 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+                                  ? (isDarkMode
+                                      ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900/60'
+                                      : 'bg-emerald-100 hover:bg-emerald-200/80 text-emerald-800 border border-emerald-300')
+                                  : (isDarkMode
+                                      ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+                                      : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-300 hover:border-emerald-300')
                               }`}
                             >
-                              <CheckCircle className={`w-3.5 h-3.5 ${isInterceded ? 'text-emerald-400' : 'text-slate-400'}`} />
+                              <CheckCircle className={`w-3.5 h-3.5 ${isInterceded ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-700') : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`} />
                               <span>{isInterceded ? 'Prayed Over ✓' : 'Mark as Interceded'}</span>
                             </button>
 
                             <button
                               onClick={() => handleDeletePrayer(p.id)}
-                              className="px-3 py-1.5 text-red-400 hover:text-white hover:bg-red-600/30 border border-red-500/20 rounded-xl transition-colors flex items-center gap-1"
+                              className={`px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 cursor-pointer font-semibold ${
+                                isDarkMode
+                                  ? 'text-red-400 hover:text-white hover:bg-red-600/30 border border-red-500/20'
+                                  : 'bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300'
+                              }`}
                               title="Delete Prayer Request"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
