@@ -504,6 +504,7 @@ export default function AdminDashboard() {
       }, 4000);
     } catch (err) {
       console.error('Settings save failed:', err);
+      alert('Could not save settings: ' + (err.message || 'Please try again'));
     } finally {
       setIsSavingSettings(false);
     }
@@ -518,6 +519,7 @@ export default function AdminDashboard() {
         window.location.reload();
       }, 400);
     } catch (err) {
+      alert('Could not save settings: ' + (err.message || 'Please try again'));
       setIsSavingSettings(false);
     }
   };
@@ -724,7 +726,7 @@ export default function AdminDashboard() {
     if (currentFeatured.map(String).includes(String(id))) {
       const updated = currentFeatured.filter(fid => String(fid) !== String(id));
       setSiteForm(prev => ({ ...prev, featuredHomeTestimonyIds: updated }));
-      updateSettings({ featuredHomeTestimonyIds: updated });
+      updateSettings({ featuredHomeTestimonyIds: updated }).catch(err => alert('Could not save: ' + err.message));
     }
   };
 
@@ -745,7 +747,12 @@ export default function AdminDashboard() {
     }
     const updatedForm = { ...siteForm, featuredHomeTestimonyIds: updated };
     setSiteForm(updatedForm);
-    await updateSettings({ featuredHomeTestimonyIds: updated });
+    try {
+      await updateSettings({ featuredHomeTestimonyIds: updated });
+    } catch (err) {
+      alert('Could not save: ' + err.message);
+      return;
+    }
     try {
       await toggleTestimonyHomeFeature(testimonyId);
     } catch (e) {}

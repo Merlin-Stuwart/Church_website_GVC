@@ -669,11 +669,17 @@ async def update_site_settings(payload: SettingsUpdateRequest, _authorized: bool
     if is_db_connected():
         try:
             db = get_database()
+            # Only write the fields that changed. Writing the whole in-memory cache
+            # would overwrite saved values with defaults after a server restart.
             await db.site_settings.update_one(
                 {"_id": "global_config"},
-                {"$set": site_settings_cache},
+                {"$set": updates},
                 upsert=True
             )
+            saved = await db.site_settings.find_one({"_id": "global_config"})
+            if saved:
+                saved.pop("_id", None)
+                site_settings_cache.update(saved)
             # Sync featured_home flag in testimonies collection
             if "featured_home_testimony_ids" in updates and isinstance(updates["featured_home_testimony_ids"], list):
                 f_ids = updates["featured_home_testimony_ids"]
@@ -687,6 +693,7 @@ async def update_site_settings(payload: SettingsUpdateRequest, _authorized: bool
                 )
         except Exception as e:
             print("Failed to persist settings to mongo:", e)
+            raise HTTPException(status_code=500, detail="Could not save settings to the database. Please try again.")
 
     response_settings = dict(site_settings_cache)
     response_settings["razorpay_secret_configured"] = bool(site_settings_cache.get("razorpay_key_secret") and not str(site_settings_cache.get("razorpay_key_secret")).endswith("Testing"))

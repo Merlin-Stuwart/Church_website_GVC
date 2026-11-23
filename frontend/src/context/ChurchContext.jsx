@@ -102,6 +102,16 @@ const safeStorage = {
   }
 };
 
+// Keep the browser cache in sync with the server copy so stale local edits
+// never override what is actually live.
+function persistSettings(next) {
+  try {
+    const { razorpayKeySecret, ...clean } = next || {};
+    safeStorage.setItem('gvc_live_settings', JSON.stringify(clean));
+  } catch (e) { }
+  return next;
+}
+
 export function sanitizeFranklinName(name) {
   if (!name || typeof name !== 'string') return 'Pastor R. Franklin Rajendran';
   let cleaned = name.replace(/(?:Rajendran)+/gi, 'Rajendran');
@@ -189,11 +199,11 @@ export function ChurchProvider({ children }) {
     let isMounted = true;
     async function loadRemoteSettings() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/settings`);
+        const res = await fetch(`${API_BASE_URL}/api/admin/settings`, { cache: 'no-store' });
         if (res.ok) {
           const remote = await res.json();
           if (remote && remote.church_name && isMounted) {
-            setSettings(prev => ({
+            setSettings(prev => persistSettings({
               ...prev,
               churchName: remote.church_name || prev.churchName,
               tamilName: remote.tamil_name || prev.tamilName,
@@ -288,12 +298,15 @@ export function ChurchProvider({ children }) {
       window.dispatchEvent(new Event('gvc_settings_updated'));
     }
 
-    // Non-blocking background sync with abort timeout so UI never freezes
+    // Save to the backend and WAIT for confirmation. Render free tier can take
+    // 30-60s to wake up, so use a generous timeout and surface real failures
+    // instead of silently keeping the change only in this browser.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+    const token = safeStorage.getItem('gvc_admin_token') || '';
+    let res;
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1500);
-      const token = safeStorage.getItem('gvc_admin_token') || 'gvc-admin-session-active';
-      fetch(`${API_BASE_URL}/api/admin/settings`, {
+      res = await fetch(`${API_BASE_URL}/api/admin/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -310,6 +323,7 @@ export function ChurchProvider({ children }) {
           phone: updated.phone,
           whatsapp_number: updated.whatsappNumber,
           email: updated.email,
+          admin_notification_email: updated.adminNotificationEmail,
           address: updated.address,
           google_maps_embed_url: updated.googleMapsEmbedUrl,
           google_maps_link: updated.googleMapsLink,
@@ -349,9 +363,26 @@ export function ChurchProvider({ children }) {
           prayer_wall_verse: updated.prayerWallVerse,
         }),
         signal: controller.signal
-      }).catch(() => { })
-        .finally(() => clearTimeout(timeoutId));
-    } catch (e) { }
+      });
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw new Error(
+        err?.name === 'AbortError'
+          ? 'Server took too long to respond. Your change was NOT saved to the live site — please try again.'
+          : 'Cannot reach the backend server. Your change was NOT saved to the live site.'
+      );
+    }
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        safeStorage.removeItem('gvc_admin_token');
+        setIsAdminLoggedIn(false);
+        throw new Error('Admin session expired. Please log in again and re-save.');
+      }
+      throw new Error(errBody.detail || `Save failed (HTTP ${res.status}). Your change was NOT saved to the live site.`);
+    }
 
     return updated;
   };
