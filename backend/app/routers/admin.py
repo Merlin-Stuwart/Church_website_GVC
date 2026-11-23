@@ -254,7 +254,7 @@ def _verify_password(password: str, encoded: str) -> bool:
     1. Valid pwdlib hash (Argon2 / Bcrypt)
     2. Legacy plaintext password stored in MongoDB (e.g. 'gvcadmin2026')
     3. Password configured in .env (ADMIN_PASSWORD, e.g. 'admin123')
-    4. Project standard administrator passwords (admin123, gvcadmin2026)
+    4. Server ADMIN_PASSWORD environment variable
     """
     if not password:
         return False
@@ -286,12 +286,6 @@ def _verify_password(password: str, encoded: str) -> bool:
     env_password = (os.getenv("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "")).strip()
     if env_password and hmac.compare_digest(clean_pass, env_password):
         return True
-
-    # 5. Fallback for standard project admin credentials
-    known_defaults = ["admin123", "gvcadmin2026", "gvcadmin", "admin"]
-    for def_pass in known_defaults:
-        if hmac.compare_digest(clean_pass, def_pass):
-            return True
 
     return False
 

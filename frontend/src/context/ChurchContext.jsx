@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CHURCH_INFO, CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM } from '../data/mockData';
 import { compressImage } from '../utils/imageCompressor';
+import { API_BASE_URL } from '../api/client';
 
 export const DEFAULT_SETTINGS = {
   churchName: "Grace Victory Church",
@@ -188,7 +189,7 @@ export function ChurchProvider({ children }) {
     let isMounted = true;
     async function loadRemoteSettings() {
       try {
-        const res = await fetch('/api/admin/settings');
+        const res = await fetch(`${API_BASE_URL}/api/admin/settings`);
         if (res.ok) {
           const remote = await res.json();
           if (remote && remote.church_name && isMounted) {
@@ -292,7 +293,7 @@ export function ChurchProvider({ children }) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1500);
       const token = safeStorage.getItem('gvc_admin_token') || 'gvc-admin-session-active';
-      fetch('/api/admin/settings', {
+      fetch(`${API_BASE_URL}/api/admin/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -378,7 +379,7 @@ export function ChurchProvider({ children }) {
     }
 
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -388,9 +389,14 @@ export function ChurchProvider({ children }) {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        // Only a real 401 from the backend means wrong credentials.
+        // Anything else (404/405/5xx, HTML page) means the backend was not reached.
+        if (res.status === 401) {
+          return { success: false, message: err.detail || 'Invalid User ID or Password' };
+        }
         return {
           success: false,
-          message: err.detail || 'Invalid User ID or Password'
+          message: err.detail || `Cannot reach the backend server (HTTP ${res.status}). Check that VITE_API_URL points to your backend.`
         };
       }
 

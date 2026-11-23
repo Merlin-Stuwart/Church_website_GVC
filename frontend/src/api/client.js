@@ -1,4 +1,4 @@
-const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '';
+export const API_BASE_URL = ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '').replace(/\/+$/, '');
 
 export function getAdminHeaders() {
   let token = 'gvc-admin-session-active';

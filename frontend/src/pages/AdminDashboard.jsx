@@ -20,7 +20,7 @@ import {
   fetchMinistries, createMinistry, updateMinistry, deleteMinistry,
   fetchSystemStatus, fetchAllDonations, deleteDonation, updateDonationStatus, submitDonation, getStoredDonations,
   fetchInquiries, deleteInquiry, getStoredInquiries,
-  getGmailComposeUrl 
+  getGmailComposeUrl, API_BASE_URL, getAdminHeaders 
 } from '../api/client';
 import { INITIAL_SERMONS, INITIAL_EVENTS, INITIAL_PRAYERS, TESTIMONIES, CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM, MINISTRIES_DATA, FAQ_LIST } from '../data/mockData';
 import { compressImage } from '../utils/imageCompressor';
@@ -448,9 +448,9 @@ export default function AdminDashboard() {
 
     setAuthSaveLoading(true);
     try {
-      const res = await fetch('/api/admin/auth/credentials', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/auth/credentials`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify({
           current_password: authForm.currentPassword,
           new_user_id: authForm.newUserId,
