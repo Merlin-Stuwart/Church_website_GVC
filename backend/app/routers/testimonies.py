@@ -21,9 +21,20 @@ async def get_testimonies():
             doc["id"] = str(doc.get("_id", doc.get("id")))
             results.append(doc)
         if not results:
-            for t in INITIAL_TESTIMONIES:
-                await db.testimonies.insert_one({**t, "_id": t["id"]})
-            return list(testimonies_store.values())
+            flags = await db.site_meta.find_one({"_id": "seed_flags"})
+            if not flags or not flags.get("testimonies_seeded"):
+                for t in INITIAL_TESTIMONIES:
+                    await db.testimonies.update_one(
+                        {"_id": t["id"]},
+                        {"$setOnInsert": {**t, "_id": t["id"]}},
+                        upsert=True
+                    )
+                await db.site_meta.update_one(
+                    {"_id": "seed_flags"},
+                    {"$set": {"testimonies_seeded": True}},
+                    upsert=True
+                )
+                return list(testimonies_store.values())
         return results
 
     return list(testimonies_store.values())

@@ -55,8 +55,8 @@ def verify_admin_session(authorization: Optional[str] = Header(None)) -> bool:
             body = f"{user_id}:{timestamp}"
             expected_sig = hmac.new(AUTH_SECRET_KEY.encode(), body.encode(), hashlib.sha256).hexdigest()
             if hmac.compare_digest(expected_sig, sig):
-                # Verify 7-day expiration (7 * 86400 seconds)
-                if not 0 <= datetime.now().timestamp() - timestamp <= 7 * 86400:
+                # Verify 7-day expiration (7 * 86400 seconds) with 5-min clock skew tolerance
+                if not -300 <= datetime.now().timestamp() - timestamp <= 7 * 86400:
                     raise HTTPException(status_code=401, detail="Admin session expired. Please re-login.")
                 return True
         except ValueError:
@@ -122,6 +122,8 @@ site_settings_cache: Dict[str, Any] = {
     "google_maps_embed_url": "https://maps.google.com/maps?q=Grace%20Victory%20Church,%20Vattamalai,%20Tamil%20Nadu,%20India&t=&z=15&ie=UTF8&iwloc=&output=embed",
     "google_maps_link": "https://maps.google.com/?q=Grace+Victory+Church+Vattamalai+Tamil+Nadu+India",
     "service_timings": "Sunday 09:30 AM – 11:30 AM",
+    "wednesday_timing": "07:00 PM – 08:30 PM",
+    "friday_timing": "10:30 AM – 01:30 PM",
     "year_badge": "2026",
     "theme_badge": "YEAR OF FELLOWSHIP",
     "tamil_theme": "2026 வெற்றி மற்றும் ஐக்கியத்தின் ஆண்டு",
@@ -205,6 +207,8 @@ class SettingsUpdateRequest(BaseModel):
     google_maps_embed_url: Optional[str] = None
     google_maps_link: Optional[str] = None
     service_timings: Optional[str] = None
+    wednesday_timing: Optional[str] = None
+    friday_timing: Optional[str] = None
     year_badge: Optional[str] = None
     theme_badge: Optional[str] = None
     tamil_theme: Optional[str] = None
@@ -232,7 +236,7 @@ class SettingsUpdateRequest(BaseModel):
     pastor_welcome_p1: Optional[str] = None
     pastor_welcome_p2: Optional[str] = None
     pastor_welcome_quote: Optional[str] = None
-    faq_list: Optional[List[Dict[str, str]]] = None
+    faq_list: Optional[List[Dict[str, Any]]] = None
     swift_code: Optional[str] = None
     giving_verse: Optional[str] = None
     giving_presets: Optional[str] = None
@@ -379,14 +383,18 @@ async def update_auth_credentials(
 
     if not target_user or not updated_user_id:
         raise HTTPException(status_code=400, detail="User ID cannot be empty.")
-    if len(updated_password) < 12:
-        raise HTTPException(status_code=400, detail="New password must be at least 12 characters long.")
+    if len(updated_password) < 4:
+        raise HTTPException(status_code=400, detail="New password must be at least 4 characters long.")
     if not is_db_connected():
         raise HTTPException(status_code=503, detail="Admin credentials update temporarily unavailable.")
 
     try:
         db = get_database()
         user_doc = await db.auth.find_one(_identity_query(target_user))
+        if not user_doc:
+            user_doc = await db.auth.find_one({"_id": "admin-account"})
+            if not user_doc:
+                user_doc = await db.auth.find_one({})
     except Exception:
         raise HTTPException(status_code=503, detail="Admin credentials update temporarily unavailable.")
 
@@ -630,14 +638,14 @@ async def get_site_settings():
     Returns public church configuration.
     CRITICAL SECURITY: Strips razorpay_key_secret completely so secrets NEVER leave the server.
     """
-    settings_data = site_settings_cache
+    settings_data = dict(site_settings_cache)
     if is_db_connected():
         try:
             db = get_database()
             saved = await db.site_settings.find_one({"_id": "global_config"})
             if saved:
                 saved.pop("_id", None)
-                settings_data = saved
+                settings_data = {**site_settings_cache, **saved}
         except Exception:
             pass
 

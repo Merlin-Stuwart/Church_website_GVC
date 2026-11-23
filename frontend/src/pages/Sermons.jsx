@@ -35,7 +35,7 @@ export default function Sermons() {
         category: selectedCategory,
         series: selectedSeries
       });
-      if (data && data.length > 0) {
+      if (Array.isArray(data)) {
         setSermons(data);
       } else if (!data) {
         // Robust offline fallback filter

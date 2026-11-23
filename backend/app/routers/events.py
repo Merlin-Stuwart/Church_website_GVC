@@ -89,7 +89,10 @@ async def update_event(event_id: str, event: EventUpdate):
 async def delete_event(event_id: str):
     if is_db_connected():
         db = get_database()
-        await db.events.delete_one({"$or": [{"_id": event_id}, {"id": event_id}]})
+        res = await db.events.delete_one({"$or": [{"_id": event_id}, {"id": event_id}]})
+        if res.deleted_count > 0:
+            events_store.pop(event_id, None)
+            return {"message": "Event deleted successfully", "id": event_id}
     if event_id in events_store:
         del events_store[event_id]
         return {"message": "Event deleted successfully", "id": event_id}

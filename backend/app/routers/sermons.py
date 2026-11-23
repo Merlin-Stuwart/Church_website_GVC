@@ -37,10 +37,21 @@ async def get_all_sermons(
             doc["id"] = str(doc.get("_id", doc.get("id")))
             results.append(doc)
         if not results and not q and not category and not series:
-            # If MongoDB collection is empty, seed it
-            for s in INITIAL_SERMONS:
-                await db.sermons.insert_one({**s, "_id": s["id"], "created_at": datetime.now()})
-            return list(sermons_store.values())
+            # Seed initial sermons only once (don't resurrect if admin intentionally deleted all)
+            flags = await db.site_meta.find_one({"_id": "seed_flags"})
+            if not flags or not flags.get("sermons_seeded"):
+                for s in INITIAL_SERMONS:
+                    await db.sermons.update_one(
+                        {"_id": s["id"]},
+                        {"$setOnInsert": {**s, "_id": s["id"], "created_at": datetime.now()}},
+                        upsert=True
+                    )
+                await db.site_meta.update_one(
+                    {"_id": "seed_flags"},
+                    {"$set": {"sermons_seeded": True}},
+                    upsert=True
+                )
+                return list(sermons_store.values())
         return results
     
     # Fallback to store
@@ -113,7 +124,10 @@ async def update_sermon(sermon_id: str, sermon: SermonUpdate):
 async def delete_sermon(sermon_id: str):
     if is_db_connected():
         db = get_database()
-        await db.sermons.delete_one({"$or": [{"_id": sermon_id}, {"id": sermon_id}]})
+        res = await db.sermons.delete_one({"$or": [{"_id": sermon_id}, {"id": sermon_id}]})
+        if res.deleted_count > 0:
+            sermons_store.pop(sermon_id, None)
+            return {"message": "Sermon deleted successfully", "id": sermon_id}
     if sermon_id in sermons_store:
         del sermons_store[sermon_id]
         return {"message": "Sermon deleted successfully", "id": sermon_id}

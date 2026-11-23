@@ -34,13 +34,13 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
   useEffect(() => {
     async function loadData() {
       const sData = await fetchSermons();
-      if (sData && sData.length > 0) setSermons(sData);
+      if (Array.isArray(sData)) setSermons(sData);
 
       const eData = await fetchEvents();
-      if (eData && eData.length > 0) setEvents(eData);
+      if (Array.isArray(eData)) setEvents(eData);
 
       const tData = await fetchTestimonies();
-      if (tData && tData.length > 0) setTestimonies(tData);
+      if (Array.isArray(tData)) setTestimonies(tData);
     }
     loadData();
 
@@ -123,7 +123,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
             </h2>
 
             <p className="text-slate-600 text-sm leading-relaxed">
-              When you step through the doors of Grace Victory Church, you are greeted not as a stranger, but as beloved family. From anointed keyboard worship and spirit-led praise to practical verse-by-verse preaching, our sanctuary is consecrated for you to encounter Jesus.
+              When you step through the doors of {settings.churchName || 'Grace Victory Church'}, you are greeted not as a stranger, but as beloved family. From anointed keyboard worship and spirit-led praise to practical verse-by-verse preaching, our sanctuary is consecrated for you to encounter Jesus.
             </p>
 
             <div className="space-y-3 pt-2 text-xs text-slate-700 font-medium">
@@ -335,7 +335,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
           {/* Vertical Recent Playlist (5 Cols) */}
           <div className="lg:col-span-5 space-y-4 text-left">
             <h4 className="font-serif font-bold text-lg text-slate-900 mb-2">
-              Recent Teachings by Pastor P. Rajendran
+              Recent Teachings by {settings.seniorPastor || 'Pastor P. Rajendran'}
             </h4>
 
             {sermons.slice(1, 4).map((sermon) => (
@@ -507,7 +507,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
             </div>
             <div>
               <strong className="text-slate-900 block font-bold text-xs sm:text-sm">Need Personal Prayer & Pastoral Intercession?</strong>
-              <span className="text-slate-600">All prayer petitions submitted via the button above are kept 100% confidential and interceded over privately by Pastor P. Rajendran and our prayer warriors.</span>
+              <span className="text-slate-600">All prayer petitions submitted via the button above are kept 100% confidential and interceded over privately by {settings.seniorPastor || 'Pastor P. Rajendran'} and our prayer warriors.</span>
             </div>
           </div>
 

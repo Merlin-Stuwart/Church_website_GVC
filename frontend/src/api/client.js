@@ -1,5 +1,15 @@
 export const API_BASE_URL = ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '').replace(/\/+$/, '');
 
+async function parseErrorMessage(res, fallback) {
+  try {
+    const data = await res.json();
+    if (data?.detail) {
+      return typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+    }
+  } catch (e) {}
+  return `${fallback} (HTTP ${res.status})`;
+}
+
 export function getAdminHeaders() {
   let token = 'gvc-admin-session-active';
   try {
@@ -15,7 +25,7 @@ export function getAdminHeaders() {
 
 export async function fetchSystemStatus() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/status`);
+    const res = await fetch(`${API_BASE_URL}/api/status`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Status failed');
     return await res.json();
   } catch (err) {
@@ -35,7 +45,7 @@ export async function fetchSermons(params = {}) {
     if (params.category && params.category !== 'All') query.append('category', params.category);
     if (params.series && params.series !== 'All') query.append('series', params.series);
 
-    const res = await fetch(`${API_BASE_URL}/api/sermons?${query.toString()}`);
+    const res = await fetch(`${API_BASE_URL}/api/sermons?${query.toString()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch sermons');
     return await res.json();
   } catch (err) {
@@ -50,7 +60,7 @@ export async function createSermon(sermonData) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(sermonData)
   });
-  if (!res.ok) throw new Error('Failed to create sermon');
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to create sermon'));
   return await res.json();
 }
 
@@ -58,7 +68,7 @@ export async function deleteSermon(id) {
   const res = await fetch(`${API_BASE_URL}/api/sermons/${id}`, {
     method: 'DELETE'
   });
-  if (!res.ok) throw new Error('Failed to delete sermon');
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to delete sermon'));
   return await res.json();
 }
 
@@ -279,7 +289,7 @@ export async function fetchEvents(params = {}) {
     if (params.featured !== undefined) query.append('featured', params.featured);
     if (params.category && params.category !== 'All') query.append('category', params.category);
 
-    const res = await fetch(`${API_BASE_URL}/api/events?${query.toString()}`);
+    const res = await fetch(`${API_BASE_URL}/api/events?${query.toString()}`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -302,26 +312,15 @@ export async function fetchEvents(params = {}) {
 }
 
 export async function createEvent(eventData) {
-  let created = null;
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/events`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventData)
-    });
-    if (res.ok) {
-      created = await res.json();
-    }
-  } catch (err) {
-    console.warn('Backend offline, saving event locally', err);
+  const res = await fetch(`${API_BASE_URL}/api/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(eventData)
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to create event'));
   }
-
-  if (!created) {
-    created = {
-      ...eventData,
-      id: eventData.id || `event-${Date.now()}`
-    };
-  }
+  const created = await res.json();
 
   const existing = getStoredEvents() || [];
   const updated = [created, ...existing.filter(e => e.id !== created.id)];
@@ -331,23 +330,15 @@ export async function createEvent(eventData) {
 }
 
 export async function updateEvent(id, eventData) {
-  let updatedEvent = null;
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventData)
-    });
-    if (res.ok) {
-      updatedEvent = await res.json();
-    }
-  } catch (err) {
-    console.warn('Backend offline, updating event locally', err);
+  const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(eventData)
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to update event'));
   }
-
-  if (!updatedEvent) {
-    updatedEvent = { ...eventData, id };
-  }
+  const updatedEvent = await res.json();
 
   const existing = getStoredEvents() || [];
   const updated = existing.map(e => e.id === id ? { ...e, ...updatedEvent } : e);
@@ -360,11 +351,12 @@ export async function updateEvent(id, eventData) {
 }
 
 export async function deleteEvent(id) {
-  try {
-    await fetch(`${API_BASE_URL}/api/events/${id}`, {
-      method: 'DELETE'
-    });
-  } catch (err) {}
+  const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to delete event'));
+  }
 
   const existing = getStoredEvents() || [];
   saveStoredEvents(existing.filter(e => e.id !== id && e._id !== id));
@@ -384,7 +376,7 @@ export async function submitEventRsvp(rsvpData) {
 // PRAYER REQUESTS
 export async function fetchPrayers() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/prayers`);
+    const res = await fetch(`${API_BASE_URL}/api/prayers`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch prayers');
     return await res.json();
   } catch (err) {
@@ -395,7 +387,7 @@ export async function fetchPrayers() {
 
 export async function fetchAllPrayersAdmin() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/prayers/admin/all`);
+    const res = await fetch(`${API_BASE_URL}/api/prayers/admin/all`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch admin prayers');
     return await res.json();
   } catch (err) {
@@ -405,15 +397,11 @@ export async function fetchAllPrayersAdmin() {
 }
 
 export async function deletePrayer(prayerId) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/prayers/${prayerId}`, {
-      method: 'DELETE'
-    });
-    if (!res.ok) throw new Error('Failed to delete prayer');
-    return await res.json();
-  } catch (err) {
-    return { success: true };
-  }
+  const res = await fetch(`${API_BASE_URL}/api/prayers/${prayerId}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to delete prayer'));
+  return await res.json();
 }
 
 export async function submitPrayer(prayerData) {
@@ -503,10 +491,10 @@ export function saveStoredTestimonies(list) {
 
 export async function fetchTestimonies() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/testimonies`);
+    const res = await fetch(`${API_BASE_URL}/api/testimonies`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const normalized = data.map((t, idx) => ({
           ...t,
           id: String(t.id || t._id || `testimony-${idx + 1}`)
@@ -522,33 +510,19 @@ export async function fetchTestimonies() {
 }
 
 export async function submitTestimony(testimonyData) {
-  let created = null;
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/testimonies`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(testimonyData)
-    });
-    if (res.ok) {
-      created = await res.json();
-    }
-  } catch (err) {
-    console.warn('Backend unavailable, saving testimony locally', err);
+  const res = await fetch(`${API_BASE_URL}/api/testimonies`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(testimonyData)
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to submit testimony'));
   }
-
-  if (!created) {
-    created = {
-      ...testimonyData,
-      id: testimonyData.id || `testimony-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
-      created_at: new Date().toISOString()
-    };
-  } else {
-    created = {
-      ...created,
-      id: String(created.id || created._id || `testimony-${Date.now()}`)
-    };
-  }
+  const rawCreated = await res.json();
+  const created = {
+    ...rawCreated,
+    id: String(rawCreated.id || rawCreated._id || `testimony-${Date.now()}`)
+  };
 
   const existing = getStoredTestimonies();
   const updated = [created, ...existing.filter(t => String(t.id) !== String(created.id) && String(t._id) !== String(created.id))];
@@ -557,12 +531,11 @@ export async function submitTestimony(testimonyData) {
 }
 
 export async function deleteTestimony(testimonyId) {
-  try {
-    await fetch(`${API_BASE_URL}/api/testimonies/${testimonyId}`, {
-      method: 'DELETE'
-    });
-  } catch (err) {
-    console.warn('Backend delete error', err);
+  const res = await fetch(`${API_BASE_URL}/api/testimonies/${testimonyId}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to delete testimony'));
   }
   const existing = getStoredTestimonies();
   const updated = existing.filter(t => String(t.id) !== String(testimonyId) && String(t._id) !== String(testimonyId));
@@ -571,13 +544,13 @@ export async function deleteTestimony(testimonyId) {
 }
 
 export async function toggleTestimonyHomeFeature(id) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/testimonies/${id}/toggle-home`, {
-      method: 'PUT'
-    });
-    if (res.ok) return await res.json();
-  } catch (e) {}
-  return { id, success: true };
+  const res = await fetch(`${API_BASE_URL}/api/testimonies/${id}/toggle-home`, {
+    method: 'PUT'
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to toggle featured testimony'));
+  }
+  return await res.json();
 }
 
 export async function changeAdminPassword({ userId = 'admin', currentPassword, newPassword, newUserId }) {
@@ -645,7 +618,7 @@ export async function triggerNotification(payload) {
 // MINISTRIES & PRAYER SERVICES
 export async function fetchMinistries() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/ministries`);
+    const res = await fetch(`${API_BASE_URL}/api/ministries`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch ministries');
     return await res.json();
   } catch (err) {
@@ -660,7 +633,7 @@ export async function createMinistry(ministryData) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(ministryData)
   });
-  if (!res.ok) throw new Error('Failed to create ministry');
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to create ministry'));
   return await res.json();
 }
 
@@ -670,20 +643,16 @@ export async function updateMinistry(id, ministryData) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(ministryData)
   });
-  if (!res.ok) throw new Error('Failed to update ministry');
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to update ministry'));
   return await res.json();
 }
 
 export async function deleteMinistry(id) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/ministries/${id}`, {
-      method: 'DELETE'
-    });
-    if (!res.ok) throw new Error('Failed to delete ministry');
-    return await res.json();
-  } catch (err) {
-    return { success: true };
-  }
+  const res = await fetch(`${API_BASE_URL}/api/ministries/${id}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to delete ministry'));
+  return await res.json();
 }
 
 // CONTACT & PLAN A VISIT
@@ -708,7 +677,7 @@ export function saveStoredInquiries(list) {
 
 export async function fetchInquiries() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/contact/messages`);
+    const res = await fetch(`${API_BASE_URL}/api/contact/messages`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -721,9 +690,10 @@ export async function fetchInquiries() {
 }
 
 export async function deleteInquiry(id) {
-  try {
-    await fetch(`${API_BASE_URL}/api/contact/messages/${id}`, { method: 'DELETE' });
-  } catch (e) {}
+  const res = await fetch(`${API_BASE_URL}/api/contact/messages/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to delete inquiry'));
+  }
   const existing = getStoredInquiries();
   const updated = existing.filter(m => m.id !== id);
   saveStoredInquiries(updated);
@@ -772,7 +742,7 @@ export async function submitPlanVisit(visitData) {
 // GIVING / DONATIONS
 export async function fetchGivingDetails() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/donations/details`);
+    const res = await fetch(`${API_BASE_URL}/api/donations/details`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch details');
     return await res.json();
   } catch (err) {
@@ -867,7 +837,7 @@ export async function submitDonation(donationData) {
 export async function fetchAllDonations() {
   let serverDonations = [];
   try {
-    const res = await fetch(`${API_BASE_URL}/api/donations`);
+    const res = await fetch(`${API_BASE_URL}/api/donations`, { cache: 'no-store' });
     if (res.ok) {
       serverDonations = await res.json();
     }
@@ -890,12 +860,11 @@ export async function fetchAllDonations() {
 }
 
 export async function deleteDonation(donationId) {
-  try {
-    await fetch(`${API_BASE_URL}/api/donations/${donationId}`, {
-      method: 'DELETE'
-    });
-  } catch (err) {
-    console.warn('Could not delete donation on server', err);
+  const res = await fetch(`${API_BASE_URL}/api/donations/${donationId}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Could not delete donation on server'));
   }
 
   const existing = getStoredDonations();
@@ -905,14 +874,13 @@ export async function deleteDonation(donationId) {
 }
 
 export async function updateDonationStatus(donationId, status) {
-  try {
-    await fetch(`${API_BASE_URL}/api/donations/${donationId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-  } catch (err) {
-    console.warn('Could not update donation status on server', err);
+  const res = await fetch(`${API_BASE_URL}/api/donations/${donationId}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Could not update donation status on server'));
   }
 
   const existing = getStoredDonations();

@@ -21,11 +21,21 @@ async def get_all_ministries():
                 doc["id"] = str(doc.get("_id", doc.get("id")))
                 results.append(doc)
             if not results:
-                # Seed initial collection
-                for m in INITIAL_MINISTRIES:
-                    doc_to_save = {**m, "_id": m["id"], "created_at": datetime.now()}
-                    await db.ministries.insert_one(doc_to_save)
-                return list(ministries_store.values())
+                flags = await db.site_meta.find_one({"_id": "seed_flags"})
+                if not flags or not flags.get("ministries_seeded"):
+                    for m in INITIAL_MINISTRIES:
+                        doc_to_save = {**m, "_id": m["id"], "created_at": datetime.now()}
+                        await db.ministries.update_one(
+                            {"_id": m["id"]},
+                            {"$setOnInsert": doc_to_save},
+                            upsert=True
+                        )
+                    await db.site_meta.update_one(
+                        {"_id": "seed_flags"},
+                        {"$set": {"ministries_seeded": True}},
+                        upsert=True
+                    )
+                    return list(ministries_store.values())
             return results
         except Exception as e:
             print("MongoDB fetch ministries error:", e)
@@ -44,6 +54,7 @@ async def create_ministry(ministry: MinistryCreate):
             await db.ministries.insert_one({**item_dict, "_id": new_id})
         except Exception as e:
             print("MongoDB insert ministry error:", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     ministries_store[new_id] = item_dict
     return item_dict
@@ -62,7 +73,7 @@ async def update_ministry(ministry_id: str, payload: MinistryUpdate):
             db = get_database()
             await db.ministries.update_one(
                 {"$or": [{"_id": ministry_id}, {"id": ministry_id}]},
-                {"$set": updates},
+                {"$set": updates, "$setOnInsert": {"id": ministry_id, "created_at": datetime.now()}},
                 upsert=True
             )
             saved = await db.ministries.find_one({"$or": [{"_id": ministry_id}, {"id": ministry_id}]})
@@ -72,6 +83,7 @@ async def update_ministry(ministry_id: str, payload: MinistryUpdate):
                 return saved
         except Exception as e:
             print("MongoDB update ministry error:", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     ministries_store[ministry_id] = updated_item
     return updated_item
@@ -87,6 +99,7 @@ async def delete_ministry(ministry_id: str):
                 deleted = True
         except Exception as e:
             print("MongoDB delete ministry error:", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     if ministry_id in ministries_store:
         del ministries_store[ministry_id]

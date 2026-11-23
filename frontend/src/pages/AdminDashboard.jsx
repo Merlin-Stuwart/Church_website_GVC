@@ -164,6 +164,7 @@ export default function AdminDashboard() {
   const [inquirySearch, setInquirySearch] = useState('');
   const [inquirySubjectFilter, setInquirySubjectFilter] = useState('All');
   const [loading, setLoading] = useState(false);
+  const [systemStatus, setSystemStatus] = useState(null);
 
   // New Sermon Modal State
   const [isSermonModalOpen, setIsSermonModalOpen] = useState(false);
@@ -257,26 +258,29 @@ export default function AdminDashboard() {
   const loadAll = async () => {
     setLoading(true);
     try {
+      const st = await fetchSystemStatus();
+      setSystemStatus(st);
+
       const s = await fetchSermons();
-      if (s && s.length > 0) setSermons(s);
+      if (Array.isArray(s)) setSermons(s);
 
       const e = await fetchEvents();
       if (Array.isArray(e)) setEvents(e);
 
       const p = await fetchAllPrayersAdmin();
-      if (p && p.length > 0) setPrayers(p);
+      if (Array.isArray(p)) setPrayers(p);
 
       const t = await fetchTestimonies();
-      if (t && t.length > 0) setTestimonies(t);
+      if (Array.isArray(t)) setTestimonies(t);
 
       const m = await fetchMinistries();
-      if (m && m.length > 0) setMinistries(m);
+      if (Array.isArray(m)) setMinistries(m);
 
       const d = await fetchAllDonations();
-      if (d) setDonations(d);
+      if (Array.isArray(d)) setDonations(d);
 
       const inq = await fetchInquiries();
-      if (inq && Array.isArray(inq)) setInquiries(inq);
+      if (Array.isArray(inq)) setInquiries(inq);
     } catch (err) {
       console.warn('Dashboard load fallback', err);
     } finally {
@@ -323,8 +327,12 @@ export default function AdminDashboard() {
 
   const handleDeleteInquiry = async (id) => {
     if (window.confirm('Delete this inquiry? / இந்த தகவலை நீக்க வேண்டுமா?')) {
-      await deleteInquiry(id);
-      setInquiries(prev => prev.filter(item => item.id !== id));
+      try {
+        await deleteInquiry(id);
+        setInquiries(prev => prev.filter(item => item.id !== id));
+      } catch (err) {
+        alert('Delete failed: ' + (err.message || 'Check backend connection'));
+      }
     }
   };
 
@@ -335,6 +343,7 @@ export default function AdminDashboard() {
         setDonations(prev => prev.filter(item => item.id !== id));
       } catch (err) {
         console.warn('Delete donation error', err);
+        alert('Delete failed: ' + (err.message || 'Check backend connection'));
       }
     }
   };
@@ -346,6 +355,7 @@ export default function AdminDashboard() {
       setDonations(prev => prev.map(item => item.id === id ? { ...item, status: nextStatus } : item));
     } catch (err) {
       console.warn('Status update error', err);
+      alert('Save failed: ' + (err.message || 'Check backend connection'));
     }
   };
 
@@ -552,24 +562,8 @@ export default function AdminDashboard() {
         thumbnail: ''
       });
     } catch (err) {
-      // Local fallback
-      const localSermon = { ...sermonPayload, id: `sermon-${Date.now()}` };
-      setSermons([localSermon, ...sermons]);
-      setIsSermonModalOpen(false);
-      setNewSermon({
-        title: '',
-        speaker: siteForm.seniorPastor,
-        date: new Date().toISOString().split('T')[0],
-        series: 'கூடாரப் பண்டிகை பெருவிழா',
-        scripture: '',
-        video_url: '',
-        audio_url: '',
-        duration: '45 mins',
-        category: 'கூடாரப் பண்டிகை',
-        language: 'Tamil',
-        summary: '',
-        thumbnail: ''
-      });
+      console.error('Failed to publish sermon:', err);
+      alert('Save failed: ' + (err.message || 'Check backend connection'));
     }
   };
 
@@ -577,8 +571,10 @@ export default function AdminDashboard() {
     if (!window.confirm('Are you sure you want to delete this sermon?')) return;
     try {
       await deleteSermon(id);
-    } catch (err) {}
-    setSermons(sermons.filter(s => s.id !== id));
+      setSermons(sermons.filter(s => s.id !== id));
+    } catch (err) {
+      alert('Delete failed: ' + (err.message || 'Check backend connection'));
+    }
   };
 
   const handleEventImageUpload = async (e) => {
@@ -685,14 +681,8 @@ export default function AdminDashboard() {
       setIsEventModalOpen(false);
       setEditingEventId(null);
     } catch (err) {
-      if (editingEventId) {
-        setEvents(events.map(ev => ev.id === editingEventId ? { ...ev, ...payload } : ev));
-      } else {
-        const localEvent = { ...payload, id: `event-${Date.now()}` };
-        setEvents([localEvent, ...events]);
-      }
-      setIsEventModalOpen(false);
-      setEditingEventId(null);
+      console.error('Failed to save event:', err);
+      alert('Save failed: ' + (err.message || 'Check backend connection'));
     }
   };
 
@@ -700,28 +690,33 @@ export default function AdminDashboard() {
     if (!window.confirm('Are you sure you want to delete this event?')) return;
     try {
       await deleteEvent(id);
-    } catch (err) {}
-    setEvents(events.filter(e => e.id !== id));
+      setEvents(events.filter(e => e.id !== id));
+    } catch (err) {
+      alert('Delete failed: ' + (err.message || 'Check backend connection'));
+    }
   };
 
   const handleDeletePrayer = async (id) => {
     if (!window.confirm('Delete this prayer request?')) return;
     try {
       await deletePrayer(id);
+      setPrayers(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.warn('Error deleting prayer', err);
+      alert('Delete failed: ' + (err.message || 'Check backend connection'));
     }
-    setPrayers(prev => prev.filter(p => p.id !== id));
   };
 
   const handleDeleteTestimony = async (id) => {
     if (!window.confirm('Delete this testimony? / இந்த சாட்சியை நீக்க வேண்டுமா?')) return;
     try {
       await deleteTestimony(id);
+      setTestimonies(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       console.warn('Error deleting testimony', err);
+      alert('Delete failed: ' + (err.message || 'Check backend connection'));
+      return;
     }
-    setTestimonies(prev => prev.filter(t => t.id !== id));
     const currentFeatured = siteForm.featuredHomeTestimonyIds || settings.featuredHomeTestimonyIds || [];
     if (currentFeatured.map(String).includes(String(id))) {
       const updated = currentFeatured.filter(fid => String(fid) !== String(id));
@@ -854,15 +849,8 @@ export default function AdminDashboard() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3500);
     } catch (err) {
-      if (editingMinistryId) {
-        setMinistries(prev => prev.map(m => m.id === editingMinistryId ? { ...m, ...ministryForm } : m));
-      } else {
-        const localItem = { ...ministryForm, id: `ministry-${Date.now()}` };
-        setMinistries(prev => [localItem, ...prev]);
-      }
-      setIsMinistryModalOpen(false);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3500);
+      console.error('Failed to save ministry:', err);
+      alert('Save failed: ' + (err.message || 'Check backend connection'));
     }
   };
 
@@ -870,8 +858,10 @@ export default function AdminDashboard() {
     if (!window.confirm('Are you sure you want to delete this ministry or prayer service?')) return;
     try {
       await deleteMinistry(id);
-    } catch (err) {}
-    setMinistries(prev => prev.filter(m => m.id !== id));
+      setMinistries(prev => prev.filter(m => m.id !== id));
+    } catch (err) {
+      alert('Delete failed: ' + (err.message || 'Check backend connection'));
+    }
   };
 
   const handleLogout = () => {
@@ -1691,12 +1681,44 @@ export default function AdminDashboard() {
           </p>
           <div className="hidden lg:flex items-center gap-2 shrink-0 text-[11px] text-slate-500">
             <span>Database:</span>
-            <span className="font-semibold text-amber-400 font-mono">MongoDB Atlas</span>
+            {systemStatus === null ? (
+              <span className="font-semibold text-amber-400 font-mono">Checking...</span>
+            ) : systemStatus.status === 'offline-fallback' || !systemStatus.database?.connected ? (
+              <span className="font-semibold text-red-400 font-mono">Offline / Disconnected</span>
+            ) : (
+              <span className="font-semibold text-emerald-400 font-mono">MongoDB Connected</span>
+            )}
           </div>
         </div>
 
         {/* Main Content Area */}
         <main className="max-w-7xl mx-auto w-full p-4 sm:p-8 flex-1">
+
+        {/* Live Backend & Database Diagnostic Banner */}
+        {systemStatus && (systemStatus.status === 'offline-fallback' || !systemStatus.database?.connected) && (
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-red-500/15 border-2 border-red-500/50 text-red-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-start gap-3 text-left">
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-bold text-sm text-white">
+                  Backend Server / MongoDB Not Reachable — Changes Cannot Save Live
+                </div>
+                <p className="text-xs text-red-200/90 leading-relaxed">
+                  Frontend is trying to reach <code className="px-1.5 py-0.5 rounded bg-slate-900 text-amber-300 font-mono">{API_BASE_URL || `${typeof window !== 'undefined' ? window.location.origin : ''} (VITE_API_URL not set)`}</code>. If you deployed frontend &amp; backend separately, set <code className="px-1 py-0.5 rounded bg-slate-900 text-amber-300 font-mono">VITE_API_URL</code> to your Render backend URL in frontend environment variables and redeploy, or wait ~30s if Render free tier is waking up.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={loadAll}
+              disabled={loading}
+              className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 cursor-pointer self-start sm:self-center"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>Re-check Connection</span>
+            </button>
+          </div>
+        )}
         
         {/* Success Alert Banner */}
         {saveSuccess && (

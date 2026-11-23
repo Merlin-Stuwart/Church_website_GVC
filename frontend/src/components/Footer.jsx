@@ -56,7 +56,7 @@ export default function Footer({ onOpenAdminAuth }) {
             </div>
 
             <p className="text-slate-400 text-[11px] leading-relaxed line-clamp-2">
-              Apostolic, Bible-believing family rooted in the gospel of grace. Established 1998 in Vattamalai.
+              Apostolic, Bible-believing family rooted in the gospel of grace. Established {settings?.foundedYear || '1998'} in Vattamalai.
             </p>
 
             <div className="flex items-center gap-2 pt-0.5">
@@ -69,9 +69,15 @@ export default function Footer({ onOpenAdminAuth }) {
               <a href="https://instagram.com" target="_blank" rel="noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-pink-500 hover:border-pink-500/40 transition-colors" title="Instagram">
                 <Instagram className="w-3.5 h-3.5" />
               </a>
-              <a href={`https://wa.me/919360588397`} target="_blank" rel="noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors" title="WhatsApp">
-                <MessageCircle className="w-3.5 h-3.5" />
-              </a>
+              {(() => {
+                const digits = (settings?.whatsappNumber || '919360588397').replace(/[^0-9]/g, '');
+                const waNum = digits.length === 10 ? `91${digits}` : (digits || '919360588397');
+                return (
+                  <a href={`https://wa.me/${waNum}`} target="_blank" rel="noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors" title="WhatsApp">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                  </a>
+                );
+              })()}
             </div>
           </div>
 
@@ -111,11 +117,11 @@ export default function Footer({ onOpenAdminAuth }) {
               </div>
               <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-center">
                 <span className="font-bold text-slate-300">Wednesday Study</span>
-                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">07:00 PM</span>
+                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">{settings.wednesdayTiming || '07:00 PM'}</span>
               </div>
               <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-center">
                 <span className="font-bold text-slate-300">Friday Fasting</span>
-                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">10:30 AM</span>
+                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">{settings.fridayTiming || '10:30 AM'}</span>
               </div>
             </div>
           </div>

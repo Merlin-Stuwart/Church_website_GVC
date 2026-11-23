@@ -7,7 +7,7 @@ class MinistryBase(BaseModel):
     category: Optional[str] = "Prayer & Service"
     badge: Optional[str] = None
     tagline: Optional[str] = None
-    desc: str
+    desc: Optional[str] = ""
     meeting_time: Optional[str] = None
     leader: Optional[str] = None
     image: Optional[str] = None

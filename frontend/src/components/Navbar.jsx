@@ -90,8 +90,8 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
             {/* Quick Access Info */}
             <div className="flex items-center gap-4 font-semibold text-slate-500">
               <Link to="/contact" className="hidden md:inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">
-                <MapPin className="w-3.5 h-3.5 text-amber-600" />
-                <span>Vattamalai, Tamil Nadu</span>
+                <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="max-w-[220px] truncate">{(settings.address || 'Vattamalai, Tamil Nadu').replace(/^Grace Victory Church,\s*/i, '')}</span>
               </Link>
               <span className="hidden md:inline text-slate-300">|</span>
               <a href={`tel:${(settings.phone || '+91 93605 88397').replace(/[^0-9+]/g, '')}`} className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">
@@ -137,14 +137,23 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
                 </svg>
               </div>
               <div className="flex flex-col text-left leading-none min-w-0">
-                <div className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
-                  <span className="font-serif font-black text-xs sm:text-base md:text-xl text-[#0B192C] tracking-tight sm:tracking-wide uppercase">
-                    Grace Victory
-                  </span>
-                  <span className="font-serif font-black text-xs sm:text-base md:text-xl text-amber-600 tracking-tight sm:tracking-wide uppercase">
-                    Church
-                  </span>
-                </div>
+                {(() => {
+                  const words = (settings.churchName || 'Grace Victory Church').trim().split(/\s+/);
+                  const lastWord = words.length > 1 ? words[words.length - 1] : '';
+                  const mainPart = words.length > 1 ? words.slice(0, -1).join(' ') : words[0];
+                  return (
+                    <div className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
+                      <span className="font-serif font-black text-xs sm:text-base md:text-xl text-[#0B192C] tracking-tight sm:tracking-wide uppercase">
+                        {mainPart}
+                      </span>
+                      {lastWord && (
+                        <span className="font-serif font-black text-xs sm:text-base md:text-xl text-amber-600 tracking-tight sm:tracking-wide uppercase">
+                          {lastWord}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
                 <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.10em] sm:tracking-[0.18em] text-slate-400 uppercase mt-0.5 truncate hidden xs:block">
                   Vattamalai • Established {settings.foundedYear || '1998'}
                 </span>

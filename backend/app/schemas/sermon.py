@@ -5,10 +5,10 @@ from datetime import datetime
 class SermonBase(BaseModel):
     title: str
     speaker: str
-    date: str
-    series: str
-    scripture: str
-    summary: str
+    date: Optional[str] = ""
+    series: Optional[str] = ""
+    scripture: Optional[str] = ""
+    summary: Optional[str] = ""
     video_url: str
     audio_url: Optional[str] = ""
     duration: Optional[str] = "45 mins"

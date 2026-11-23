@@ -22,7 +22,7 @@ export default function Ministries({ onOpenPlanVisit }) {
   useEffect(() => {
     async function load() {
       const data = await fetchMinistries();
-      if (data && data.length > 0) {
+      if (Array.isArray(data)) {
         setMinistries(data);
       }
     }

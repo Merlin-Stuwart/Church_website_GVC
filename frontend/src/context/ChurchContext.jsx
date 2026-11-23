@@ -114,53 +114,20 @@ function persistSettings(next) {
 
 export function sanitizeFranklinName(name) {
   if (!name || typeof name !== 'string') return 'Pastor R. Franklin Rajendran';
-  let cleaned = name.replace(/(?:Rajendran)+/gi, 'Rajendran');
-  cleaned = cleaned.replace(/(?:endran)+/gi, 'endran');
-  if (cleaned.includes('Franklin') && !cleaned.includes('Rajendran')) {
-    cleaned = cleaned.replace(/Franklin(\s+Raj)?/i, 'Franklin Rajendran');
-  }
+  let cleaned = name.replace(/(?:Rajendran){2,}/gi, 'Rajendran');
+  cleaned = cleaned.replace(/(?:endran){2,}/gi, 'endran');
   return cleaned.trim();
 }
 
 export function normalizeLeadershipTeam(team) {
-  if (!Array.isArray(team) || team.length < 2) return team;
-
-  let list = team.map(leader => {
-    let updatedName = leader.name;
-    if (updatedName && updatedName.includes('Franklin') && !updatedName.includes('Rajendran')) {
-      updatedName = 'Pastor R. Franklin Rajendran';
-    }
-    if (updatedName && (updatedName.includes('Rachel') || updatedName.includes('Joice'))) {
-      updatedName = 'Pastor Joice Rajendran';
-    }
-    return { ...leader, name: updatedName };
-  });
-
-  // Re-order: 1) Senior Pastor, 2) Co-Pastor, 3) Youth Pastor
-  const seniorIdx = list.findIndex(l =>
-    l.role?.toLowerCase().includes('senior') || l.name?.toLowerCase().includes('p. rajendran')
-  );
-  const coPastorIdx = list.findIndex(l =>
-    l.role?.toLowerCase().includes('co-pastor') || l.role?.toLowerCase().includes('women') || l.name?.toLowerCase().includes('joice') || l.name?.toLowerCase().includes('rachel')
-  );
-  const youthIdx = list.findIndex(l =>
-    l.role?.toLowerCase().includes('youth') || l.name?.toLowerCase().includes('franklin')
-  );
-
-  if (seniorIdx !== -1 && coPastorIdx !== -1 && youthIdx !== -1) {
-    const senior = list[seniorIdx];
-    const coPastor = list[coPastorIdx];
-    const youth = list[youthIdx];
-    const remaining = list.filter((_, i) => i !== seniorIdx && i !== coPastorIdx && i !== youthIdx);
-    return [senior, coPastor, youth, ...remaining];
-  }
-
-  return list;
+  if (!Array.isArray(team)) return team;
+  return team;
 }
 
 const ChurchContext = createContext({
   settings: DEFAULT_SETTINGS,
   updateSettings: async () => DEFAULT_SETTINGS,
+  refreshSettings: async () => false,
   resetSettings: () => { },
   isAdminLoggedIn: false,
   loginAdmin: async () => ({ success: false }),
@@ -194,73 +161,127 @@ export function ChurchProvider({ children }) {
     }
   });
 
-  // Sync settings with backend API if available
+  // Sync settings with backend API, retry on Render cold starts, and re-sync on tab focus/storage
+  const lastFetchRef = React.useRef(0);
+
+  const loadRemoteSettings = React.useCallback(async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastFetchRef.current < 2000) return false;
+    lastFetchRef.current = now;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/settings`, { cache: 'no-store' });
+      if (!res.ok) return false;
+      const remote = await res.json();
+      if (remote && typeof remote === 'object') {
+        setSettings(prev => persistSettings({
+          ...prev,
+          churchName: remote.church_name || prev.churchName,
+          tamilName: remote.tamil_name || prev.tamilName,
+          seniorPastor: remote.senior_pastor || prev.seniorPastor,
+          seniorPastorTitle: remote.senior_pastor_title || prev.seniorPastorTitle,
+          associatePastor: sanitizeFranklinName(remote.associate_pastor || prev.associatePastor),
+          associatePastorTitle: remote.associate_pastor_title || prev.associatePastorTitle,
+          associatePastorImage: remote.associate_pastor_image || prev.associatePastorImage,
+          phone: remote.phone || prev.phone,
+          whatsappNumber: remote.whatsapp_number || prev.whatsappNumber,
+          email: remote.email || prev.email,
+          adminNotificationEmail: remote.admin_notification_email || prev.adminNotificationEmail,
+          address: remote.address || prev.address,
+          googleMapsEmbedUrl: remote.google_maps_embed_url || prev.googleMapsEmbedUrl,
+          googleMapsLink: remote.google_maps_link || prev.googleMapsLink,
+          serviceTimings: remote.service_timings || prev.serviceTimings,
+          wednesdayTiming: remote.wednesday_timing || prev.wednesdayTiming,
+          fridayTiming: remote.friday_timing || prev.fridayTiming,
+          yearBadge: remote.year_badge || prev.yearBadge,
+          themeBadge: remote.theme_badge || prev.themeBadge,
+          tamilTheme: remote.tamil_theme || prev.tamilTheme,
+          tagline: remote.tagline || prev.tagline,
+          verse: remote.verse || prev.verse,
+          pastorImage: remote.pastor_image || prev.pastorImage,
+          churchHallImage: remote.church_hall_image || prev.churchHallImage,
+          upiId: remote.upi_id || prev.upiId,
+          bankName: remote.bank_name || prev.bankName,
+          accountNumber: remote.account_number || prev.accountNumber,
+          branch: remote.branch || prev.branch,
+          ifscCode: remote.ifsc_code || prev.ifscCode,
+          razorpayKeyId: remote.razorpay_key_id || prev.razorpayKeyId,
+          razorpaySecretConfigured: Boolean(remote.razorpay_secret_configured),
+          churchStats: remote.church_stats || prev.churchStats,
+          milestones: remote.milestones || prev.milestones,
+          coreBeliefs: remote.core_beliefs || prev.coreBeliefs,
+          leadershipTeam: normalizeLeadershipTeam(remote.leadership_team || prev.leadershipTeam),
+          sliderSpeedSeconds: remote.slider_speed_seconds || prev.sliderSpeedSeconds || 3,
+          featuredHomeTestimonyIds: remote.featured_home_testimony_ids || prev.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
+          foundedYear: remote.founded_year || prev.foundedYear || "1998",
+          pastorWelcomeBadge: remote.pastor_welcome_badge || prev.pastorWelcomeBadge,
+          pastorWelcomeTitle: remote.pastor_welcome_title || prev.pastorWelcomeTitle,
+          pastorWelcomeP1: remote.pastor_welcome_p1 || prev.pastorWelcomeP1,
+          pastorWelcomeP2: remote.pastor_welcome_p2 || prev.pastorWelcomeP2,
+          pastorWelcomeQuote: remote.pastor_welcome_quote || prev.pastorWelcomeQuote,
+          faqList: remote.faq_list || prev.faqList,
+          swiftCode: remote.swift_code || prev.swiftCode || "SBININBB492",
+          givingVerse: remote.giving_verse || prev.givingVerse,
+          givingPresets: remote.giving_presets || prev.givingPresets,
+          prayerWallVerse: remote.prayer_wall_verse || prev.prayerWallVerse,
+        }));
+        return true;
+      }
+    } catch (err) {
+      // Backend sleeping or offline
+    }
+    return false;
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
-    async function loadRemoteSettings() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/settings`, { cache: 'no-store' });
-        if (res.ok) {
-          const remote = await res.json();
-          if (remote && remote.church_name && isMounted) {
-            setSettings(prev => persistSettings({
-              ...prev,
-              churchName: remote.church_name || prev.churchName,
-              tamilName: remote.tamil_name || prev.tamilName,
-              seniorPastor: remote.senior_pastor || prev.seniorPastor,
-              seniorPastorTitle: remote.senior_pastor_title || prev.seniorPastorTitle,
-              associatePastor: sanitizeFranklinName(remote.associate_pastor || prev.associatePastor),
-              associatePastorTitle: remote.associate_pastor_title || prev.associatePastorTitle,
-              associatePastorImage: remote.associate_pastor_image || prev.associatePastorImage,
-              phone: remote.phone || prev.phone,
-              whatsappNumber: remote.whatsapp_number || prev.whatsappNumber,
-              email: remote.email || prev.email,
-              adminNotificationEmail: remote.admin_notification_email || prev.adminNotificationEmail,
-              address: remote.address || prev.address,
-              googleMapsEmbedUrl: remote.google_maps_embed_url || prev.googleMapsEmbedUrl,
-              googleMapsLink: remote.google_maps_link || prev.googleMapsLink,
-              serviceTimings: remote.service_timings || prev.serviceTimings,
-              yearBadge: remote.year_badge || prev.yearBadge,
-              themeBadge: remote.theme_badge || prev.themeBadge,
-              tamilTheme: remote.tamil_theme || prev.tamilTheme,
-              tagline: remote.tagline || prev.tagline,
-              verse: remote.verse || prev.verse,
-              pastorImage: remote.pastor_image || prev.pastorImage,
-              churchHallImage: remote.church_hall_image || prev.churchHallImage,
-              upiId: remote.upi_id || prev.upiId,
-              bankName: remote.bank_name || prev.bankName,
-              accountNumber: remote.account_number || prev.accountNumber,
-              branch: remote.branch || prev.branch,
-              ifscCode: remote.ifsc_code || prev.ifscCode,
-              razorpayKeyId: remote.razorpay_key_id || prev.razorpayKeyId,
-              razorpaySecretConfigured: Boolean(remote.razorpay_secret_configured),
-              churchStats: remote.church_stats || prev.churchStats,
-              milestones: remote.milestones || prev.milestones,
-              coreBeliefs: remote.core_beliefs || prev.coreBeliefs,
-              leadershipTeam: normalizeLeadershipTeam(remote.leadership_team || prev.leadershipTeam),
-              sliderSpeedSeconds: remote.slider_speed_seconds || prev.sliderSpeedSeconds || 3,
-              featuredHomeTestimonyIds: remote.featured_home_testimony_ids || prev.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
-              foundedYear: remote.founded_year || prev.foundedYear || "1998",
-              pastorWelcomeBadge: remote.pastor_welcome_badge || prev.pastorWelcomeBadge,
-              pastorWelcomeTitle: remote.pastor_welcome_title || prev.pastorWelcomeTitle,
-              pastorWelcomeP1: remote.pastor_welcome_p1 || prev.pastorWelcomeP1,
-              pastorWelcomeP2: remote.pastor_welcome_p2 || prev.pastorWelcomeP2,
-              pastorWelcomeQuote: remote.pastor_welcome_quote || prev.pastorWelcomeQuote,
-              faqList: remote.faq_list || prev.faqList,
-              swiftCode: remote.swift_code || prev.swiftCode || "SBININBB492",
-              givingVerse: remote.giving_verse || prev.givingVerse,
-              givingPresets: remote.giving_presets || prev.givingPresets,
-              prayerWallVerse: remote.prayer_wall_verse || prev.prayerWallVerse,
-            }));
+    let retryTimer1;
+    let retryTimer2;
+
+    async function initLoad() {
+      const ok = await loadRemoteSettings(true);
+      if (!ok && isMounted) {
+        retryTimer1 = setTimeout(async () => {
+          if (!isMounted) return;
+          const ok2 = await loadRemoteSettings(true);
+          if (!ok2 && isMounted) {
+            retryTimer2 = setTimeout(() => {
+              if (isMounted) loadRemoteSettings(true);
+            }, 10000);
           }
-        }
-      } catch (err) {
-        // Backend offline or fallback
+        }, 4000);
       }
     }
-    loadRemoteSettings();
-    return () => { isMounted = false; };
-  }, []);
+    initLoad();
+
+    const handleFocus = () => {
+      loadRemoteSettings(false);
+    };
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadRemoteSettings(false);
+      }
+    };
+    const handleStorage = (e) => {
+      if (e.key === 'gvc_live_settings' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setSettings(prev => ({ ...DEFAULT_SETTINGS, ...prev, ...parsed }));
+        } catch (err) { }
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      isMounted = false;
+      clearTimeout(retryTimer1);
+      clearTimeout(retryTimer2);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [loadRemoteSettings]);
 
   const updateSettings = async (newSettings) => {
     let finalLeadership = newSettings.leadershipTeam || settings.leadershipTeam;
@@ -290,17 +311,9 @@ export function ChurchProvider({ children }) {
 
     // Strip sensitive write-only fields so they are NEVER saved to browser localStorage
     const { razorpayKeySecret, ...cleanSettingsToPersist } = updated;
-    setSettings(cleanSettingsToPersist);
-    safeStorage.setItem('gvc_live_settings', JSON.stringify(cleanSettingsToPersist));
 
-    // Dispatch custom event for real-time multi-tab/component sync
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('gvc_settings_updated'));
-    }
-
-    // Save to the backend and WAIT for confirmation. Render free tier can take
-    // 30-60s to wake up, so use a generous timeout and surface real failures
-    // instead of silently keeping the change only in this browser.
+    // Save to the backend FIRST and wait for confirmation.
+    // Only update local state & browser cache AFTER MongoDB/server confirms success.
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 90000);
     const token = safeStorage.getItem('gvc_admin_token') || '';
@@ -328,6 +341,8 @@ export function ChurchProvider({ children }) {
           google_maps_embed_url: updated.googleMapsEmbedUrl,
           google_maps_link: updated.googleMapsLink,
           service_timings: updated.serviceTimings,
+          wednesday_timing: updated.wednesdayTiming,
+          friday_timing: updated.fridayTiming,
           year_badge: updated.yearBadge,
           theme_badge: updated.themeBadge,
           tamil_theme: updated.tamilTheme,
@@ -384,7 +399,21 @@ export function ChurchProvider({ children }) {
       throw new Error(errBody.detail || `Save failed (HTTP ${res.status}). Your change was NOT saved to the live site.`);
     }
 
-    return updated;
+    const respData = await res.json().catch(() => ({}));
+    const finalSaved = {
+      ...cleanSettingsToPersist,
+      ...(respData?.settings && typeof respData.settings.razorpay_secret_configured === 'boolean'
+        ? { razorpaySecretConfigured: respData.settings.razorpay_secret_configured }
+        : {})
+    };
+    setSettings(finalSaved);
+    persistSettings(finalSaved);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('gvc_settings_updated'));
+    }
+
+    return finalSaved;
   };
 
   const loginAdmin = async (param1, param2) => {
@@ -471,6 +500,7 @@ export function ChurchProvider({ children }) {
     <ChurchContext.Provider value={{
       settings: settings || DEFAULT_SETTINGS,
       updateSettings,
+      refreshSettings: () => loadRemoteSettings(true),
       resetSettings,
       isAdminLoggedIn,
       loginAdmin,

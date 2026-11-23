@@ -21,9 +21,20 @@ async def get_public_prayers():
             doc["id"] = str(doc.get("_id", doc.get("id")))
             results.append(doc)
         if not results:
-            for p in INITIAL_PRAYERS:
-                await db.prayers.insert_one({**p, "_id": p["id"]})
-            return [p for p in prayers_store.values() if p["is_public"]]
+            flags = await db.site_meta.find_one({"_id": "seed_flags"})
+            if not flags or not flags.get("prayers_seeded"):
+                for p in INITIAL_PRAYERS:
+                    await db.prayers.update_one(
+                        {"_id": p["id"]},
+                        {"$setOnInsert": {**p, "_id": p["id"]}},
+                        upsert=True
+                    )
+                await db.site_meta.update_one(
+                    {"_id": "seed_flags"},
+                    {"$set": {"prayers_seeded": True}},
+                    upsert=True
+                )
+                return [p for p in prayers_store.values() if p["is_public"]]
         return results
 
     return [p for p in prayers_store.values() if p.get("is_public", True)]

@@ -23,7 +23,7 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
   useEffect(() => {
     async function loadTestimonies() {
       const data = await fetchTestimonies();
-      if (data && data.length > 0) {
+      if (Array.isArray(data)) {
         setTestimonies(data);
       }
     }
@@ -183,7 +183,7 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
             Every Request Is Lifted Up In Prayer
           </h3>
           <p className="text-slate-600 text-sm leading-relaxed mb-6">
-            Our Senior Pastor P. Rajendran and church intercessory prayer warriors gather every Friday morning from 10:30 AM to 01:30 PM to lay hands on and pray over every submitted petition.
+            Our Senior Pastor {settings?.seniorPastor || 'Pastor P. Rajendran'} and church intercessory prayer warriors gather every Friday morning ({settings?.fridayTiming || '10:30 AM to 01:30 PM'}) to lay hands on and pray over every submitted petition.
           </p>
           <button
             onClick={onOpenPrayerModal}

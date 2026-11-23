@@ -346,7 +346,7 @@ export default function Contact() {
           </div>
 
           <div className="space-y-4">
-            {FAQ_LIST.map((faq, idx) => {
+            {(Array.isArray(settings?.faqList) && settings.faqList.length > 0 ? settings.faqList : FAQ_LIST).map((faq, idx) => {
               const isOpen = openFaq === idx;
               return (
                 <div 

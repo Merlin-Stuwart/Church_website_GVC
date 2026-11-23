@@ -4,11 +4,11 @@ from datetime import datetime
 
 class EventBase(BaseModel):
     title: str
-    description: str
+    description: Optional[str] = ""
     date: str
-    time: str
-    location: str
-    category: str = "Worship"
+    time: Optional[str] = ""
+    location: Optional[str] = ""
+    category: Optional[str] = "Sunday Worship"
     image_url: Optional[str] = ""
     featured: Optional[bool] = False
     registration_required: Optional[bool] = False
