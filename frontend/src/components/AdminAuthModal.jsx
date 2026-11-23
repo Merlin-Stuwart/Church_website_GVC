@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   X, Lock, Key, ArrowRight, ShieldCheck, AlertCircle, Eye, EyeOff, User, CheckCircle, Mail, RotateCcw 
@@ -15,12 +15,12 @@ export default function AdminAuthModal({ isOpen, onClose }) {
   const [mode, setMode] = useState('login');
 
   // Login fields
-  const [userId, setUserId] = useState('admin');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   // Forgot password / OTP fields
-  const [forgotUserId, setForgotUserId] = useState('admin');
+  const [forgotUserId, setForgotUserId] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
   const [devOtp, setDevOtp] = useState('');
@@ -29,7 +29,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
   const [showOtpPassword, setShowOtpPassword] = useState(false);
 
   // Change password with old password fields
-  const [cpUserId, setCpUserId] = useState('admin');
+  const [cpUserId, setCpUserId] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -44,6 +44,18 @@ export default function AdminAuthModal({ isOpen, onClose }) {
   const church = useChurch();
   const loginAdmin = church?.loginAdmin || (async () => ({ success: false }));
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode('login');
+      setUserId('');
+      setPassword('');
+      setForgotUserId('');
+      setCpUserId('');
+      setError('');
+      setSuccessMsg('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -81,7 +93,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
     setSuccessMsg('');
     setLoading(true);
 
-    const targetUser = (forgotUserId || userId || 'admin').trim();
+    const targetUser = (forgotUserId || userId || '').trim();
     try {
       const res = await requestPasswordResetOTP(targetUser);
       setMaskedEmail(res.masked_email || 'super admin email');
@@ -123,7 +135,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
     }
 
     setLoading(true);
-    const targetUser = (forgotUserId || userId || 'admin').trim();
+    const targetUser = (forgotUserId || userId || '').trim();
 
     try {
       const res = await resetPasswordWithOTP({
@@ -184,16 +196,16 @@ export default function AdminAuthModal({ isOpen, onClose }) {
     setLoading(true);
     try {
       await changeAdminPassword({
-        userId: cpUserId.trim() || 'admin',
+        userId: cpUserId.trim(),
         currentPassword: currentPassword.trim(),
         newPassword: newPassword.trim(),
-        newUserId: cpUserId.trim() || 'admin'
+        newUserId: cpUserId.trim()
       });
       setSuccessMsg('✓ Password changed successfully! Please log in with your new password.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setUserId(cpUserId.trim() || 'admin');
+      setUserId(cpUserId.trim());
       setTimeout(() => {
         setMode('login');
         setSuccessMsg('');
@@ -273,7 +285,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
              VIEW 1: NORMAL LOGIN FORM
              ============================================================= */}
           {mode === 'login' && (
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <form onSubmit={handleLoginSubmit} autoComplete="off" className="space-y-4">
               {/* User ID Field */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -287,12 +299,13 @@ export default function AdminAuthModal({ isOpen, onClose }) {
                     type="text"
                     required
                     autoFocus
+                    autoComplete="off"
                     value={userId}
                     onChange={(e) => {
                       setUserId(e.target.value);
                       setError('');
                     }}
-                    placeholder="Enter User ID (e.g. admin)..."
+                    placeholder="Enter User ID..."
                     className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-medium"
                   />
                 </div>
@@ -310,7 +323,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
                       setMode('forgot');
                       setError('');
                       setSuccessMsg('');
-                      setForgotUserId(userId || 'admin');
+                      setForgotUserId(userId || '');
                     }}
                     className="text-xs font-bold text-amber-700 hover:text-amber-900 hover:underline flex items-center gap-1 cursor-pointer"
                   >
@@ -326,6 +339,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
+                    autoComplete="off"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -362,7 +376,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
                     setMode('change_with_old');
                     setError('');
                     setSuccessMsg('');
-                    setCpUserId(userId || 'admin');
+                    setCpUserId(userId || '');
                   }}
                   className="text-xs text-slate-500 hover:text-slate-800 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
@@ -402,7 +416,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
                     autoFocus
                     value={forgotUserId}
                     onChange={(e) => setForgotUserId(e.target.value)}
-                    placeholder="admin"
+                    placeholder="Enter User ID..."
                     className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-medium"
                   />
                 </div>
@@ -576,7 +590,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
                     required
                     value={cpUserId}
                     onChange={(e) => setCpUserId(e.target.value)}
-                    placeholder="admin"
+                    placeholder="Enter User ID..."
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-medium"
                   />
                 </div>

@@ -251,7 +251,6 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                         <div className="flex flex-wrap gap-2 max-w-xl">
                           {getEventNotices(s.event).map((notice, nIdx) => (
                             <div key={nIdx} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/25 border border-amber-400/50 text-amber-200 text-xs font-semibold backdrop-blur-md shadow-lg">
-                              <span className="text-sm shrink-0">🍽️</span>
                               <span className="text-white font-medium">{notice}</span>
                             </div>
                           ))}
@@ -301,7 +300,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                         {getEventNotices(s.event).length > 0 && (
                           <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-400/40 text-amber-200 text-xs space-y-1.5 shadow-sm">
                             <strong className="text-amber-300 font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                              <span className="text-base">🍽️</span>
+                              <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                               <span>Special Notices / கூடுதல் தகவல்கள்</span>
                             </strong>
                             <div className="space-y-1">

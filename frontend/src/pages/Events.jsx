@@ -173,7 +173,7 @@ export default function Events() {
                   {getEventNotices(evt).length > 0 && (
                     <div className="mb-2.5 p-2 sm:p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-xs flex flex-wrap items-center gap-2">
                       <span className="font-bold text-amber-900 text-[10px] uppercase tracking-wider flex items-center gap-1 shrink-0">
-                        <span>🍽️</span>
+                        <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
                         <span>Special:</span>
                       </span>
                       {getEventNotices(evt).map((notice, nIdx) => (

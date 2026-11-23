@@ -25,6 +25,23 @@ import {
 import { CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM, FAQ_LIST } from '../data/mockData';
 import { compressImage } from '../utils/imageCompressor';
 
+const NOTICE_EMOJI_OPTIONS = [
+  '✨', '🙏', '✝️', '⛪', '📖', '🕯️', '🕊️', '❤️',
+  '🎉', '🎄', '🌟', '🔥', '🎵', '🎶', '🎤', '📣',
+  '📢', '📌', '📍', '⏰', '📅', '🗓️', '🍽️', '☕',
+  '🍰', '🥤', '🍲', '🚌', '🚗', '👨‍👩‍👧‍👦', '👶', '🎓',
+  '🤝', '🎁', '💡', '✅', '🏆', '💐', '🙌', '🆓'
+];
+
+const LEADING_EMOJI_RE = /^((?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u2600-\u27BF])(?:\uFE0F|\u200D(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u2600-\u27BF]))*)\s*/u;
+
+function splitNoticeEmoji(raw) {
+  const str = String(raw || '');
+  const match = str.match(LEADING_EMOJI_RE);
+  if (!match) return { emoji: '', text: str };
+  return { emoji: match[1], text: str.slice(match[0].length) };
+}
+
 export default function AdminDashboard() {
   const church = useChurch();
   const settings = church?.settings || {};
@@ -40,7 +57,7 @@ export default function AdminDashboard() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
   const [aboutSaveSuccess, setAboutSaveSuccess] = useState(false);
-  const [directUserId, setDirectUserId] = useState('admin');
+  const [directUserId, setDirectUserId] = useState('');
   const [directPassword, setDirectPassword] = useState('');
   const [showDirectPassword, setShowDirectPassword] = useState(false);
   const [directError, setDirectError] = useState('');
@@ -186,6 +203,7 @@ export default function AdminDashboard() {
   // Event Modal State (Add & Edit)
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
+  const [openNoticeEmojiIdx, setOpenNoticeEmojiIdx] = useState(null);
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -618,6 +636,7 @@ export default function AdminDashboard() {
 
   const handleOpenAddEvent = () => {
     setEditingEventId(null);
+    setOpenNoticeEmojiIdx(null);
     setNewEvent({
       title: '',
       description: '',
@@ -637,6 +656,7 @@ export default function AdminDashboard() {
 
   const handleOpenEditEvent = (evt) => {
     setEditingEventId(evt.id);
+    setOpenNoticeEmojiIdx(null);
     const existingNotices = getEventNotices(evt);
     setNewEvent({
       title: evt.title || '',
@@ -674,9 +694,22 @@ export default function AdminDashboard() {
     }));
   };
 
+  const handleSelectNoticeEmoji = (idx, selectedEmoji) => {
+    const list = [...(newEvent.extra_notices || [''])];
+    const { text } = splitNoticeEmoji(list[idx]);
+    list[idx] = selectedEmoji ? (text ? `${selectedEmoji} ${text}` : `${selectedEmoji} `) : text;
+    setNewEvent(prev => ({
+      ...prev,
+      extra_notices: list,
+      extra_info: list.filter(Boolean).join(' • ')
+    }));
+    setOpenNoticeEmojiIdx(null);
+  };
+
   const handleRemoveNotice = (idx) => {
     const list = (newEvent.extra_notices || ['']).filter((_, i) => i !== idx);
     const finalList = list.length > 0 ? list : [''];
+    setOpenNoticeEmojiIdx(null);
     setNewEvent(prev => ({
       ...prev,
       extra_notices: finalList,
@@ -703,6 +736,7 @@ export default function AdminDashboard() {
       }
       setIsEventModalOpen(false);
       setEditingEventId(null);
+      setOpenNoticeEmojiIdx(null);
     } catch (err) {
       console.error('Failed to save event:', err);
       alert('Save failed: ' + (err.message || 'Check backend connection'));
@@ -1138,10 +1172,10 @@ export default function AdminDashboard() {
     setDirectLoading(true);
     try {
       await changeAdminPassword({
-        userId: directUserId.trim() || 'admin',
+        userId: directUserId.trim(),
         currentPassword: directPassword.trim(),
         newPassword: authForm.newPassword.trim(),
-        newUserId: directUserId.trim() || 'admin'
+        newUserId: directUserId.trim()
       });
       setDirectSuccess('✓ Password updated in db.auth! You can now log in.');
       setDirectPassword('');
@@ -1191,7 +1225,7 @@ export default function AdminDashboard() {
           )}
 
           {directLockMode === 'login' ? (
-            <form onSubmit={handleDirectLogin} className="space-y-4 text-left">
+            <form onSubmit={handleDirectLogin} autoComplete="off" className="space-y-4 text-left">
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
                   User ID / Username
@@ -1204,12 +1238,13 @@ export default function AdminDashboard() {
                     type="text"
                     required
                     autoFocus
+                    autoComplete="off"
                     value={directUserId}
                     onChange={(e) => {
                       setDirectUserId(e.target.value);
                       setDirectError('');
                     }}
-                    placeholder="Enter User ID (e.g. admin)..."
+                    placeholder="Enter User ID..."
                     className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 font-medium"
                   />
                 </div>
@@ -3485,7 +3520,6 @@ export default function AdminDashboard() {
                       <div className="flex flex-col gap-1 pt-1">
                         {getEventNotices(e).map((n, nIdx) => (
                           <div key={nIdx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-semibold max-w-full">
-                            <span className="shrink-0">🍽️</span>
                             <span className="truncate">{n}</span>
                           </div>
                         ))}
@@ -5162,7 +5196,7 @@ export default function AdminDashboard() {
                 {editingEventId ? 'Edit Church Event' : 'Add Church Event'}
               </h3>
               <button 
-                onClick={() => { setIsEventModalOpen(false); setEditingEventId(null); }} 
+                onClick={() => { setIsEventModalOpen(false); setEditingEventId(null); setOpenNoticeEmojiIdx(null); }} 
                 className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -5286,12 +5320,12 @@ export default function AdminDashboard() {
                 ></textarea>
               </div>
 
-              {/* SPECIAL NOTICES & DETAILS SECTION (With + Add Details Button, NO suggestions) */}
+              {/* SPECIAL NOTICES & DETAILS SECTION (With Emoji Picker + Add Detail Button) */}
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <label className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                    <span className="text-sm">🍽️</span>
-                    <span>Special Notices / Additional Details (கூடுதல் தகவல்கள் / உணவு விவரம்)</span>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span>Special Notices / Additional Details (கூடுதல் தகவல்கள்)</span>
                   </label>
                   <button
                     type="button"
@@ -5304,34 +5338,109 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-2.5">
-                  {(newEvent.extra_notices || ['']).map((notice, nIdx) => (
-                    <div key={nIdx} className="flex items-center gap-2">
-                      <span className="text-xs text-amber-400 font-bold w-4 text-center">{nIdx + 1}.</span>
-                      <input
-                        type="text"
-                        value={notice}
-                        onChange={(e) => handleUpdateNotice(nIdx, e.target.value)}
-                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-100 placeholder-slate-500 text-sm focus:border-amber-400 focus:outline-none"
-                        placeholder={
-                          nIdx === 0
-                            ? "e.g. Fellowship Lunch / அன்பு விருந்து ஏற்பாடு செய்யப்பட்டுள்ளது"
-                            : nIdx === 1
-                            ? "e.g. Free Transportation from Town"
-                            : "e.g. Special Anointing Prayer for Families"
-                        }
-                      />
-                      {(newEvent.extra_notices || []).length > 1 && (
+                  {(newEvent.extra_notices || ['']).map((notice, nIdx) => {
+                    const { emoji: activeEmoji } = splitNoticeEmoji(notice);
+                    const isPickerOpen = openNoticeEmojiIdx === nIdx;
+                    return (
+                      <div key={nIdx} className="relative flex items-center gap-2">
+                        <span className="text-xs text-amber-400 font-bold w-4 text-center shrink-0">{nIdx + 1}.</span>
+
                         <button
                           type="button"
-                          onClick={() => handleRemoveNotice(nIdx)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-900 transition-colors cursor-pointer"
-                          title="Remove this detail"
+                          onClick={() => setOpenNoticeEmojiIdx(isPickerOpen ? null : nIdx)}
+                          title="Choose emoji for this notice (or press Win + . inside the text box)"
+                          className={`h-11 px-2.5 rounded-xl border text-base flex items-center gap-1 shrink-0 cursor-pointer transition-colors ${
+                            isDarkMode
+                              ? 'bg-slate-900 border-amber-500/40 hover:border-amber-400 text-amber-200'
+                              : 'bg-white border-amber-300 hover:border-amber-500 text-slate-800 shadow-sm'
+                          }`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <span className="leading-none">{activeEmoji || '😊'}</span>
+                          <ChevronDown className="w-3 h-3 opacity-70" />
                         </button>
-                      )}
-                    </div>
-                  ))}
+
+                        {isPickerOpen && (
+                          <div
+                            className={`absolute left-6 top-full mt-1.5 z-50 w-72 rounded-2xl border p-3 shadow-2xl ${
+                              isDarkMode
+                                ? 'bg-slate-950 border-slate-700 text-slate-100'
+                                : 'bg-white border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
+                                Choose Emoji
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {activeEmoji && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSelectNoticeEmoji(nIdx, '')}
+                                    className="px-2 py-0.5 rounded-md text-[10px] font-bold border border-slate-300 text-slate-600 hover:bg-slate-100 cursor-pointer"
+                                  >
+                                    None
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenNoticeEmojiIdx(null)}
+                                  className="p-0.5 rounded-md text-slate-400 hover:text-slate-700 cursor-pointer"
+                                  title="Close"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-8 gap-1">
+                              {NOTICE_EMOJI_OPTIONS.map((emo) => (
+                                <button
+                                  key={emo}
+                                  type="button"
+                                  onClick={() => handleSelectNoticeEmoji(nIdx, emo)}
+                                  className={`h-8 rounded-lg text-lg flex items-center justify-center cursor-pointer transition-transform hover:scale-110 ${
+                                    activeEmoji === emo
+                                      ? 'bg-amber-100 ring-1 ring-amber-500'
+                                      : isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-amber-50'
+                                  }`}
+                                >
+                                  {emo}
+                                </button>
+                              ))}
+                            </div>
+
+                            <p className="mt-2 pt-1.5 border-t border-slate-100 text-[10px] text-slate-500">
+                              Tip: Press <kbd className="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono">Win + .</kbd> inside the box for full keyboard emojis.
+                            </p>
+                          </div>
+                        )}
+
+                        <input
+                          type="text"
+                          value={notice}
+                          onChange={(e) => handleUpdateNotice(nIdx, e.target.value)}
+                          className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-100 placeholder-slate-500 text-sm focus:border-amber-400 focus:outline-none"
+                          placeholder={
+                            nIdx === 0
+                              ? "e.g. 🙏 Fellowship Lunch / அன்பு விருந்து"
+                              : nIdx === 1
+                              ? "e.g. 🚌 Free Transportation from Town"
+                              : "e.g. ✨ Special Anointing Prayer for Families"
+                          }
+                        />
+                        {(newEvent.extra_notices || []).length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveNotice(nIdx)}
+                            className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-900 transition-colors cursor-pointer"
+                            title="Remove this detail"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
