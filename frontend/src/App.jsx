@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import PrayerModal from './components/PrayerModal';
@@ -96,6 +96,7 @@ export default function App() {
             element={<Contact onOpenPlanVisit={() => setIsPlanVisitOpen(true)} />} 
           />
           <Route path="/admin" element={<AdminDashboard onOpenAdminAuth={() => setIsAdminAuthOpen(true)} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
