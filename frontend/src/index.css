@@ -275,6 +275,38 @@
   color: #94A3B8 !important;
 }
 
+/* Explicit Date Picker Icon Visibility (Bright & Dark Portal) */
+.admin-bright-portal input[type="date"] {
+  color-scheme: light !important;
+}
+
+.admin-bright-portal input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  filter: none !important;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.admin-bright-portal input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  background-color: #FEF3C7 !important;
+}
+
+input[type="date"].admin-date-input {
+  color-scheme: dark;
+}
+
+input[type="date"].admin-date-input::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+input[type="date"].admin-date-input::-webkit-calendar-picker-indicator:hover {
+  background-color: rgba(245, 158, 11, 0.2);
+}
+
 /* Badges & Highlights */
 .admin-bright-portal .bg-amber-500\/20,
 .admin-bright-portal .bg-amber-500\/10 {
@@ -303,7 +335,7 @@
 }
 
 /* Event notices & highlight pills (Fellowship, Mentorship etc) */
-.admin-bright-portal [class*="bg-slate-900"][class*="rounded"] {
+.admin-bright-portal [class*="bg-slate-900"][class*="rounded"]:not(input):not(select):not(textarea) {
   background-color: #FFFBEB !important;
   border-color: #FDE68A !important;
   color: #92400E !important;
@@ -354,8 +386,8 @@
   backdrop-filter: blur(4px) !important;
 }
 
-.admin-bright-portal .fixed.inset-0 .bg-slate-950,
-.admin-bright-portal .fixed.inset-0 .bg-slate-900 {
+.admin-bright-portal .fixed.inset-0 .bg-slate-950:not(input):not(select):not(textarea),
+.admin-bright-portal .fixed.inset-0 .bg-slate-900:not(input):not(select):not(textarea) {
   background-color: #FFFFFF !important;
   border-color: #E2E8F0 !important;
   color: #0F172A !important;

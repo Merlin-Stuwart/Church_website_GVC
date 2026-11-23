@@ -5017,67 +5017,68 @@ export default function AdminDashboard() {
          ========================================================================= */}
       {isSermonModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center pb-4 mb-5 border-b border-slate-800">
               <h3 className="font-serif font-bold text-xl text-white">Add New Sermon</h3>
-              <button onClick={() => setIsSermonModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsSermonModalOpen(false)} className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateSermon} className="space-y-4">
+            <form onSubmit={handleCreateSermon} className="space-y-5">
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Sermon Title *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Sermon Title *</label>
                 <input
                   type="text"
                   required
                   value={newSermon.title}
                   onChange={(e) => setNewSermon({ ...newSermon, title: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="Walking in Faith"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Speaker *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Speaker *</label>
                   <input
                     type="text"
                     required
                     value={newSermon.speaker}
                     onChange={(e) => setNewSermon({ ...newSermon, speaker: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Date</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Date</label>
                   <input
                     type="date"
                     value={newSermon.date}
                     onChange={(e) => setNewSermon({ ...newSermon, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    onClick={(e) => { try { e.currentTarget.showPicker?.(); } catch {} }}
+                    className={`w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm admin-date-input ${isDarkMode ? '[color-scheme:dark]' : '[color-scheme:light]'} cursor-pointer focus:border-amber-400 focus:outline-none`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Scripture Reference</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Scripture Reference</label>
                 <input
                   type="text"
                   value={newSermon.scripture}
                   onChange={(e) => setNewSermon({ ...newSermon, scripture: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="Hebrews 11:1"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Category *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Category *</label>
                   <select
                     value={newSermon.category}
                     onChange={(e) => setNewSermon({ ...newSermon, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   >
                     <option value="கூடாரப் பண்டிகை">கூடாரப் பண்டிகை</option>
                     <option value="Sunday Worship">Sunday Worship</option>
@@ -5088,46 +5089,46 @@ export default function AdminDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Series</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Series</label>
                   <input
                     type="text"
                     value={newSermon.series}
                     onChange={(e) => setNewSermon({ ...newSermon, series: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="கூடாரப் பண்டிகை பெருவிழா"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">YouTube Video / Live Stream URL *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">YouTube Video / Live Stream URL *</label>
                 <input
                   type="url"
                   required
                   value={newSermon.video_url}
                   onChange={(e) => setNewSermon({ ...newSermon, video_url: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="https://www.youtube.com/live/..."
                 />
-                <span className="text-[10px] text-amber-400/80 mt-1 block">
+                <span className="text-[11px] text-amber-400/90 mt-1.5 block">
                   YouTube Live stream or video link preview will be automatically extracted.
                 </span>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Summary</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Summary</label>
                 <textarea
                   rows="3"
                   value={newSermon.summary}
                   onChange={(e) => setNewSermon({ ...newSermon, summary: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="Key message takeaways..."
                 ></textarea>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl font-bold text-xs uppercase bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors"
+                className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-wider bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors cursor-pointer shadow-lg"
               >
                 Publish Sermon
               </button>
@@ -5141,81 +5142,81 @@ export default function AdminDashboard() {
          ========================================================================= */}
       {isEventModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center pb-4 mb-5 border-b border-slate-800">
               <h3 className="font-serif font-bold text-xl text-white">
                 {editingEventId ? 'Edit Church Event' : 'Add Church Event'}
               </h3>
               <button 
                 onClick={() => { setIsEventModalOpen(false); setEditingEventId(null); }} 
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEvent} className="space-y-4">
+            <form onSubmit={handleSaveEvent} className="space-y-5">
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Event Title *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Event Title *</label>
                 <input
                   type="text"
                   required
                   value={newEvent.title}
                   onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="Annual Miracle Night"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="text-xs font-semibold text-slate-200 mb-1 flex items-center justify-between">
-                    <span>Date (Calendar Picker) *</span>
-                    <span className="text-[10px] text-amber-400 font-normal">Day / Month / Year</span>
+                  <label className="block text-xs font-semibold text-slate-200 mb-1.5 leading-5">
+                    Date *
                   </label>
                   <input
                     type="date"
                     required
                     value={formatDateForInput(newEvent.date)}
                     onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs [color-scheme:dark] cursor-pointer focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                    onClick={(e) => { try { e.currentTarget.showPicker?.(); } catch {} }}
+                    className={`w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm admin-date-input ${isDarkMode ? '[color-scheme:dark]' : '[color-scheme:light]'} cursor-pointer focus:border-amber-400 focus:outline-none`}
                   />
                   {newEvent.date && (
-                    <p className="mt-1 text-[11px] text-amber-300 font-medium flex items-center gap-1">
-                      <span>📅</span>
+                    <p className="mt-1.5 text-xs text-amber-500 font-medium flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 shrink-0" />
                       <span>Selected: {formatEventDisplayDate(newEvent.date)}</span>
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-200 mb-1">Time</label>
+                  <label className="block text-xs font-semibold text-slate-200 mb-1.5 leading-5">Time</label>
                   <input
                     type="text"
                     value={newEvent.time}
                     onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-amber-400 focus:outline-none"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="09:30 AM - 11:30 AM"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Location</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Location</label>
                   <input
                     type="text"
                     value={newEvent.location}
                     onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="Grace Victory Church Sanctuary"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Category *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Category *</label>
                   <select
                     value={newEvent.category}
                     onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 text-xs font-semibold"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 text-sm font-semibold focus:border-amber-400 focus:outline-none"
                   >
                     <option value="Sunday Worship">Sunday Worship</option>
                     <option value="Fasting & Prayer">Fasting & Prayer</option>
@@ -5229,16 +5230,16 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Event Poster / Banner Image</label>
-                <div className="flex gap-2 mb-2">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Event Poster / Banner Image</label>
+                <div className="flex items-center gap-2.5 mb-2">
                   <input
                     type="text"
                     value={newEvent.image_url}
                     onChange={(e) => setNewEvent({ ...newEvent, image_url: e.target.value })}
-                    className="flex-1 p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="https://... or upload image"
                   />
-                  <label className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer">
+                  <label className="h-11 px-4 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors">
                     <Upload className="w-3.5 h-3.5 text-amber-400" />
                     <span>Upload</span>
                     <input
@@ -5250,7 +5251,7 @@ export default function AdminDashboard() {
                   </label>
                 </div>
                 {newEvent.image_url && (
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-800 w-36">
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-800 w-40 mt-2">
                     <img 
                       src={newEvent.image_url} 
                       alt="Event Preview" 
@@ -5261,19 +5262,19 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Description</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Description</label>
                 <textarea
                   rows="3"
                   value={newEvent.description}
                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="Describe the gathering, theme and invitation..."
                 ></textarea>
               </div>
 
               {/* SPECIAL NOTICES & DETAILS SECTION (With + Add Details Button, NO suggestions) */}
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <label className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
                     <span className="text-sm">🍽️</span>
                     <span>Special Notices / Additional Details (கூடுதல் தகவல்கள் / உணவு விவரம்)</span>
@@ -5281,14 +5282,14 @@ export default function AdminDashboard() {
                   <button
                     type="button"
                     onClick={handleAddNoticeField}
-                    className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+                    className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-sm shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Detail</span>
                   </button>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {(newEvent.extra_notices || ['']).map((notice, nIdx) => (
                     <div key={nIdx} className="flex items-center gap-2">
                       <span className="text-xs text-amber-400 font-bold w-4 text-center">{nIdx + 1}.</span>
@@ -5296,7 +5297,7 @@ export default function AdminDashboard() {
                         type="text"
                         value={notice}
                         onChange={(e) => handleUpdateNotice(nIdx, e.target.value)}
-                        className="flex-1 p-2.5 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-100 placeholder-slate-500 text-xs focus:border-amber-400"
+                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-100 placeholder-slate-500 text-sm focus:border-amber-400 focus:outline-none"
                         placeholder={
                           nIdx === 0
                             ? "e.g. Fellowship Lunch / அன்பு விருந்து ஏற்பாடு செய்யப்பட்டுள்ளது"
@@ -5322,12 +5323,12 @@ export default function AdminDashboard() {
 
               {/* KEY HIGHLIGHTS / BULLET POINTS (Shown on Slide 2 VIP card & Event cards) */}
               <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2.5">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                     <span>Event Highlights & Features (நிகழ்ச்சி சிறப்பம்சங்கள் - Up to 3)</span>
                   </label>
-                  <span className="text-[10px] text-slate-400">Slide 2 Bullet Points</span>
+                  <span className="text-[10px] text-slate-400 shrink-0">Slide 2 Bullet Points</span>
                 </div>
 
                 {[0, 1, 2].map((idx) => {
@@ -5343,7 +5344,7 @@ export default function AdminDashboard() {
                           updated[idx] = e.target.value;
                           setNewEvent({ ...newEvent, highlights: updated.filter(Boolean) });
                         }}
-                        className="flex-1 p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs"
+                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                         placeholder={
                           idx === 0 
                             ? "e.g. Anointed Praise & Intercession" 
@@ -5359,7 +5360,7 @@ export default function AdminDashboard() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl font-bold text-xs uppercase bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors cursor-pointer shadow-lg"
+                className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-wider bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors cursor-pointer shadow-lg"
               >
                 {editingEventId ? 'Update Event Changes' : 'Create Event'}
               </button>
@@ -5373,22 +5374,22 @@ export default function AdminDashboard() {
          ========================================================================= */}
       {isTestimonyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center pb-4 mb-5 border-b border-slate-800">
               <h3 className="font-serif font-bold text-xl text-white">Add Public Testimony</h3>
-              <button onClick={() => setIsTestimonyModalOpen(false)} className="text-slate-400 hover:text-white cursor-pointer">
+              <button onClick={() => setIsTestimonyModalOpen(false)} className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateTestimony} className="space-y-4">
+            <form onSubmit={handleCreateTestimony} className="space-y-5">
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Title & Believer Name *</label>
-                <div className="flex gap-2">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Title & Believer Name *</label>
+                <div className="flex items-center gap-2.5">
                   <select
                     value={newTestimonyPrefix}
                     onChange={(e) => setNewTestimonyPrefix(e.target.value)}
-                    className="w-28 p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 text-xs font-bold"
+                    className="w-32 h-11 px-3 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 text-sm font-bold focus:border-amber-400 focus:outline-none shrink-0"
                   >
                     <option value="Brother">Brother</option>
                     <option value="Sister">Sister</option>
@@ -5403,19 +5404,19 @@ export default function AdminDashboard() {
                     required
                     value={newTestimony.name}
                     onChange={(e) => setNewTestimony({ ...newTestimony, name: e.target.value })}
-                    className="flex-1 p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="e.g. Samuel / Priya & Family"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Category *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Category *</label>
                   <select
                     value={newTestimony.type}
                     onChange={(e) => setNewTestimony({ ...newTestimony, type: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   >
                     <option value="Miraculous Healing">Miraculous Healing</option>
                     <option value="Life Transformation">Life Transformation</option>
@@ -5427,32 +5428,32 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Location</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Location</label>
                   <input
                     type="text"
                     value={newTestimony.location}
                     onChange={(e) => setNewTestimony({ ...newTestimony, location: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="Vattamalai"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Testimony Story *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Testimony Story *</label>
                 <textarea
                   rows="4"
                   required
                   value={newTestimony.story}
                   onChange={(e) => setNewTestimony({ ...newTestimony, story: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="Describe what Jesus did..."
                 ></textarea>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl font-bold text-xs uppercase bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors cursor-pointer"
+                className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-wider bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors cursor-pointer shadow-lg"
               >
                 Publish Testimony
               </button>
@@ -5466,35 +5467,35 @@ export default function AdminDashboard() {
          ========================================================================= */}
       {isMinistryModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center pb-4 mb-5 border-b border-slate-800">
               <h3 className="font-serif font-bold text-xl text-white">
                 {editingMinistryId ? 'Edit Ministry / Prayer Service' : 'Add New Ministry / Prayer Service'}
               </h3>
               <button 
                 onClick={() => setIsMinistryModalOpen(false)} 
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveMinistry} className="space-y-4">
+            <form onSubmit={handleSaveMinistry} className="space-y-5">
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Ministry or Prayer Title *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Ministry or Prayer Title *</label>
                 <input
                   type="text"
                   required
                   value={ministryForm.title}
                   onChange={(e) => setMinistryForm({ ...ministryForm, title: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="e.g. Friday Miracle & Fasting Prayer (வெள்ளி உபவாச ஜெபம்)"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Category (பிரிவு) *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Category (பிரிவு) *</label>
                   <select
                     required
                     value={isCustomCategory ? '__custom__' : (ministryForm.category || 'Weekly Prayer Gatherings')}
@@ -5507,7 +5508,7 @@ export default function AdminDashboard() {
                         setMinistryForm(prev => ({ ...prev, category: e.target.value }));
                       }
                     }}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 text-xs font-semibold focus:border-amber-400"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 text-sm font-semibold focus:border-amber-400 focus:outline-none"
                   >
                     <option value="Weekly Prayer Gatherings">Weekly Prayer Gatherings (வாராந்திர ஜெபங்கள்)</option>
                     <option value="Fasting Prayer">Fasting Prayer (வெள்ளி உபவாச ஜெபம்)</option>
@@ -5530,23 +5531,20 @@ export default function AdminDashboard() {
                       autoFocus
                       value={ministryForm.category}
                       onChange={(e) => setMinistryForm({ ...ministryForm, category: e.target.value })}
-                      className="w-full p-2.5 mt-2 rounded-xl bg-slate-900 border border-amber-400 text-white text-xs placeholder-slate-500"
+                      className="w-full h-11 px-3.5 mt-2 rounded-xl bg-slate-900 border border-amber-400 text-white text-sm placeholder-slate-500 focus:outline-none"
                       placeholder="Type custom category name..."
                     />
                   )}
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-xs text-slate-300">Target / Age Badge</label>
-                    <span className="text-[10px] text-slate-500">Quick list</span>
-                  </div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Target / Age Badge</label>
                   <input
                     type="text"
                     list="ministry-badge-suggestions"
                     value={ministryForm.badge}
                     onChange={(e) => setMinistryForm({ ...ministryForm, badge: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="e.g. Open to All / Every Friday"
                   />
                   <datalist id="ministry-badge-suggestions">
@@ -5563,64 +5561,64 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Meeting Time / Days</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Meeting Time / Days</label>
                   <input
                     type="text"
                     value={ministryForm.meeting_time}
                     onChange={(e) => setMinistryForm({ ...ministryForm, meeting_time: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="Every Friday 10:00 AM – 02:00 PM"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Ministry Leader / In-charge</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Ministry Leader / In-charge</label>
                   <input
                     type="text"
                     value={ministryForm.leader}
                     onChange={(e) => setMinistryForm({ ...ministryForm, leader: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="Pastor P. Rajendran"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Spiritual Tagline / Theme</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Spiritual Tagline / Theme</label>
                 <input
                   type="text"
                   value={ministryForm.tagline}
                   onChange={(e) => setMinistryForm({ ...ministryForm, tagline: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="Miracle & Healing Breakthrough"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Description & Purpose *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Description & Purpose *</label>
                 <textarea
                   rows="4"
                   required
                   value={ministryForm.desc}
                   onChange={(e) => setMinistryForm({ ...ministryForm, desc: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                   placeholder="Describe the anointing, scriptures, and spiritual mission of this gathering..."
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 mb-1">Cover Image URL or Upload</label>
-                <div className="flex gap-2 mb-2">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 leading-5">Cover Image URL or Upload</label>
+                <div className="flex items-center gap-2.5 mb-2">
                   <input
                     type="text"
                     value={ministryForm.image}
                     onChange={(e) => setMinistryForm({ ...ministryForm, image: e.target.value })}
-                    className="flex-1 p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                    className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="https://... or upload photo"
                   />
-                  <label className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer">
+                  <label className="h-11 px-4 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors">
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload</span>
                     <input
@@ -5632,7 +5630,7 @@ export default function AdminDashboard() {
                   </label>
                 </div>
                 {ministryForm.image && (
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-800 w-32">
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-800 w-40 mt-2">
                     <img 
                       src={ministryForm.image} 
                       alt="Preview" 
@@ -5644,7 +5642,7 @@ export default function AdminDashboard() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl font-bold text-xs uppercase bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors cursor-pointer mt-4"
+                className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-wider bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors cursor-pointer mt-2 shadow-lg"
               >
                 {editingMinistryId ? 'Update Ministry Live' : 'Save Ministry Live to Database'}
               </button>
@@ -5658,8 +5656,8 @@ export default function AdminDashboard() {
          ========================================================================= */}
       {isChangePasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-          <div className="bg-slate-950 rounded-3xl border border-amber-500/30 p-5 sm:p-8 max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl relative my-auto">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-slate-950 rounded-3xl border border-amber-500/30 p-6 sm:p-8 max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative my-auto">
+            <div className="flex justify-between items-center pb-4 mb-5 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center">
                   <Key className="w-5 h-5" />
@@ -5673,19 +5671,19 @@ export default function AdminDashboard() {
               </div>
               <button 
                 onClick={() => setIsChangePasswordModalOpen(false)} 
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateAuthCredentials} className="space-y-4">
+            <form onSubmit={handleUpdateAuthCredentials} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                   Admin User ID
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                     <User className="w-4 h-4" />
                   </div>
                   <input
@@ -5693,18 +5691,18 @@ export default function AdminDashboard() {
                     required
                     value={authForm.newUserId}
                     onChange={(e) => setAuthForm({ ...authForm, newUserId: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-medium"
+                    className="w-full h-11 pl-10 pr-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 font-medium"
                     placeholder="admin"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                   Current Password *
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -5712,18 +5710,18 @@ export default function AdminDashboard() {
                     required
                     value={authForm.currentPassword}
                     onChange={(e) => setAuthForm({ ...authForm, currentPassword: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+                    className="w-full h-11 pl-10 pr-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 font-mono"
                     placeholder="Enter current password..."
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                   New Password *
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                     <Key className="w-4 h-4" />
                   </div>
                   <input
@@ -5731,14 +5729,14 @@ export default function AdminDashboard() {
                     required
                     value={authForm.newPassword}
                     onChange={(e) => setAuthForm({ ...authForm, newPassword: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+                    className="w-full h-11 pl-10 pr-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 font-mono"
                     placeholder="Enter new password (min 4 chars)..."
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                   Confirm New Password *
                 </label>
                 <input
@@ -5746,7 +5744,7 @@ export default function AdminDashboard() {
                   required
                   value={authForm.confirmPassword}
                   onChange={(e) => setAuthForm({ ...authForm, confirmPassword: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 font-mono"
                   placeholder="Re-enter new password..."
                 />
               </div>
@@ -5765,7 +5763,7 @@ export default function AdminDashboard() {
               <button
                 type="submit"
                 disabled={authSaveLoading}
-                className="w-full py-3 rounded-xl font-bold text-xs uppercase bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 mt-2"
+                className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-wider bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 mt-2"
               >
                 <Key className="w-4 h-4" />
                 <span>{authSaveLoading ? 'Saving in db.auth...' : 'Save New Password in db.auth'}</span>
@@ -5910,16 +5908,16 @@ export default function AdminDashboard() {
          ========================================================================= */}
       {isManualDonationModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-5 sm:p-8 max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl relative space-y-6 my-auto">
+          <div className="bg-slate-950 rounded-3xl border border-slate-800 p-6 sm:p-8 max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative space-y-5 my-auto">
             
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
                   <Plus className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-base text-white">Record Sunday Offering</h3>
-                  <span className="text-[10px] text-slate-400">Manual Church Sanctuary / Cash Entry</span>
+                  <h3 className="font-serif font-bold text-lg text-white">Record Sunday Offering</h3>
+                  <span className="text-[11px] text-slate-400">Manual Church Sanctuary / Cash Entry</span>
                 </div>
               </div>
               <button
@@ -5930,9 +5928,9 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateManualDonation} className="space-y-4">
+            <form onSubmit={handleCreateManualDonation} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                   Donor Full Name *
                 </label>
                 <input
@@ -5941,13 +5939,13 @@ export default function AdminDashboard() {
                   value={manualDonationForm.donor_name}
                   onChange={(e) => setManualDonationForm({ ...manualDonationForm, donor_name: e.target.value })}
                   placeholder="e.g. Bro. David / Sis. Mary"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                     Amount (₹) *
                   </label>
                   <input
@@ -5957,18 +5955,18 @@ export default function AdminDashboard() {
                     value={manualDonationForm.amount}
                     onChange={(e) => setManualDonationForm({ ...manualDonationForm, amount: e.target.value })}
                     placeholder="e.g. 5000"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-amber-400 font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                     Payment Mode
                   </label>
                   <select
                     value={manualDonationForm.payment_method}
                     onChange={(e) => setManualDonationForm({ ...manualDonationForm, payment_method: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs focus:outline-none focus:border-amber-400"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-sm focus:outline-none focus:border-amber-400"
                   >
                     <option value="Cash / Sunday Offering">Cash / Sanctuary</option>
                     <option value="UPI (Direct)">UPI Direct</option>
@@ -5979,13 +5977,13 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                   Ministry Cause / Purpose
                 </label>
                 <select
                   value={manualDonationForm.cause}
                   onChange={(e) => setManualDonationForm({ ...manualDonationForm, cause: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-sm focus:outline-none focus:border-amber-400"
                 >
                   <option value="Tithes & General Offerings">Tithes & General Offerings</option>
                   <option value="Sanctuary Expansion & Building Fund">Sanctuary Expansion & Building Fund</option>
@@ -5996,9 +5994,9 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                     Phone (WhatsApp)
                   </label>
                   <input
@@ -6006,12 +6004,12 @@ export default function AdminDashboard() {
                     value={manualDonationForm.phone}
                     onChange={(e) => setManualDonationForm({ ...manualDonationForm, phone: e.target.value })}
                     placeholder="+91..."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-amber-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                     Email
                   </label>
                   <input
@@ -6019,36 +6017,36 @@ export default function AdminDashboard() {
                     value={manualDonationForm.email}
                     onChange={(e) => setManualDonationForm({ ...manualDonationForm, email: e.target.value })}
                     placeholder="donor@..."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className="w-full h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-amber-400"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 leading-5">
                   Personal Note / Prayer Request
                 </label>
                 <textarea
-                  rows="2"
+                  rows="3"
                   value={manualDonationForm.notes}
                   onChange={(e) => setManualDonationForm({ ...manualDonationForm, notes: e.target.value })}
                   placeholder="Optional note e.g. Thanksgiving for birthday / family healing..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400 resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-amber-400 resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-900">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-900">
                 <button
                   type="button"
                   onClick={() => setIsManualDonationModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl text-slate-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                  className="h-11 px-4 rounded-xl text-slate-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingManualDonation}
-                  className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-amber-400/20"
+                  className="h-11 px-5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-amber-400/20"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>{isSubmittingManualDonation ? 'Saving...' : 'Save Offering & Record'}</span>
