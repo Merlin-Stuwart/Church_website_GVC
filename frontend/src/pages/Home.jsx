@@ -12,14 +12,13 @@ import ServiceCountdown from '../components/ServiceCountdown';
 import SermonPlayerModal from '../components/SermonPlayerModal';
 import { CHURCH_INFO, CHURCH_STATS, TESTIMONIES, FAQ_LIST } from '../data/mockData';
 import { fetchSermons, fetchEvents, fetchTestimonies, getStoredTestimonies } from '../api/client';
-import { INITIAL_SERMONS, INITIAL_EVENTS } from '../data/mockData';
 import { useChurch } from '../context/ChurchContext';
 
 export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimonyModal }) {
   const { settings } = useChurch();
-  const [sermons, setSermons] = useState(INITIAL_SERMONS);
-  const [events, setEvents] = useState(INITIAL_EVENTS);
-  const [testimonies, setTestimonies] = useState(() => getStoredTestimonies());
+  const [sermons, setSermons] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [testimonies, setTestimonies] = useState([]);
   const [selectedSermon, setSelectedSermon] = useState(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const [expandedTestimonies, setExpandedTestimonies] = useState({});
@@ -266,6 +265,15 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
           </Link>
         </div>
 
+        {sermons.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-10 text-center max-w-xl mx-auto shadow-sm">
+            <BookOpen className="w-10 h-10 text-amber-500 mx-auto mb-3 opacity-80" />
+            <h3 className="font-serif font-bold text-lg text-slate-900 mb-1.5">No Sermons Published Yet</h3>
+            <p className="text-xs sm:text-sm text-slate-600">
+              New sermons and messages published from the Admin Portal will appear here automatically.
+            </p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* Main Cinema Viewport (7 Cols) */}
@@ -377,6 +385,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
           </div>
 
         </div>
+        )}
       </section>
 
       {/* =========================================================================
@@ -432,6 +441,26 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
 
             const remaining = testimonies.filter(t => !featuredSelected.some(ft => String(ft.id) === String(t.id) || String(ft._id) === String(t.id)));
             const homeDisplayTestimonies = [...featuredSelected, ...remaining].slice(0, 3);
+
+            if (homeDisplayTestimonies.length === 0) {
+              return (
+                <div className="bg-white rounded-3xl border border-amber-200/80 p-10 text-center max-w-xl mx-auto shadow-sm">
+                  <Sparkles className="w-10 h-10 text-amber-500 mx-auto mb-3 opacity-80" />
+                  <h3 className="font-serif font-bold text-lg text-slate-900 mb-1.5">
+                    No Testimonies Published Yet
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 mb-4">
+                    Share what God has done in your life or publish praise reports from the Admin Portal!
+                  </p>
+                  <button
+                    onClick={onOpenTestimonyModal}
+                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs uppercase tracking-wider cursor-pointer"
+                  >
+                    Share Your Testimony
+                  </button>
+                </div>
+              );
+            }
 
             return (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">

@@ -1,15 +1,15 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from typing import List
 import uuid
 from datetime import datetime
 from app.schemas.prayer import PrayerCreate, PrayerResponse
 from app.database import get_database, is_db_connected
-from app.seed_data import INITIAL_PRAYERS
+from app.auth import verify_admin_session
 from app.services.email_service import notify_prayer_request
 
 router = APIRouter(prefix="/api/prayers", tags=["Prayers"])
 
-prayers_store = {p["id"]: {**p} for p in INITIAL_PRAYERS}
+prayers_store = {}
 
 @router.get("", response_model=List[PrayerResponse])
 async def get_public_prayers():
@@ -20,27 +20,12 @@ async def get_public_prayers():
         async for doc in cursor:
             doc["id"] = str(doc.get("_id", doc.get("id")))
             results.append(doc)
-        if not results:
-            flags = await db.site_meta.find_one({"_id": "seed_flags"})
-            if not flags or not flags.get("prayers_seeded"):
-                for p in INITIAL_PRAYERS:
-                    await db.prayers.update_one(
-                        {"_id": p["id"]},
-                        {"$setOnInsert": {**p, "_id": p["id"]}},
-                        upsert=True
-                    )
-                await db.site_meta.update_one(
-                    {"_id": "seed_flags"},
-                    {"$set": {"prayers_seeded": True}},
-                    upsert=True
-                )
-                return [p for p in prayers_store.values() if p["is_public"]]
         return results
 
     return [p for p in prayers_store.values() if p.get("is_public", True)]
 
 @router.get("/admin/all", response_model=List[PrayerResponse])
-async def get_all_prayers_admin():
+async def get_all_prayers_admin(_authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         db = get_database()
         results = []
@@ -96,8 +81,18 @@ async def click_pray(prayer_id: str):
 
     raise HTTPException(status_code=404, detail="Prayer request not found")
 
+@router.delete("")
+async def clear_all_prayers(_authorized: bool = Depends(verify_admin_session)):
+    deleted_count = 0
+    if is_db_connected():
+        db = get_database()
+        res = await db.prayers.delete_many({})
+        deleted_count = res.deleted_count
+    prayers_store.clear()
+    return {"success": True, "deleted_count": deleted_count, "message": "All prayers cleared"}
+
 @router.delete("/{prayer_id}")
-async def delete_prayer(prayer_id: str):
+async def delete_prayer(prayer_id: str, _authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         db = get_database()
         res = await db.prayers.delete_one({"$or": [{"_id": prayer_id}, {"id": prayer_id}]})

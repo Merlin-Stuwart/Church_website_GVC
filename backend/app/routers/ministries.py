@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from app.schemas.ministry import MinistryCreate, MinistryUpdate, MinistryResponse
 from app.database import get_database, is_db_connected
-from app.routers.admin import verify_admin_session
+from app.auth import verify_admin_session
 
 router = APIRouter(prefix="/api/ministries", tags=["Ministries & Prayer Services"])
 

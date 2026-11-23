@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 import uuid
 from datetime import datetime
 from app.schemas.event import EventCreate, EventUpdate, EventResponse, EventRsvpCreate
 from app.database import get_database, is_db_connected
-from app.seed_data import INITIAL_EVENTS
+from app.auth import verify_admin_session
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
 
@@ -50,7 +50,7 @@ async def get_event(event_id: str):
     raise HTTPException(status_code=404, detail="Event not found")
 
 @router.post("", response_model=EventResponse, status_code=201)
-async def create_event(event: EventCreate):
+async def create_event(event: EventCreate, _authorized: bool = Depends(verify_admin_session)):
     new_id = f"event-{uuid.uuid4().hex[:8]}"
     event_dict = event.model_dump()
     event_dict["id"] = new_id
@@ -64,7 +64,7 @@ async def create_event(event: EventCreate):
     return event_dict
 
 @router.put("/{event_id}", response_model=EventResponse)
-async def update_event(event_id: str, event: EventUpdate):
+async def update_event(event_id: str, event: EventUpdate, _authorized: bool = Depends(verify_admin_session)):
     update_data = {k: v for k, v in event.model_dump().items() if v is not None}
     
     if is_db_connected():
@@ -85,8 +85,18 @@ async def update_event(event_id: str, event: EventUpdate):
     
     raise HTTPException(status_code=404, detail="Event not found")
 
+@router.delete("")
+async def clear_all_events(_authorized: bool = Depends(verify_admin_session)):
+    deleted_count = 0
+    if is_db_connected():
+        db = get_database()
+        res = await db.events.delete_many({})
+        deleted_count = res.deleted_count
+    events_store.clear()
+    return {"success": True, "deleted_count": deleted_count, "message": "All events cleared"}
+
 @router.delete("/{event_id}")
-async def delete_event(event_id: str):
+async def delete_event(event_id: str, _authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         db = get_database()
         res = await db.events.delete_one({"$or": [{"_id": event_id}, {"id": event_id}]})
@@ -115,7 +125,7 @@ async def rsvp_to_event(rsvp: EventRsvpCreate):
     }
 
 @router.get("/rsvps/all")
-async def get_all_rsvps():
+async def get_all_rsvps(_authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         db = get_database()
         results = []

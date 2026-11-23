@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import SermonPlayerModal from '../components/SermonPlayerModal';
 import { fetchSermons } from '../api/client';
-import { INITIAL_SERMONS } from '../data/mockData';
 
 function getSermonThumbnail(sermon) {
   if (sermon?.thumbnail && !sermon.thumbnail.includes('unsplash.com')) {
@@ -19,8 +18,8 @@ function getSermonThumbnail(sermon) {
 }
 
 export default function Sermons() {
-  const [sermons, setSermons] = useState(INITIAL_SERMONS);
-  const [loading, setLoading] = useState(false);
+  const [sermons, setSermons] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedSeries, setSelectedSeries] = useState('All');
@@ -37,25 +36,6 @@ export default function Sermons() {
       });
       if (Array.isArray(data)) {
         setSermons(data);
-      } else if (!data) {
-        // Robust offline fallback filter
-        let filtered = INITIAL_SERMONS;
-        if (selectedCategory && selectedCategory !== 'All') {
-          filtered = filtered.filter(s => s.category?.toLowerCase() === selectedCategory.toLowerCase());
-        }
-        if (selectedSeries && selectedSeries !== 'All') {
-          filtered = filtered.filter(s => s.series?.toLowerCase() === selectedSeries.toLowerCase());
-        }
-        if (searchTerm) {
-          const q = searchTerm.toLowerCase();
-          filtered = filtered.filter(s => 
-            s.title?.toLowerCase().includes(q) ||
-            s.speaker?.toLowerCase().includes(q) ||
-            s.scripture?.toLowerCase().includes(q) ||
-            s.summary?.toLowerCase().includes(q)
-          );
-        }
-        setSermons(filtered);
       }
       setLoading(false);
     }
@@ -215,17 +195,37 @@ export default function Sermons() {
           </span>
         </h3>
 
-        {sermons.length === 0 ? (
+        {loading && sermons.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 animate-pulse">
+                <div className="aspect-video rounded-2xl bg-slate-200"></div>
+                <div className="h-5 bg-slate-200 rounded w-3/4"></div>
+                <div className="h-3 bg-slate-100 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        ) : sermons.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h4 className="font-serif font-bold text-xl text-slate-800 mb-1">No Sermons Found</h4>
-            <p className="text-xs text-slate-500 mb-4">Try searching with a different keyword or resetting filters.</p>
-            <button
-              onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedSeries('All'); }}
-              className="px-4 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold"
-            >
-              Reset Filters
-            </button>
+            <BookOpen className="w-12 h-12 text-amber-500/70 mx-auto mb-3" />
+            <h4 className="font-serif font-bold text-xl text-slate-800 mb-1">
+              {searchTerm || selectedCategory !== 'All' || selectedSeries !== 'All'
+                ? 'No Sermons Found'
+                : 'No Sermons Published Yet'}
+            </h4>
+            <p className="text-xs text-slate-500 mb-4">
+              {searchTerm || selectedCategory !== 'All' || selectedSeries !== 'All'
+                ? 'Try searching with a different keyword or resetting filters.'
+                : 'Sermons published through the Admin Portal will appear here automatically.'}
+            </p>
+            {(searchTerm || selectedCategory !== 'All' || selectedSeries !== 'All') && (
+              <button
+                onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedSeries('All'); }}
+                className="px-4 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

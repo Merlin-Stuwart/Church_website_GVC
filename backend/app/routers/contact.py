@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from typing import List
 import uuid
 from datetime import datetime
@@ -9,6 +9,7 @@ from app.schemas.contact import (
     PlanVisitResponse
 )
 from app.database import get_database, is_db_connected
+from app.auth import verify_admin_session
 from app.services.email_service import notify_contact_message
 
 router = APIRouter(prefix="/api/contact", tags=["Contact & Plan a Visit"])
@@ -34,7 +35,7 @@ async def submit_contact_message(msg: ContactMessageCreate, background_tasks: Ba
     return msg_dict
 
 @router.get("/messages", response_model=List[ContactMessageResponse])
-async def get_all_messages():
+async def get_all_messages(_authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         db = get_database()
         results = []
@@ -46,7 +47,7 @@ async def get_all_messages():
     return messages_store
 
 @router.delete("/messages/{msg_id}")
-async def delete_contact_message(msg_id: str):
+async def delete_contact_message(msg_id: str, _authorized: bool = Depends(verify_admin_session)):
     global messages_store
     messages_store = [m for m in messages_store if m.get("id") != msg_id and m.get("_id") != msg_id]
     if is_db_connected():
@@ -69,7 +70,7 @@ async def submit_plan_visit(visit: PlanVisitCreate):
     return visit_dict
 
 @router.get("/plan-visit/all", response_model=List[PlanVisitResponse])
-async def get_all_planned_visits():
+async def get_all_planned_visits(_authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         db = get_database()
         results = []

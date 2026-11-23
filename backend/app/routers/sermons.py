@@ -1,15 +1,15 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 import uuid
 from datetime import datetime
 from app.schemas.sermon import SermonCreate, SermonUpdate, SermonResponse
 from app.database import get_database, is_db_connected
-from app.seed_data import INITIAL_SERMONS
+from app.auth import verify_admin_session
 
 router = APIRouter(prefix="/api/sermons", tags=["Sermons"])
 
-# In-memory storage cache as fallback when MongoDB is starting up
-sermons_store = {s["id"]: {**s, "created_at": datetime.now()} for s in INITIAL_SERMONS}
+# In-memory storage cache when MongoDB is unavailable (starts empty - 100% admin managed)
+sermons_store = {}
 
 @router.get("", response_model=List[SermonResponse])
 async def get_all_sermons(
@@ -36,22 +36,6 @@ async def get_all_sermons(
         async for doc in cursor:
             doc["id"] = str(doc.get("_id", doc.get("id")))
             results.append(doc)
-        if not results and not q and not category and not series:
-            # Seed initial sermons only once (don't resurrect if admin intentionally deleted all)
-            flags = await db.site_meta.find_one({"_id": "seed_flags"})
-            if not flags or not flags.get("sermons_seeded"):
-                for s in INITIAL_SERMONS:
-                    await db.sermons.update_one(
-                        {"_id": s["id"]},
-                        {"$setOnInsert": {**s, "_id": s["id"], "created_at": datetime.now()}},
-                        upsert=True
-                    )
-                await db.site_meta.update_one(
-                    {"_id": "seed_flags"},
-                    {"$set": {"sermons_seeded": True}},
-                    upsert=True
-                )
-                return list(sermons_store.values())
         return results
     
     # Fallback to store
@@ -84,7 +68,7 @@ async def get_sermon(sermon_id: str):
     raise HTTPException(status_code=404, detail="Sermon not found")
 
 @router.post("", response_model=SermonResponse, status_code=201)
-async def create_sermon(sermon: SermonCreate):
+async def create_sermon(sermon: SermonCreate, _authorized: bool = Depends(verify_admin_session)):
     new_id = f"sermon-{uuid.uuid4().hex[:8]}"
     sermon_dict = sermon.model_dump()
     sermon_dict["id"] = new_id
@@ -99,7 +83,7 @@ async def create_sermon(sermon: SermonCreate):
     return sermon_dict
 
 @router.put("/{sermon_id}", response_model=SermonResponse)
-async def update_sermon(sermon_id: str, sermon: SermonUpdate):
+async def update_sermon(sermon_id: str, sermon: SermonUpdate, _authorized: bool = Depends(verify_admin_session)):
     update_data = {k: v for k, v in sermon.model_dump().items() if v is not None}
     
     if is_db_connected():
@@ -120,8 +104,18 @@ async def update_sermon(sermon_id: str, sermon: SermonUpdate):
     
     raise HTTPException(status_code=404, detail="Sermon not found")
 
+@router.delete("")
+async def clear_all_sermons(_authorized: bool = Depends(verify_admin_session)):
+    deleted_count = 0
+    if is_db_connected():
+        db = get_database()
+        res = await db.sermons.delete_many({})
+        deleted_count = res.deleted_count
+    sermons_store.clear()
+    return {"success": True, "deleted_count": deleted_count, "message": "All sermons cleared"}
+
 @router.delete("/{sermon_id}")
-async def delete_sermon(sermon_id: str):
+async def delete_sermon(sermon_id: str, _authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         db = get_database()
         res = await db.sermons.delete_one({"$or": [{"_id": sermon_id}, {"id": sermon_id}]})

@@ -1,15 +1,15 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from typing import List
 import uuid
 from datetime import datetime
 from app.schemas.testimony import TestimonyCreate, TestimonyResponse
 from app.database import get_database, is_db_connected
-from app.seed_data import INITIAL_TESTIMONIES
+from app.auth import verify_admin_session
 from app.services.email_service import notify_testimony
 
 router = APIRouter(prefix="/api/testimonies", tags=["Testimonies"])
 
-testimonies_store = {t["id"]: {**t} for t in INITIAL_TESTIMONIES}
+testimonies_store = {}
 
 @router.get("", response_model=List[TestimonyResponse])
 async def get_testimonies():
@@ -20,21 +20,6 @@ async def get_testimonies():
         async for doc in cursor:
             doc["id"] = str(doc.get("_id", doc.get("id")))
             results.append(doc)
-        if not results:
-            flags = await db.site_meta.find_one({"_id": "seed_flags"})
-            if not flags or not flags.get("testimonies_seeded"):
-                for t in INITIAL_TESTIMONIES:
-                    await db.testimonies.update_one(
-                        {"_id": t["id"]},
-                        {"$setOnInsert": {**t, "_id": t["id"]}},
-                        upsert=True
-                    )
-                await db.site_meta.update_one(
-                    {"_id": "seed_flags"},
-                    {"$set": {"testimonies_seeded": True}},
-                    upsert=True
-                )
-                return list(testimonies_store.values())
         return results
 
     return list(testimonies_store.values())
@@ -61,7 +46,7 @@ async def create_testimony(testimony: TestimonyCreate, background_tasks: Backgro
     return testimony_dict
 
 @router.put("/{testimony_id}/toggle-home")
-async def toggle_home_testimony(testimony_id: str):
+async def toggle_home_testimony(testimony_id: str, _authorized: bool = Depends(verify_admin_session)):
     new_state = True
     if testimony_id in testimonies_store:
         current = testimonies_store[testimony_id].get("featured_home", False)
@@ -79,8 +64,18 @@ async def toggle_home_testimony(testimony_id: str):
             )
     return {"id": testimony_id, "featured_home": new_state}
 
+@router.delete("")
+async def clear_all_testimonies(_authorized: bool = Depends(verify_admin_session)):
+    deleted_count = 0
+    if is_db_connected():
+        db = get_database()
+        res = await db.testimonies.delete_many({})
+        deleted_count = res.deleted_count
+    testimonies_store.clear()
+    return {"success": True, "deleted_count": deleted_count, "message": "All testimonies cleared"}
+
 @router.delete("/{testimony_id}")
-async def delete_testimony(testimony_id: str):
+async def delete_testimony(testimony_id: str, _authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         db = get_database()
         res = await db.testimonies.delete_one({"$or": [{"_id": testimony_id}, {"id": testimony_id}]})

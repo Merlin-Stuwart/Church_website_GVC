@@ -57,7 +57,7 @@ export async function fetchSermons(params = {}) {
 export async function createSermon(sermonData) {
   const res = await fetch(`${API_BASE_URL}/api/sermons`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAdminHeaders(),
     body: JSON.stringify(sermonData)
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to create sermon'));
@@ -66,9 +66,19 @@ export async function createSermon(sermonData) {
 
 export async function deleteSermon(id) {
   const res = await fetch(`${API_BASE_URL}/api/sermons/${id}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: getAdminHeaders()
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to delete sermon'));
+  return await res.json();
+}
+
+export async function clearAllSermons() {
+  const res = await fetch(`${API_BASE_URL}/api/sermons`, {
+    method: 'DELETE',
+    headers: getAdminHeaders()
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to clear sermons'));
   return await res.json();
 }
 
@@ -314,7 +324,7 @@ export async function fetchEvents(params = {}) {
 export async function createEvent(eventData) {
   const res = await fetch(`${API_BASE_URL}/api/events`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAdminHeaders(),
     body: JSON.stringify(eventData)
   });
   if (!res.ok) {
@@ -332,7 +342,7 @@ export async function createEvent(eventData) {
 export async function updateEvent(id, eventData) {
   const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAdminHeaders(),
     body: JSON.stringify(eventData)
   });
   if (!res.ok) {
@@ -352,7 +362,8 @@ export async function updateEvent(id, eventData) {
 
 export async function deleteEvent(id) {
   const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: getAdminHeaders()
   });
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, 'Failed to delete event'));
@@ -361,6 +372,18 @@ export async function deleteEvent(id) {
   const existing = getStoredEvents() || [];
   saveStoredEvents(existing.filter(e => e.id !== id && e._id !== id));
   return { id };
+}
+
+export async function clearAllEvents() {
+  const res = await fetch(`${API_BASE_URL}/api/events`, {
+    method: 'DELETE',
+    headers: getAdminHeaders()
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to clear events'));
+  }
+  saveStoredEvents([]);
+  return await res.json();
 }
 
 export async function submitEventRsvp(rsvpData) {
@@ -387,7 +410,10 @@ export async function fetchPrayers() {
 
 export async function fetchAllPrayersAdmin() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/prayers/admin/all`, { cache: 'no-store' });
+    const res = await fetch(`${API_BASE_URL}/api/prayers/admin/all`, {
+      cache: 'no-store',
+      headers: getAdminHeaders()
+    });
     if (!res.ok) throw new Error('Failed to fetch admin prayers');
     return await res.json();
   } catch (err) {
@@ -398,9 +424,19 @@ export async function fetchAllPrayersAdmin() {
 
 export async function deletePrayer(prayerId) {
   const res = await fetch(`${API_BASE_URL}/api/prayers/${prayerId}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: getAdminHeaders()
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to delete prayer'));
+  return await res.json();
+}
+
+export async function clearAllPrayers() {
+  const res = await fetch(`${API_BASE_URL}/api/prayers`, {
+    method: 'DELETE',
+    headers: getAdminHeaders()
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, 'Failed to clear prayers'));
   return await res.json();
 }
 
@@ -434,50 +470,17 @@ export async function clickPrayCount(prayerId) {
 // TESTIMONIES (SEPARATE DATABASE COLLECTION)
 const TESTIMONIES_STORAGE_KEY = 'gvc_testimonies_v2';
 
-export const INITIAL_FALLBACK_TESTIMONIES = [
-  {
-    id: "testimony-1",
-    name: "Dr. Arun Kumar & Dr. Priya",
-    story: "When my father was hospitalized in ICU with severe complications, the pastoral team and prayer chain of Grace Victory Church interceded continuously. God performed a supernatural miracle! Today he is completely healed. Praise the Lord!",
-    type: "Miraculous Healing",
-    date: "2026-11-10",
-    location: "Vattamalai",
-    featured_home: true,
-    is_active: true
-  },
-  {
-    id: "testimony-2",
-    name: "Grace Shalini",
-    story: "I came to GVC feeling broken and depressed after failing key exams and losing hope. Through the anointed worship and loving community at Ignite Youth, Jesus healed my mind and restored my confidence. I now work at a top firm and lead a life group!",
-    type: "Life Transformation",
-    date: "2026-11-05",
-    location: "Vattamalai",
-    featured_home: true,
-    is_active: true
-  },
-  {
-    id: "testimony-3",
-    name: "Brother David & Family",
-    story: "Our family business was facing severe financial ruin. Pastor P. Rajendran prayed over us during the Sunday service and prophesied divine breakthrough. Within two months, God opened extraordinary new doors beyond our imagination!",
-    type: "Financial Breakthrough",
-    date: "2026-10-28",
-    location: "Vattamalai",
-    featured_home: true,
-    is_active: true
-  }
-];
-
 export function getStoredTestimonies() {
   try {
     if (typeof window !== 'undefined') {
       const raw = localStorage.getItem(TESTIMONIES_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     }
   } catch (e) {}
-  return INITIAL_FALLBACK_TESTIMONIES;
+  return [];
 }
 
 export function saveStoredTestimonies(list) {
@@ -532,7 +535,8 @@ export async function submitTestimony(testimonyData) {
 
 export async function deleteTestimony(testimonyId) {
   const res = await fetch(`${API_BASE_URL}/api/testimonies/${testimonyId}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: getAdminHeaders()
   });
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, 'Failed to delete testimony'));
@@ -543,9 +547,22 @@ export async function deleteTestimony(testimonyId) {
   return { success: true };
 }
 
+export async function clearAllTestimonies() {
+  const res = await fetch(`${API_BASE_URL}/api/testimonies`, {
+    method: 'DELETE',
+    headers: getAdminHeaders()
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Failed to clear testimonies'));
+  }
+  saveStoredTestimonies([]);
+  return await res.json();
+}
+
 export async function toggleTestimonyHomeFeature(id) {
   const res = await fetch(`${API_BASE_URL}/api/testimonies/${id}/toggle-home`, {
-    method: 'PUT'
+    method: 'PUT',
+    headers: getAdminHeaders()
   });
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, 'Failed to toggle featured testimony'));
@@ -706,7 +723,10 @@ export function saveStoredInquiries(list) {
 
 export async function fetchInquiries() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/contact/messages`, { cache: 'no-store' });
+    const res = await fetch(`${API_BASE_URL}/api/contact/messages`, {
+      cache: 'no-store',
+      headers: getAdminHeaders()
+    });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -719,7 +739,10 @@ export async function fetchInquiries() {
 }
 
 export async function deleteInquiry(id) {
-  const res = await fetch(`${API_BASE_URL}/api/contact/messages/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE_URL}/api/contact/messages/${id}`, {
+    method: 'DELETE',
+    headers: getAdminHeaders()
+  });
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, 'Failed to delete inquiry'));
   }
@@ -864,33 +887,28 @@ export async function submitDonation(donationData) {
 }
 
 export async function fetchAllDonations() {
-  let serverDonations = [];
   try {
-    const res = await fetch(`${API_BASE_URL}/api/donations`, { cache: 'no-store' });
+    const res = await fetch(`${API_BASE_URL}/api/donations`, {
+      cache: 'no-store',
+      headers: getAdminHeaders()
+    });
     if (res.ok) {
-      serverDonations = await res.json();
+      const serverDonations = await res.json();
+      if (Array.isArray(serverDonations)) {
+        saveStoredDonations(serverDonations);
+        return serverDonations;
+      }
     }
   } catch (err) {
     console.warn('Could not fetch donations from server, using cached', err);
   }
-
-  const localDonations = getStoredDonations();
-  const map = new Map();
-  serverDonations.forEach(d => map.set(d.id, d));
-  localDonations.forEach(d => {
-    if (!map.has(d.id)) {
-      map.set(d.id, d);
-    }
-  });
-
-  const merged = Array.from(map.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-  saveStoredDonations(merged);
-  return merged;
+  return getStoredDonations();
 }
 
 export async function deleteDonation(donationId) {
   const res = await fetch(`${API_BASE_URL}/api/donations/${donationId}`, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: getAdminHeaders()
   });
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, 'Could not delete donation on server'));
@@ -902,10 +920,22 @@ export async function deleteDonation(donationId) {
   return { status: 'success', id: donationId };
 }
 
+export async function clearAllDonations() {
+  const res = await fetch(`${API_BASE_URL}/api/donations`, {
+    method: 'DELETE',
+    headers: getAdminHeaders()
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'Could not clear donations on server'));
+  }
+  saveStoredDonations([]);
+  return await res.json();
+}
+
 export async function updateDonationStatus(donationId, status) {
   const res = await fetch(`${API_BASE_URL}/api/donations/${donationId}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAdminHeaders(),
     body: JSON.stringify({ status })
   });
   if (!res.ok) {

@@ -9,7 +9,7 @@ import { useChurch } from '../context/ChurchContext';
 
 export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) {
   const { settings } = useChurch();
-  const [testimonies, setTestimonies] = useState(() => getStoredTestimonies());
+  const [testimonies, setTestimonies] = useState([]);
   const [selectedType, setSelectedType] = useState('All');
   const [expandedTestimonies, setExpandedTestimonies] = useState({});
 
@@ -122,6 +122,17 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
           </p>
         </div>
 
+        {filteredTestimonies.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center max-w-lg mx-auto shadow-sm">
+            <Sparkles className="w-10 h-10 text-amber-500 mx-auto mb-3 opacity-80" />
+            <h3 className="font-serif font-bold text-lg text-slate-900 mb-1.5">
+              No Testimonies Published Yet
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600">
+              Testimonies shared by believers or published from the Admin Portal will appear here.
+            </p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
           {filteredTestimonies.map((item, idx) => {
             const cardId = item.id || `testimony-${idx}`;
@@ -175,6 +186,7 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
             );
           })}
         </div>
+        )}
 
         {/* Pastoral Prayer Promise Banner */}
         <div className="mt-16 bg-[#F8F6F0] text-slate-800 rounded-3xl p-8 sm:p-12 border border-amber-200/80 text-center max-w-3xl mx-auto shadow-md">

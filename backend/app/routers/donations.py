@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from typing import List, Optional, Tuple
 import uuid
 import logging
@@ -13,58 +13,13 @@ from app.schemas.donation import (
     PaymentOrderCreate, PaymentOrderResponse, PaymentVerifyRequest
 )
 from app.database import get_database, is_db_connected
+from app.auth import verify_admin_session
 
 logger = logging.getLogger("uvicorn")
 
 router = APIRouter(prefix="/api/donations", tags=["Donations & Giving"])
 
-# Initial Seed Donations to display realistic giving records immediately
-INITIAL_DONATIONS = [
-    {
-        "id": "don-seed-001",
-        "receipt_number": "GVC-202611-TIT041",
-        "donor_name": "Bro. David Sundararajan",
-        "email": "davidsundar@gmail.com",
-        "phone": "+91 94432 10892",
-        "amount": 5000.0,
-        "cause": "Tithes & General Offerings",
-        "payment_method": "Razorpay / Bank UPI (100% Verified)",
-        "transaction_id": "pay_O7w21908201",
-        "notes": "Monthly thanksgiving tithe for family health & peace",
-        "status": "Verified",
-        "created_at": datetime(2026, 11, 15, 10, 30)
-    },
-    {
-        "id": "don-seed-002",
-        "receipt_number": "GVC-202611-BLD089",
-        "donor_name": "Sis. Ruth Kamalam",
-        "email": "ruthkamalam@yahoo.com",
-        "phone": "+91 98401 55431",
-        "amount": 10000.0,
-        "cause": "Sanctuary Expansion & Building Fund",
-        "payment_method": "Razorpay / Bank UPI (100% Verified)",
-        "transaction_id": "pay_O8b91204855",
-        "notes": "Building fund offering for new church youth hall construction",
-        "status": "Verified",
-        "created_at": datetime(2026, 11, 18, 14, 15)
-    },
-    {
-        "id": "don-seed-003",
-        "receipt_number": "GVC-202611-MIS102",
-        "donor_name": "Evg. Paul Jayakumar",
-        "email": "paul.jayakumar@outlook.com",
-        "phone": "+91 97890 23412",
-        "amount": 2500.0,
-        "cause": "Village Missions & Church Planting",
-        "payment_method": "Razorpay / Bank UPI (100% Verified)",
-        "transaction_id": "pay_O9c74193022",
-        "notes": "For rural evangelism outreach and gospel tracts",
-        "status": "Verified",
-        "created_at": datetime(2026, 11, 20, 18, 45)
-    }
-]
-
-donations_store = [dict(d) for d in INITIAL_DONATIONS]
+donations_store = []
 
 async def get_active_razorpay_keys() -> Tuple[str, str]:
     """Retrieve Razorpay API credentials securely from Environment, MongoDB, or cache."""
@@ -345,7 +300,7 @@ async def record_donation(donation: DonationCreate):
     return donation_dict
 
 @router.get("", response_model=List[DonationResponse])
-async def get_all_donations():
+async def get_all_donations(_authorized: bool = Depends(verify_admin_session)):
     if is_db_connected():
         try:
             db = get_database()
@@ -356,25 +311,30 @@ async def get_all_donations():
                 if "_id" in doc:
                     doc.pop("_id", None)
                 results.append(doc)
-
-            # If collection is currently empty, seed with initial realistic records
-            if not results:
-                for seed_item in INITIAL_DONATIONS:
-                    seed_doc = {**seed_item, "_id": seed_item["id"]}
-                    try:
-                        await db.donations.insert_one(seed_doc)
-                    except Exception:
-                        pass
-                return INITIAL_DONATIONS
-
             return results
         except Exception as e:
             logger.error("Failed to fetch donations from MongoDB: %s", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     return donations_store
 
+@router.delete("")
+async def clear_all_donations(_authorized: bool = Depends(verify_admin_session)):
+    deleted_count = 0
+    if is_db_connected():
+        try:
+            db = get_database()
+            res = await db.donations.delete_many({})
+            deleted_count = res.deleted_count
+        except Exception as e:
+            logger.error("Failed to clear donations from MongoDB: %s", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+    donations_store.clear()
+    return {"success": True, "deleted_count": deleted_count, "message": "All donation records cleared"}
+
 @router.delete("/{donation_id}")
-async def delete_donation(donation_id: str):
+async def delete_donation(donation_id: str, _authorized: bool = Depends(verify_admin_session)):
     global donations_store
     if is_db_connected():
         try:
@@ -382,12 +342,13 @@ async def delete_donation(donation_id: str):
             await db.donations.delete_one({"$or": [{"_id": donation_id}, {"id": donation_id}]})
         except Exception as e:
             logger.error("Failed to delete donation from MongoDB: %s", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     donations_store = [d for d in donations_store if d.get("id") != donation_id]
     return {"status": "success", "message": f"Donation {donation_id} removed"}
 
 @router.patch("/{donation_id}/status")
-async def update_donation_status(donation_id: str, payload: dict):
+async def update_donation_status(donation_id: str, payload: dict, _authorized: bool = Depends(verify_admin_session)):
     new_status = payload.get("status", "Verified")
     if is_db_connected():
         try:
@@ -398,6 +359,7 @@ async def update_donation_status(donation_id: str, payload: dict):
             )
         except Exception as e:
             logger.error("Failed to update donation status in MongoDB: %s", e)
+            raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     for d in donations_store:
         if d.get("id") == donation_id:

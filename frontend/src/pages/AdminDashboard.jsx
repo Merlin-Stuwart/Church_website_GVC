@@ -11,18 +11,18 @@ import {
 } from 'lucide-react';
 import { useChurch } from '../context/ChurchContext';
 import { 
-  fetchSermons, createSermon, deleteSermon, 
-  fetchEvents, createEvent, updateEvent, deleteEvent, getEventNotices,
+  fetchSermons, createSermon, deleteSermon, clearAllSermons, 
+  fetchEvents, createEvent, updateEvent, deleteEvent, clearAllEvents, getEventNotices,
   formatDateForInput, formatEventDisplayDate, isEventActive,
-  fetchPrayers, fetchAllPrayersAdmin, deletePrayer, 
-  fetchTestimonies, submitTestimony, deleteTestimony, getStoredTestimonies,
+  fetchPrayers, fetchAllPrayersAdmin, deletePrayer, clearAllPrayers, 
+  fetchTestimonies, submitTestimony, deleteTestimony, clearAllTestimonies, getStoredTestimonies,
   toggleTestimonyHomeFeature, changeAdminPassword,
   fetchMinistries, createMinistry, updateMinistry, deleteMinistry, clearAllMinistries,
-  fetchSystemStatus, fetchAllDonations, deleteDonation, updateDonationStatus, submitDonation, getStoredDonations,
+  fetchSystemStatus, fetchAllDonations, deleteDonation, clearAllDonations, updateDonationStatus, submitDonation, getStoredDonations,
   fetchInquiries, deleteInquiry, getStoredInquiries,
   getGmailComposeUrl, API_BASE_URL, getAdminHeaders 
 } from '../api/client';
-import { INITIAL_SERMONS, INITIAL_EVENTS, INITIAL_PRAYERS, TESTIMONIES, CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM, FAQ_LIST } from '../data/mockData';
+import { CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM, FAQ_LIST } from '../data/mockData';
 import { compressImage } from '../utils/imageCompressor';
 
 export default function AdminDashboard() {
@@ -111,14 +111,14 @@ export default function AdminDashboard() {
     prayerWallVerse: settings.prayerWallVerse || '“Again I say unto you, That if two of you shall agree on earth as touching any thing that they shall ask, it shall be done for them of my Father which is in heaven.” — Matthew 18:19',
   });
 
-  // Data states
-  const [sermons, setSermons] = useState(INITIAL_SERMONS);
+  // Data states (100% live DB driven)
+  const [sermons, setSermons] = useState([]);
   const [events, setEvents] = useState([]);
-  const [prayers, setPrayers] = useState(INITIAL_PRAYERS);
+  const [prayers, setPrayers] = useState([]);
   const [prayerSearch, setPrayerSearch] = useState('');
   const [prayerCategoryFilter, setPrayerCategoryFilter] = useState('All');
   const [intercededPrayerIds, setIntercededPrayerIds] = useState(new Set());
-  const [testimonies, setTestimonies] = useState(() => getStoredTestimonies());
+  const [testimonies, setTestimonies] = useState([]);
   const [isTestimonyModalOpen, setIsTestimonyModalOpen] = useState(false);
   const [newTestimonyPrefix, setNewTestimonyPrefix] = useState('Brother');
   const [newTestimony, setNewTestimony] = useState({
@@ -289,8 +289,21 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    loadAll();
+    fetchSystemStatus().then(setSystemStatus).catch(() => {});
+    if (isAdminLoggedIn) {
+      loadAll();
+    } else {
+      setSermons([]);
+      setEvents([]);
+      setPrayers([]);
+      setTestimonies([]);
+      setMinistries([]);
+      setDonations([]);
+      setInquiries([]);
+    }
+  }, [isAdminLoggedIn]);
 
+  useEffect(() => {
     const handleInquiriesUpdate = (e) => {
       if (e?.detail && Array.isArray(e.detail)) {
         setInquiries(e.detail);
@@ -577,6 +590,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleClearAllSermons = async () => {
+    if (!window.confirm('Delete ALL sermons from MongoDB and the live website? Only sermons you add manually after this will appear.')) return;
+    try {
+      await clearAllSermons();
+      setSermons([]);
+    } catch (err) {
+      alert('Clear all failed: ' + (err.message || 'Check backend connection'));
+    }
+  };
+
   const handleEventImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -696,6 +719,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleClearAllEvents = async () => {
+    if (!window.confirm('Delete ALL events from MongoDB and the live website?')) return;
+    try {
+      await clearAllEvents();
+      setEvents([]);
+    } catch (err) {
+      alert('Clear all failed: ' + (err.message || 'Check backend connection'));
+    }
+  };
+
   const handleDeletePrayer = async (id) => {
     if (!window.confirm('Delete this prayer request?')) return;
     try {
@@ -704,6 +737,16 @@ export default function AdminDashboard() {
     } catch (err) {
       console.warn('Error deleting prayer', err);
       alert('Delete failed: ' + (err.message || 'Check backend connection'));
+    }
+  };
+
+  const handleClearAllPrayers = async () => {
+    if (!window.confirm('Delete ALL prayer requests from MongoDB?')) return;
+    try {
+      await clearAllPrayers();
+      setPrayers([]);
+    } catch (err) {
+      alert('Clear all failed: ' + (err.message || 'Check backend connection'));
     }
   };
 
@@ -722,6 +765,26 @@ export default function AdminDashboard() {
       const updated = currentFeatured.filter(fid => String(fid) !== String(id));
       setSiteForm(prev => ({ ...prev, featuredHomeTestimonyIds: updated }));
       updateSettings({ featuredHomeTestimonyIds: updated }).catch(err => alert('Could not save: ' + err.message));
+    }
+  };
+
+  const handleClearAllTestimonies = async () => {
+    if (!window.confirm('Delete ALL testimonies from MongoDB and the live website?')) return;
+    try {
+      await clearAllTestimonies();
+      setTestimonies([]);
+    } catch (err) {
+      alert('Clear all failed: ' + (err.message || 'Check backend connection'));
+    }
+  };
+
+  const handleClearAllDonations = async () => {
+    if (!window.confirm('Delete ALL donation records from MongoDB?')) return;
+    try {
+      await clearAllDonations();
+      setDonations([]);
+    } catch (err) {
+      alert('Clear all failed: ' + (err.message || 'Check backend connection'));
     }
   };
 
@@ -3251,15 +3314,42 @@ export default function AdminDashboard() {
                 </p>
               </div>
 
-              <button
-                onClick={() => setIsSermonModalOpen(true)}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-950 bg-amber-400 hover:bg-amber-300 transition-colors flex items-center gap-2 shadow-lg"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add New Sermon</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {sermons.length > 0 && (
+                  <button
+                    onClick={handleClearAllSermons}
+                    className="px-4 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-600/30 text-red-300 hover:text-white border border-red-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Clear All</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsSermonModalOpen(true)}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-950 bg-amber-400 hover:bg-amber-300 transition-colors flex items-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New Sermon</span>
+                </button>
+              </div>
             </div>
 
+            {sermons.length === 0 ? (
+              <div className="bg-slate-950 rounded-2xl border border-slate-800 p-12 text-center space-y-3">
+                <Video className="w-10 h-10 text-amber-400 mx-auto opacity-80" />
+                <h3 className="font-serif font-bold text-lg text-white">No Sermons Published Yet</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  Auto-generated sermons are disabled. Click below to add sermons you want displayed on the live website.
+                </p>
+                <button
+                  onClick={() => setIsSermonModalOpen(true)}
+                  className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider inline-flex items-center gap-2 cursor-pointer mt-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New Sermon</span>
+                </button>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sermons.map((s) => (
                 <div key={s.id} className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-lg flex flex-col justify-between">
@@ -3295,6 +3385,7 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -3303,7 +3394,7 @@ export default function AdminDashboard() {
            ========================================================================= */}
         {activeTab === 'events' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="font-serif font-black text-2xl text-white">
                   Church Events & Conferences ({events.length})
@@ -3313,13 +3404,24 @@ export default function AdminDashboard() {
                 </p>
               </div>
 
-              <button
-                onClick={handleOpenAddEvent}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-950 bg-amber-400 hover:bg-amber-300 transition-colors flex items-center gap-2 shadow-lg cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add New Event</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {events.length > 0 && (
+                  <button
+                    onClick={handleClearAllEvents}
+                    className="px-4 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-600/30 text-red-300 hover:text-white border border-red-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Clear All</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleOpenAddEvent}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-950 bg-amber-400 hover:bg-amber-300 transition-colors flex items-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New Event</span>
+                </button>
+              </div>
             </div>
 
             {events.length === 0 ? (
@@ -3446,7 +3548,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 self-start md:self-auto">
+              <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
                 <span className="px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-300 font-bold text-xs border border-amber-500/20 flex items-center gap-1.5">
                   <Heart className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   <span>{prayers.length} Received</span>
@@ -3455,6 +3557,15 @@ export default function AdminDashboard() {
                   <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
                   <span>{intercededPrayerIds.size} Interceded</span>
                 </span>
+                {prayers.length > 0 && (
+                  <button
+                    onClick={handleClearAllPrayers}
+                    className="px-3.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-600/30 text-red-300 hover:text-white border border-red-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Clear All</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -3634,13 +3745,24 @@ export default function AdminDashboard() {
                 </p>
               </div>
 
-              <button
-                onClick={() => setIsTestimonyModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-md flex items-center gap-2 self-start md:self-auto cursor-pointer"
-              >
-                <Plus className="w-4 h-4 text-slate-950" />
-                <span>Add New Testimony</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+                {testimonies.length > 0 && (
+                  <button
+                    onClick={handleClearAllTestimonies}
+                    className="px-4 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-600/30 text-red-300 hover:text-white border border-red-500/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Clear All</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsTestimonyModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-md flex items-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 text-slate-950" />
+                  <span>Add New Testimony</span>
+                </button>
+              </div>
             </div>
 
             {/* HOME PAGE FEATURED 3 SELECTOR PANEL */}
@@ -3964,6 +4086,15 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
+                  {donations.length > 0 && (
+                    <button
+                      onClick={handleClearAllDonations}
+                      className="px-4 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-600/30 text-red-400 hover:text-white border border-red-500/30 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Clear All</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => setIsManualDonationModalOpen(true)}
                     className="px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer font-sans"
