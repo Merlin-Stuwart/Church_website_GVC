@@ -8,7 +8,7 @@ import {
   Search, Check, Filter, ChevronUp, ChevronDown, Layers,
   Mail, MessageCircle, Send, Inbox, Star, User, UserCheck, Menu, Shield,
   Sun, Moon, QrCode, Receipt, Download, Printer, FileText, CreditCard, TrendingUp, HelpCircle,
-  Instagram, Facebook, Youtube, Share2
+  Instagram, Facebook, Youtube, Share2, Home
 } from 'lucide-react';
 import { useChurch, resolveSocialLinks, resolveFooterConfig, normalizeExternalUrl, DEFAULT_SOCIAL_LINKS, DEFAULT_FOOTER_CONFIG } from '../context/ChurchContext';
 import { 
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
   const logoutAdmin = church?.logoutAdmin || (() => {});
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('settings');
+  const [activeTab, setActiveTab] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false); // Default to Bright Mode
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -1613,114 +1613,116 @@ export default function AdminDashboard() {
   }
 
   const TAB_CONFIG = {
-    settings: {
-      title: 'Church Identity & Contact Details',
-      subtitle: 'Manage church names, pastoral leadership roles, telephone numbers, emails, and weekly timings',
-      icon: Settings,
-      category: 'IDENTITY & BRANDING'
-    },
-    media: {
-      title: 'Photos & Background Banners',
-      subtitle: 'Upload and customize hero banner, pastor portraits, and sanctuary backgrounds',
-      icon: Image,
-      category: 'MEDIA & ASSETS'
+    home: {
+      title: 'Home Page Controls',
+      subtitle: 'Manage Hero banner, theme, slider speed, pastor & sanctuary photos, Pastor\'s Welcome, and Homepage FAQs',
+      icon: Home,
+      category: 'WEBSITE PAGES'
     },
     about: {
-      title: 'About Page & Church History',
-      subtitle: 'Manage founding milestone timeline, core beliefs, and leadership team profiles',
+      title: 'About Us Page',
+      subtitle: 'Manage ministry stats, founding milestone timeline, core beliefs, and pastoral leadership team',
       icon: BookOpen,
-      category: 'IDENTITY & BRANDING'
+      category: 'WEBSITE PAGES'
+    },
+    ministries: {
+      title: 'Ministries Page',
+      subtitle: 'Manage church departments: Women\'s Fellowship, Youth Ministry, Fasting Prayer, and Sunday School',
+      icon: Layers,
+      category: 'WEBSITE PAGES'
+    },
+    sermons: {
+      title: 'Sermons Page',
+      subtitle: 'Publish, organize, and manage Sunday messages, YouTube video links, and study notes',
+      icon: Video,
+      category: 'WEBSITE PAGES'
+    },
+    events: {
+      title: 'Events Page',
+      subtitle: 'Schedule upcoming special services, conventions, fasting prayer meetings, and fellowship events',
+      icon: Calendar,
+      category: 'WEBSITE PAGES'
+    },
+    testimonies: {
+      title: 'Prayer & Testimonies Page',
+      subtitle: 'Manage public testimonies, choose the 3 Home featured testimonies, and update the Prayer Wall header verse',
+      icon: Sparkles,
+      category: 'WEBSITE PAGES'
+    },
+    giving: {
+      title: 'Giving Page',
+      subtitle: 'Update church bank account details, IFSC code, direct UPI QR settings, and Razorpay gateway',
+      icon: DollarSign,
+      category: 'WEBSITE PAGES'
+    },
+    contact: {
+      title: 'Contact & Visit Page',
+      subtitle: 'Update church address, phone, WhatsApp, public email, Google Maps embed/link, and weekly service timings',
+      icon: MapPin,
+      category: 'WEBSITE PAGES'
     },
     footer: {
       title: 'Footer & Social Media Links',
       subtitle: 'Update Instagram, Facebook, YouTube names & links (Hero slide + Footer) and footer text',
       icon: Share2,
-      category: 'IDENTITY & BRANDING'
+      category: 'GLOBAL SITE & FOOTER'
     },
-    sermons: {
-      title: 'Sermons & Video Library',
-      subtitle: 'Publish, organize, and manage Sunday messages, YouTube video links, and study notes',
-      icon: Video,
-      category: 'PROGRAMS & MEDIA'
-    },
-    events: {
-      title: 'Events Calendar & Gatherings',
-      subtitle: 'Schedule upcoming special services, conventions, fasting prayer meetings, and fellowship events',
-      icon: Calendar,
-      category: 'PROGRAMS & MEDIA'
-    },
-    ministries: {
-      title: 'Ministries & Church Services',
-      subtitle: 'Manage church departments: Women\'s Fellowship, Youth Ministry, Fasting Prayer, and Sunday School',
-      icon: Layers,
-      category: 'PROGRAMS & MEDIA'
+    settings: {
+      title: 'Church Identity & Admin Security',
+      subtitle: 'Manage global church name, founded year, Gmail notification recipient, and Admin login credentials',
+      icon: Settings,
+      category: 'GLOBAL SITE & FOOTER'
     },
     prayers: {
       title: 'Confidential Prayer Requests',
       subtitle: 'Private prayer requests submitted by church believers and online visitors for intercession',
       icon: Heart,
-      category: 'PASTORAL CARE & INBOX'
-    },
-    testimonies: {
-      title: 'Public Testimonies & Stories',
-      subtitle: 'Review, approve, and select the 3 featured testimonies displayed on the website',
-      icon: Sparkles,
-      category: 'PASTORAL CARE & INBOX'
+      category: 'INBOX & RECORDS'
     },
     inquiries: {
-      title: 'Contact Messages & Inquiries',
+      title: 'Contact Inquiries Inbox',
       subtitle: 'Messages sent via the "How Can We Serve You?" contact form with direct Gmail notification',
       icon: Mail,
-      category: 'PASTORAL CARE & INBOX'
+      category: 'INBOX & RECORDS'
     },
     donations: {
       title: 'Donation & Giving Records',
-      subtitle: 'Complete list of tithes, building fund offerings, and donor contributions with receipts and contact details',
+      subtitle: 'Complete list of tithes, building fund offerings, and donor contributions with receipts and CSV export',
       icon: Receipt,
-      category: 'STEWARDSHIP'
-    },
-    giving: {
-      title: 'Tithes, Offerings & UPI Details',
-      subtitle: 'Update church bank account details, IFSC code, and direct UPI payment identifiers',
-      icon: DollarSign,
-      category: 'STEWARDSHIP'
+      category: 'INBOX & RECORDS'
     }
   };
 
-  const currentTab = TAB_CONFIG[activeTab] || TAB_CONFIG['settings'];
+  const currentTab = TAB_CONFIG[activeTab] || TAB_CONFIG['home'];
   const CurrentIcon = currentTab.icon;
 
   const navGroups = [
     {
-      group: 'IDENTITY & BRANDING',
+      group: 'WEBSITE PAGES',
       items: [
-        { id: 'settings', label: 'Church & Contact Info', icon: Settings, count: null },
-        { id: 'media', label: 'Photos & Backgrounds', icon: Image, count: null },
-        { id: 'about', label: 'About Page & History', icon: BookOpen, count: null },
+        { id: 'home', label: 'Home Page', icon: Home, count: null },
+        { id: 'about', label: 'About Us Page', icon: BookOpen, count: null },
+        { id: 'ministries', label: 'Ministries Page', icon: Layers, count: ministries.length },
+        { id: 'sermons', label: 'Sermons Page', icon: Video, count: sermons.length },
+        { id: 'events', label: 'Events Page', icon: Calendar, count: events.length },
+        { id: 'testimonies', label: 'Prayer & Testimonies', icon: Sparkles, count: testimonies.length },
+        { id: 'giving', label: 'Giving Page', icon: DollarSign, count: null },
+        { id: 'contact', label: 'Contact & Visit Page', icon: MapPin, count: null },
+      ]
+    },
+    {
+      group: 'GLOBAL SITE & FOOTER',
+      items: [
         { id: 'footer', label: 'Footer & Social Links', icon: Share2, count: null },
+        { id: 'settings', label: 'Church Identity & Admin', icon: Settings, count: null },
       ]
     },
     {
-      group: 'PROGRAMS & MEDIA',
-      items: [
-        { id: 'sermons', label: 'Sermons & Media', icon: Video, count: sermons.length },
-        { id: 'events', label: 'Events Calendar', icon: Calendar, count: events.length },
-        { id: 'ministries', label: 'Ministries & Services', icon: Layers, count: ministries.length },
-      ]
-    },
-    {
-      group: 'PASTORAL CARE & INBOX',
+      group: 'INBOX & RECORDS',
       items: [
         { id: 'prayers', label: 'Prayer Requests', icon: Heart, count: prayers.length },
-        { id: 'testimonies', label: 'Public Testimonies', icon: Sparkles, count: testimonies.length },
         { id: 'inquiries', label: 'Contact Inquiries', icon: Mail, count: inquiries.length },
-      ]
-    },
-    {
-      group: 'STEWARDSHIP',
-      items: [
         { id: 'donations', label: 'Donation Records', icon: Receipt, count: donations.length },
-        { id: 'giving', label: 'Giving & UPI Bank', icon: DollarSign, count: null },
       ]
     }
   ];
@@ -2067,446 +2069,403 @@ export default function AdminDashboard() {
         )}
 
         {/* =========================================================================
-            TAB 1: LIVE CHURCH INFORMATION & CONTACT EDITOR
+            TAB: HOME PAGE CONTROLS (ALL HOMEPAGE SECTIONS IN ONE PLACE)
            ========================================================================= */}
-        {activeTab === 'settings' && (
+        {activeTab === 'home' && (
           <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
-            <div>
-              <h2 className="font-serif font-black text-2xl text-white mb-2 flex items-center gap-2">
-                <Settings className="w-6 h-6 text-amber-400" />
-                <span>Live Church Identity & Contact Details</span>
-              </h2>
-              <p className="text-xs text-slate-400">
-                Any changes made here will immediately update across all pages (Banner, Header, Footer, and Contact sections).
-              </p>
-            </div>
-
-            <form onSubmit={handleSaveSettings} className="space-y-6">
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Church Name (English)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={siteForm.churchName}
-                    onChange={(e) => setSiteForm({ ...siteForm, churchName: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Church Name (Tamil)
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.tamilName}
-                    onChange={(e) => setSiteForm({ ...siteForm, tamilName: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Founded Year (Established)
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.foundedYear || '1998'}
-                    onChange={(e) => setSiteForm({ ...siteForm, foundedYear: e.target.value })}
-                    placeholder="1998"
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Senior Pastor Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={siteForm.seniorPastor}
-                    onChange={(e) => setSiteForm({ ...siteForm, seniorPastor: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Senior Pastor Title
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.seniorPastorTitle}
-                    onChange={(e) => setSiteForm({ ...siteForm, seniorPastorTitle: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                    placeholder="Founder & Senior Pastor"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
-                    Second Pastor Name (Elder Son)
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.associatePastor}
-                    onChange={(e) => setSiteForm({ ...siteForm, associatePastor: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                    placeholder="Pastor R. Samuel Rajendran"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
-                    Second Pastor Role / Title
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.associatePastorTitle}
-                    onChange={(e) => setSiteForm({ ...siteForm, associatePastorTitle: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                    placeholder="Associate Pastor & Administrator"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Phone / Helpline Number
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={siteForm.phone}
-                    onChange={(e) => setSiteForm({ ...siteForm, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    WhatsApp Number
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.whatsappNumber}
-                    onChange={(e) => setSiteForm({ ...siteForm, whatsappNumber: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Church Physical Address
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={siteForm.address}
-                    onChange={(e) => setSiteForm({ ...siteForm, address: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Mail className="w-4 h-4 text-amber-400" />
-                    <span>Church Public Email</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={siteForm.email || ''}
-                    onChange={(e) => setSiteForm({ ...siteForm, email: e.target.value })}
-                    placeholder="contact@gracevictorychurch.org"
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    Public church email displayed on Contact page.
-                  </span>
-                </div>
-              </div>
-
-              {/* GOOGLE MAPS LOCATION & EMBED LINK */}
-              <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h3 className="font-serif font-bold text-base text-white flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-amber-400" />
-                      <span>Google Maps Location & Live Embed Link</span>
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Controls the interactive Google Map and directions button on the Contact & Visit page.
-                    </p>
-                  </div>
-                  {siteForm.googleMapsLink && (
-                    <a
-                      href={siteForm.googleMapsLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1 self-start sm:self-auto"
-                    >
-                      <span>Test Map Link</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                      Google Maps Embed Iframe URL
-                    </label>
-                    <input
-                      type="text"
-                      value={siteForm.googleMapsEmbedUrl || ''}
-                      onChange={(e) => setSiteForm({ ...siteForm, googleMapsEmbedUrl: e.target.value })}
-                      placeholder="https://maps.google.com/maps?q=Grace%20Victory%20Church...&output=embed"
-                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
-                    />
-                    <span className="text-[10px] text-slate-500 mt-1 block">
-                      Embed URL for interactive map iframe display.
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                      Direct Google Maps App / Directions Link
-                    </label>
-                    <input
-                      type="text"
-                      value={siteForm.googleMapsLink || ''}
-                      onChange={(e) => setSiteForm({ ...siteForm, googleMapsLink: e.target.value })}
-                      placeholder="https://maps.google.com/?q=Grace+Victory+Church+Vattamalai"
-                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
-                    />
-                    <span className="text-[10px] text-slate-500 mt-1 block">
-                      Opened when users click "Get Directions" or "Open in Maps".
-                    </span>
-                  </div>
-                </div>
-
-                {/* Live Admin Preview of the Map */}
-                {siteForm.googleMapsEmbedUrl && (
-                  <div className="pt-2">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">
-                      Live Map Preview (Contact Page Display):
-                    </span>
-                    <div className="w-full h-44 rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
-                      <iframe
-                        title="Admin Map Preview"
-                        src={siteForm.googleMapsEmbedUrl}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0 }}
-                        loading="lazy"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* LIVE ADMIN ALERT & NOTIFICATION EMAIL */}
-              <div className="p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <label className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-amber-400" />
-                    <span>Notification "To" Email (Gmail Alerts Recipient)</span>
-                  </label>
-                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-mono break-all max-w-full self-start sm:self-auto">
-                    To: {siteForm.adminNotificationEmail || 'contact@gracevictorychurch.org'}
-                  </span>
-                </div>
-                <input
-                  type="email"
-                  required
-                  value={siteForm.adminNotificationEmail || ''}
-                  onChange={(e) => setSiteForm({ ...siteForm, adminNotificationEmail: e.target.value })}
-                  placeholder="contact@gracevictorychurch.org"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-amber-500/60 text-white text-sm focus:outline-none focus:border-amber-400 font-mono font-bold"
-                />
-                <p className="text-[11px] text-amber-300/90 leading-relaxed">
-                  🔔 <strong>Gmail Alerts 'To' Email:</strong> Prayer Request, Testimony, மற்றும் Contact Form ("How Can We Serve You?") வழியாக அனுப்பப்படும் அனைத்து செய்திகளும் எந்த ஜிமெயிலுக்கு (To Email) செல்ல வேண்டும் என்பதை நீங்கள் இங்கே Update செய்து கொள்ளலாம்.
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+              <div>
+                <h2 className="font-serif font-black text-2xl text-white mb-1.5 flex items-center gap-2">
+                  <Home className="w-6 h-6 text-amber-400 shrink-0" />
+                  <span>Home Page Controls</span>
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Manage everything displayed on the Home Page: Hero Banner & Theme, Slider Speed, Pastor & Sanctuary Photos, Senior Pastor's Welcome, and Visitor FAQs.
                 </p>
               </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('testimonies')}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Home Featured Testimonies</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('footer')}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Hero Social Bar</span>
+                </button>
+              </div>
+            </div>
 
-              {/* Service Timings (Displayed on Contact page & Schedule Cards) */}
-              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">
-                    Service Timings (Live on Contact Page & Timetable)
-                  </span>
+            <form onSubmit={handleSaveSettings} className="space-y-8">
+
+              {/* 1. HERO BANNER, THEME & PASTOR NAMES */}
+              <div className="space-y-5">
+                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>1. Hero Banner, Annual Theme & Slider Speed</span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Sunday Worship Service *
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Year (Banner Badge)
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.yearBadge}
+                      onChange={(e) => setSiteForm({ ...siteForm, yearBadge: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Annual Theme Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.themeBadge}
+                      onChange={(e) => setSiteForm({ ...siteForm, themeBadge: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Tamil Theme Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.tamilTheme}
+                      onChange={(e) => setSiteForm({ ...siteForm, tamilTheme: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Hero Slogan / Tagline
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.tagline || ''}
+                      onChange={(e) => setSiteForm({ ...siteForm, tagline: e.target.value })}
+                      placeholder="Always Something New — Since 1998"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Scripture Verse (Hero & Footer Default)
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.verse}
+                      onChange={(e) => setSiteForm({ ...siteForm, verse: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Pastors Shown on Hero & Welcome Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Senior Pastor Name
                     </label>
                     <input
                       type="text"
                       required
-                      value={siteForm.serviceTimings || ''}
-                      onChange={(e) => setSiteForm({ ...siteForm, serviceTimings: e.target.value })}
-                      placeholder="09:30 AM – 11:30 AM"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                      value={siteForm.seniorPastor}
+                      onChange={(e) => setSiteForm({ ...siteForm, seniorPastor: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
                     />
                   </div>
+
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Wednesday Bible Study
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Senior Pastor Title
                     </label>
                     <input
                       type="text"
-                      value={siteForm.wednesdayTiming || ''}
-                      onChange={(e) => setSiteForm({ ...siteForm, wednesdayTiming: e.target.value })}
-                      placeholder="07:00 PM – 08:30 PM"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                      value={siteForm.seniorPastorTitle}
+                      onChange={(e) => setSiteForm({ ...siteForm, seniorPastorTitle: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                      placeholder="Founder & Senior Pastor"
                     />
                   </div>
+
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Friday Fasting Prayer
+                    <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
+                      Second Pastor Name (Elder Son)
                     </label>
                     <input
                       type="text"
-                      value={siteForm.fridayTiming || ''}
-                      onChange={(e) => setSiteForm({ ...siteForm, fridayTiming: e.target.value })}
-                      placeholder="10:30 AM – 01:30 PM"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                      value={siteForm.associatePastor}
+                      onChange={(e) => setSiteForm({ ...siteForm, associatePastor: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                      placeholder="Pastor R. Franklin Rajendran"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
+                      Second Pastor Role / Title
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.associatePastorTitle}
+                      onChange={(e) => setSiteForm({ ...siteForm, associatePastorTitle: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                      placeholder="Youth Pastor & Administrator"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Year (Banner Badge)
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.yearBadge}
-                    onChange={(e) => setSiteForm({ ...siteForm, yearBadge: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Annual Theme Badge
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.themeBadge}
-                    onChange={(e) => setSiteForm({ ...siteForm, themeBadge: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Tamil Theme Subtitle
-                  </label>
-                  <input
-                    type="text"
-                    value={siteForm.tamilTheme}
-                    onChange={(e) => setSiteForm({ ...siteForm, tamilTheme: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                  Scripture Verse (Hero & Footer)
-                </label>
-                <input
-                  type="text"
-                  value={siteForm.verse}
-                  onChange={(e) => setSiteForm({ ...siteForm, verse: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
-                />
-              </div>
-
-              {/* HERO SLIDER AUTO-SWITCH SPEED CUSTOMIZER */}
-              <div className="p-5 rounded-2xl bg-slate-900 border-2 border-amber-400/40 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span className="text-xs uppercase tracking-wider font-extrabold text-amber-400 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-400" />
-                      <span>Hero Slider Auto-Switch Speed (Seconds)</span>
-                    </span>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      எத்தனை வினாடிக்கு ஒருமுறை Hero Slide தானாக மாற வேண்டும்? (Slider switch interval in seconds)
-                    </p>
+                {/* HERO SLIDER AUTO-SWITCH SPEED CUSTOMIZER */}
+                <div className="p-5 rounded-2xl bg-slate-900 border-2 border-amber-400/40 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <span className="text-xs uppercase tracking-wider font-extrabold text-amber-400 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                        <span>Hero Slider Auto-Switch Speed (Seconds)</span>
+                      </span>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        எத்தனை வினாடிக்கு ஒருமுறை Hero Slide தானாக மாற வேண்டும்? (Slider switch interval in seconds)
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <span className="text-lg font-black text-slate-950 px-3.5 py-1 rounded-xl bg-amber-400 shadow-lg">
+                        {siteForm.sliderSpeedSeconds || 3}s
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <span className="text-lg font-black text-slate-950 px-3.5 py-1 rounded-xl bg-amber-400 shadow-lg">
-                      {siteForm.sliderSpeedSeconds || 3}s
-                    </span>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="1"
-                    max="15"
-                    step="1"
-                    value={siteForm.sliderSpeedSeconds || 3}
-                    onChange={(e) => setSiteForm({ ...siteForm, sliderSpeedSeconds: Math.max(1, Number(e.target.value)) })}
-                    className="flex-1 accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
-                  />
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-4">
                     <input
-                      type="number"
+                      type="range"
                       min="1"
-                      max="30"
+                      max="15"
+                      step="1"
                       value={siteForm.sliderSpeedSeconds || 3}
                       onChange={(e) => setSiteForm({ ...siteForm, sliderSpeedSeconds: Math.max(1, Number(e.target.value)) })}
-                      className="w-20 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-center text-sm focus:outline-none focus:border-amber-400"
+                      className="flex-1 accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
                     />
-                    <span className="text-xs text-slate-400 font-bold">Sec</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={siteForm.sliderSpeedSeconds || 3}
+                        onChange={(e) => setSiteForm({ ...siteForm, sliderSpeedSeconds: Math.max(1, Number(e.target.value)) })}
+                        className="w-20 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-center text-sm focus:outline-none focus:border-amber-400"
+                      />
+                      <span className="text-xs text-slate-400 font-bold">Sec</span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Quick Preset Buttons */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800">
-                  <span className="text-[11px] text-slate-400 font-semibold mr-1">Quick Presets:</span>
-                  {[2, 3, 4, 5, 7, 10].map((sec) => (
-                    <button
-                      key={sec}
-                      type="button"
-                      onClick={() => setSiteForm({ ...siteForm, sliderSpeedSeconds: sec })}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        Number(siteForm.sliderSpeedSeconds || 3) === sec
-                          ? 'bg-amber-400 text-slate-950 shadow-md font-extrabold scale-105'
-                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                      }`}
-                    >
-                      {sec}s {sec === 3 ? '★ Recommended' : ''}
-                    </button>
-                  ))}
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800">
+                    <span className="text-[11px] text-slate-400 font-semibold mr-1">Quick Presets:</span>
+                    {[2, 3, 4, 5, 7, 10].map((sec) => (
+                      <button
+                        key={sec}
+                        type="button"
+                        onClick={() => setSiteForm({ ...siteForm, sliderSpeedSeconds: sec })}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          Number(siteForm.sliderSpeedSeconds || 3) === sec
+                            ? 'bg-amber-400 text-slate-950 shadow-md font-extrabold scale-105'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        {sec}s {sec === 3 ? '★ Recommended' : ''}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Senior Pastor's Welcome Message Section (Homepage) */}
+              {/* 2. HERO & SANCTUARY PHOTOS */}
+              <div className="pt-6 border-t border-slate-800 space-y-4">
+                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                  <Image className="w-4 h-4 shrink-0" />
+                  <span>2. Hero Pastor Portraits & Sanctuary Hall Photo</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6 items-start">
+                  {/* Senior Pastor Photo */}
+                  <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                        Senior Pastor Picture
+                      </span>
+                      <span className="text-[10px] text-slate-400 truncate">{siteForm.seniorPastor || 'Senior Pastor'}</span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                      <div className="w-24 h-32 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
+                        <img
+                          src={siteForm.pastorImage}
+                          alt="Pastor Preview"
+                          className="w-full h-full object-cover object-top"
+                          onError={(e) => { e.target.src = '/images/pastor.jpg'; }}
+                        />
+                      </div>
+                      <div className="space-y-2 flex-1 min-w-0 w-full">
+                        <label className="block text-[11px] font-medium text-slate-300">
+                          Image File or Online URL
+                        </label>
+                        <input
+                          type="text"
+                          value={siteForm.pastorImage}
+                          onChange={(e) => setSiteForm({ ...siteForm, pastorImage: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:border-amber-400"
+                          placeholder="/images/pastor.jpg"
+                        />
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          <label className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+                            <Upload className="w-3 h-3" />
+                            <span>Upload Device</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(e, 'pastorImage')}
+                              className="hidden"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setSiteForm({ ...siteForm, pastorImage: '/images/pastor.jpg' })}
+                            className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 transition-colors cursor-pointer"
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Second Pastor Photo */}
+                  <div className="p-5 rounded-2xl bg-slate-900 border border-amber-500/30 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                        Second Pastor Picture
+                      </span>
+                      <span className="text-[10px] text-amber-300 font-semibold">Elder Son</span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                      <div className="w-24 h-32 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
+                        <img
+                          src={siteForm.associatePastorImage}
+                          alt="Youth Pastor Preview"
+                          className="w-full h-full object-cover object-top"
+                          onError={(e) => { e.target.src = '/images/franklin.jpg'; }}
+                        />
+                      </div>
+                      <div className="space-y-2 flex-1 min-w-0 w-full">
+                        <label className="block text-[11px] font-medium text-slate-300">
+                          Image File or Online URL
+                        </label>
+                        <input
+                          type="text"
+                          value={siteForm.associatePastorImage}
+                          onChange={(e) => setSiteForm({ ...siteForm, associatePastorImage: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:border-amber-400"
+                          placeholder="/images/franklin.jpg"
+                        />
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          <label className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+                            <Upload className="w-3 h-3" />
+                            <span>Upload Device</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(e, 'associatePastorImage')}
+                              className="hidden"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setSiteForm({ ...siteForm, associatePastorImage: '/images/franklin.jpg' })}
+                            className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 transition-colors cursor-pointer"
+                          >
+                            Reset Default
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Church Sanctuary Photo */}
+                  <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                        Church Sanctuary Hall Photo
+                      </span>
+                      <span className="text-[10px] text-slate-400">Hero & Showcase</span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                      <div className="w-28 h-24 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
+                        <img
+                          src={siteForm.churchHallImage}
+                          alt="Sanctuary Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.target.src = '/images/church_hall.jpg'; }}
+                        />
+                      </div>
+                      <div className="space-y-2 flex-1 min-w-0 w-full">
+                        <label className="block text-[11px] font-medium text-slate-300">
+                          Image File or Online URL
+                        </label>
+                        <input
+                          type="text"
+                          value={siteForm.churchHallImage}
+                          onChange={(e) => setSiteForm({ ...siteForm, churchHallImage: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:border-amber-400"
+                          placeholder="/images/church_hall.jpg"
+                        />
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          <label className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+                            <Upload className="w-3 h-3" />
+                            <span>Upload Device</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(e, 'churchHallImage')}
+                              className="hidden"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setSiteForm({ ...siteForm, churchHallImage: '/images/church_hall.jpg' })}
+                            className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 transition-colors cursor-pointer"
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. HOMEPAGE SENIOR PASTOR'S WELCOME MESSAGE */}
               <div className="pt-6 border-t border-slate-800 space-y-4">
                 <div className="flex items-center gap-2">
                   <UserCheck className="w-4 h-4 text-amber-400" />
                   <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                    Homepage Senior Pastor's Welcome Message
+                    3. Homepage Senior Pastor's Welcome Message
                   </h3>
                 </div>
                 <p className="text-xs text-slate-400">
@@ -2581,18 +2540,18 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Homepage Visitor FAQs (Inline Interactive Editor) */}
+              {/* 4. HOMEPAGE VISITOR FAQS */}
               <div className="pt-6 border-t border-slate-800 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
                       <HelpCircle className="w-4 h-4 text-amber-400" />
                       <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                        Homepage Frequently Asked Questions (FAQs)
+                        4. Homepage & Visitor Frequently Asked Questions (FAQs)
                       </h3>
                     </div>
                     <p className="text-xs text-slate-400 mt-1">
-                      Manage the questions and answers displayed in the visitor FAQ accordion on the homepage.
+                      Manage the questions and answers displayed in the visitor FAQ section.
                     </p>
                   </div>
                   <button
@@ -2616,7 +2575,7 @@ export default function AdminDashboard() {
                           <button
                             type="button"
                             onClick={() => handleRemoveFaq(idx)}
-                            className="p-1 text-slate-400 hover:text-red-400 transition-colors"
+                            className="p-1 text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
                             title="Remove this FAQ"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2648,26 +2607,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Prayer Wall Scripture Verse */}
-              <div className="pt-6 border-t border-slate-800 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-amber-400" />
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                    Prayer Wall Header Scripture Verse
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-400">
-                  Scripture verse shown at the top of the Prayer & Testimonies page.
-                </p>
-                <textarea
-                  rows={2}
-                  value={siteForm.prayerWallVerse || ''}
-                  onChange={(e) => setSiteForm({ ...siteForm, prayerWallVerse: e.target.value })}
-                  placeholder="“Again I say unto you, That if two of you shall agree on earth...”"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none resize-y"
-                />
-              </div>
-
+              {/* SAVE HOME PAGE BAR */}
               <div className="pt-6 border-t border-slate-800 flex flex-wrap items-center gap-4">
                 <button
                   type="button"
@@ -2694,7 +2634,7 @@ export default function AdminDashboard() {
                   ) : (
                     <>
                       <Save className="w-4 h-4 text-slate-950" />
-                      <span>Save All Changes Live</span>
+                      <span>Save Home Page Changes Live</span>
                     </>
                   )}
                 </button>
@@ -2712,11 +2652,334 @@ export default function AdminDashboard() {
                 {settingsSaved && (
                   <div className="flex items-center gap-2 text-emerald-400 text-xs sm:text-sm font-bold bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-xl animate-in fade-in">
                     <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>Settings Saved Live! (Slider speed: {siteForm.sliderSpeedSeconds || 3}s)</span>
+                    <span>Home Page Saved Live! (Slider speed: {siteForm.sliderSpeedSeconds || 3}s)</span>
                   </div>
                 )}
               </div>
 
+            </form>
+          </div>
+        )}
+
+        {/* =========================================================================
+            TAB: CONTACT & VISIT PAGE CONTROLS
+           ========================================================================= */}
+        {activeTab === 'contact' && (
+          <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+              <div>
+                <h2 className="font-serif font-black text-2xl text-white mb-1.5 flex items-center gap-2">
+                  <MapPin className="w-6 h-6 text-amber-400 shrink-0" />
+                  <span>Contact & Visit Page Controls</span>
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Manage phone, WhatsApp, church address, public email, Google Maps location, and weekly service timings shown on the Contact & Visit page and Footer.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('inquiries')}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors shrink-0 self-start sm:self-auto"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>View Contact Inquiries ({inquiries.length})</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    Phone / Helpline Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={siteForm.phone}
+                    onChange={(e) => setSiteForm({ ...siteForm, phone: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    WhatsApp Number
+                  </label>
+                  <input
+                    type="text"
+                    value={siteForm.whatsappNumber}
+                    onChange={(e) => setSiteForm({ ...siteForm, whatsappNumber: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    Church Physical Address
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={siteForm.address}
+                    onChange={(e) => setSiteForm({ ...siteForm, address: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Mail className="w-4 h-4 text-amber-400" />
+                    <span>Church Public Email</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={siteForm.email || ''}
+                    onChange={(e) => setSiteForm({ ...siteForm, email: e.target.value })}
+                    placeholder="contact@gracevictorychurch.org"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Public church email displayed on Contact page & Footer.
+                  </span>
+                </div>
+              </div>
+
+              {/* GOOGLE MAPS LOCATION & EMBED LINK */}
+              <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-serif font-bold text-base text-white flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-amber-400" />
+                      <span>Google Maps Location & Live Embed Link</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Controls the interactive Google Map and directions button on the Contact & Visit page.
+                    </p>
+                  </div>
+                  {siteForm.googleMapsLink && (
+                    <a
+                      href={siteForm.googleMapsLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1 self-start sm:self-auto"
+                    >
+                      <span>Test Map Link</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                      Google Maps Embed Iframe URL
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.googleMapsEmbedUrl || ''}
+                      onChange={(e) => setSiteForm({ ...siteForm, googleMapsEmbedUrl: e.target.value })}
+                      placeholder="https://maps.google.com/maps?q=Grace%20Victory%20Church...&output=embed"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-1 block">
+                      Embed URL for interactive map iframe display.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                      Direct Google Maps App / Directions Link
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.googleMapsLink || ''}
+                      onChange={(e) => setSiteForm({ ...siteForm, googleMapsLink: e.target.value })}
+                      placeholder="https://maps.google.com/?q=Grace+Victory+Church+Vattamalai"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-1 block">
+                      Opened when users click "Get Directions" or "Open in Maps".
+                    </span>
+                  </div>
+                </div>
+
+                {siteForm.googleMapsEmbedUrl && (
+                  <div className="pt-2">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">
+                      Live Map Preview (Contact Page Display):
+                    </span>
+                    <div className="w-full h-44 rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
+                      <iframe
+                        title="Admin Map Preview"
+                        src={siteForm.googleMapsEmbedUrl}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Service Timings */}
+              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                    Weekly Service Timings (Contact Page, Top Bar & Footer)
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Sunday Worship Service *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={siteForm.serviceTimings || ''}
+                      onChange={(e) => setSiteForm({ ...siteForm, serviceTimings: e.target.value })}
+                      placeholder="09:30 AM – 11:30 AM"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Wednesday Bible Study
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.wednesdayTiming || ''}
+                      onChange={(e) => setSiteForm({ ...siteForm, wednesdayTiming: e.target.value })}
+                      placeholder="07:00 PM – 08:30 PM"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Friday Fasting Prayer
+                    </label>
+                    <input
+                      type="text"
+                      value={siteForm.fridayTiming || ''}
+                      onChange={(e) => setSiteForm({ ...siteForm, fridayTiming: e.target.value })}
+                      placeholder="10:30 AM – 01:30 PM"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-800 flex flex-wrap items-center gap-4">
+                <button
+                  type="submit"
+                  disabled={isSavingSettings}
+                  className="px-8 py-3.5 rounded-xl font-extrabold text-xs uppercase tracking-wider text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-xl shadow-amber-400/20 transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSavingSettings ? 'Saving...' : 'Save Contact & Visit Info Live'}</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        )}
+
+        {/* =========================================================================
+            TAB: GLOBAL CHURCH IDENTITY & ADMIN SECURITY
+           ========================================================================= */}
+        {activeTab === 'settings' && (
+          <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
+            <div>
+              <h2 className="font-serif font-black text-2xl text-white mb-2 flex items-center gap-2">
+                <Settings className="w-6 h-6 text-amber-400" />
+                <span>Church Identity & Admin Security</span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Manage global church branding (Navbar, Header & Footer), Gmail alert recipient, and Admin Portal login credentials.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    Church Name (English)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={siteForm.churchName}
+                    onChange={(e) => setSiteForm({ ...siteForm, churchName: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    Church Name (Tamil)
+                  </label>
+                  <input
+                    type="text"
+                    value={siteForm.tamilName}
+                    onChange={(e) => setSiteForm({ ...siteForm, tamilName: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    Founded Year (Established)
+                  </label>
+                  <input
+                    type="text"
+                    value={siteForm.foundedYear || '1998'}
+                    onChange={(e) => setSiteForm({ ...siteForm, foundedYear: e.target.value })}
+                    placeholder="1998"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* LIVE ADMIN ALERT & NOTIFICATION EMAIL */}
+              <div className="p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <label className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-amber-400" />
+                    <span>Notification "To" Email (Gmail Alerts Recipient)</span>
+                  </label>
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-mono break-all max-w-full self-start sm:self-auto">
+                    To: {siteForm.adminNotificationEmail || 'contact@gracevictorychurch.org'}
+                  </span>
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={siteForm.adminNotificationEmail || ''}
+                  onChange={(e) => setSiteForm({ ...siteForm, adminNotificationEmail: e.target.value })}
+                  placeholder="contact@gracevictorychurch.org"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-amber-500/60 text-white text-sm focus:outline-none focus:border-amber-400 font-mono font-bold"
+                />
+                <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                  🔔 <strong>Gmail Alerts 'To' Email:</strong> Prayer Request, Testimony, மற்றும் Contact Form ("How Can We Serve You?") வழியாக அனுப்பப்படும் அனைத்து செய்திகளும் எந்த ஜிமெயிலுக்கு (To Email) செல்ல வேண்டும் என்பதை நீங்கள் இங்கே Update செய்து கொள்ளலாம்.
+                </p>
+              </div>
+
+              <div className="pt-2 flex flex-wrap items-center gap-4">
+                <button
+                  type="submit"
+                  disabled={isSavingSettings}
+                  className="px-8 py-3.5 rounded-xl font-extrabold text-xs uppercase tracking-wider text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-xl shadow-amber-400/20 transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSavingSettings ? 'Saving...' : 'Save Church Identity Live'}</span>
+                </button>
+              </div>
             </form>
 
             {/* ADMIN AUTH CREDENTIALS MANAGER (db.auth collection) */}
@@ -2729,13 +2992,13 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400 mb-0.5">
-                        <span>Database Collection: db.auth • அட்மின் பாதுகாப்பு & உள்நுழைவு</span>
+                        <span>Admin Security • அட்மின் பாதுகாப்பு & உள்நுழைவு</span>
                       </div>
                       <h3 className="font-serif font-black text-xl text-white">
                         Admin Authentication & Credentials
                       </h3>
                       <p className="text-xs text-slate-400 mt-1">
-                        Manage the User ID and Password stored in MongoDB <code className="text-amber-300 font-mono">db.auth</code> collection. Both are required to unlock the Admin Portal.
+                        Update the User ID and Password required to unlock the Admin Portal.
                       </p>
                     </div>
                   </div>
@@ -2760,7 +3023,6 @@ export default function AdminDashboard() {
                           className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-medium"
                         />
                       </div>
-                      <span className="text-[10px] text-slate-500 mt-1 block">Stored as user_id in db.auth</span>
                     </div>
 
                     <div>
@@ -2780,7 +3042,6 @@ export default function AdminDashboard() {
                           className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
                         />
                       </div>
-                      <span className="text-[10px] text-slate-500 mt-1 block">Required for security verification</span>
                     </div>
                   </div>
 
@@ -2816,8 +3077,8 @@ export default function AdminDashboard() {
 
                   {authSaveStatus && (
                     <div className={`flex items-center gap-2 text-xs p-3 rounded-xl border ${
-                      authSaveStatus.success 
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold' 
+                      authSaveStatus.success
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold'
                         : 'bg-red-950/40 border-red-800/60 text-red-400 font-semibold'
                     }`}>
                       {authSaveStatus.success ? <CheckCircle className="w-4 h-4 shrink-0 text-emerald-400" /> : <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />}
@@ -2831,202 +3092,11 @@ export default function AdminDashboard() {
                     className="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-md flex items-center gap-2 cursor-pointer transition-all"
                   >
                     <Lock className="w-4 h-4" />
-                    <span>{authSaveLoading ? 'Updating in db.auth...' : 'Update Admin Credentials in db.auth'}</span>
+                    <span>{authSaveLoading ? 'Updating...' : 'Update Admin Credentials'}</span>
                   </button>
                 </form>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* =========================================================================
-            TAB 2: IMAGES & MEDIA MANAGER (CHANGE PASTOR PHOTO & BACKGROUND)
-           ========================================================================= */}
-        {activeTab === 'media' && (
-          <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
-            <div>
-              <h2 className="font-serif font-black text-2xl text-white mb-2 flex items-center gap-2">
-                <Image className="w-6 h-6 text-amber-400" />
-                <span>Photos & Visual Assets Customizer</span>
-              </h2>
-              <p className="text-xs text-slate-400">
-                Update the Senior Pastor photo or Church Sanctuary background image. Changes apply immediately to the website!
-              </p>
-            </div>
-
-            <form onSubmit={handleSaveSettings} className="space-y-8">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6 items-start">
-                
-                {/* 1. Senior Pastor Photo Customizer */}
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                      Senior Pastor Picture
-                    </span>
-                    <span className="text-[10px] text-slate-400">Pastor P. Rajendran</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <div className="w-24 h-32 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
-                      <img 
-                        src={siteForm.pastorImage} 
-                        alt="Pastor Preview" 
-                        className="w-full h-full object-cover object-top"
-                        onError={(e) => { e.target.src = '/images/pastor.jpg'; }}
-                      />
-                    </div>
-                    <div className="space-y-2 flex-1 min-w-0 w-full">
-                      <label className="block text-[11px] font-medium text-slate-300">
-                        Image File or Online URL
-                      </label>
-                      <input
-                        type="text"
-                        value={siteForm.pastorImage}
-                        onChange={(e) => setSiteForm({ ...siteForm, pastorImage: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:border-amber-400"
-                        placeholder="/images/pastor.jpg"
-                      />
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        <label className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
-                          <Upload className="w-3 h-3" />
-                          <span>Upload Device</span>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={(e) => handleImageUpload(e, 'pastorImage')} 
-                            className="hidden" 
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setSiteForm({ ...siteForm, pastorImage: '/images/pastor.jpg' })}
-                          className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 transition-colors"
-                        >
-                          Reset
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. Second Pastor Photo Customizer (Elder Son) */}
-                <div className="p-5 rounded-2xl bg-slate-900 border border-amber-500/30 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                      Second Pastor Picture
-                    </span>
-                    <span className="text-[10px] text-amber-300 font-semibold">Elder Son</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <div className="w-24 h-32 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
-                      <img 
-                        src={siteForm.associatePastorImage} 
-                        alt="Youth Pastor Preview" 
-                        className="w-full h-full object-cover object-top"
-                        onError={(e) => { e.target.src = '/images/franklin.jpg'; }}
-                      />
-                    </div>
-                    <div className="space-y-2 flex-1 min-w-0 w-full">
-                      <label className="block text-[11px] font-medium text-slate-300">
-                        Image File or Online URL
-                      </label>
-                      <input
-                        type="text"
-                        value={siteForm.associatePastorImage}
-                        onChange={(e) => setSiteForm({ ...siteForm, associatePastorImage: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:border-amber-400"
-                        placeholder="/images/franklin.jpg"
-                      />
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        <label className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
-                          <Upload className="w-3 h-3" />
-                          <span>Upload Device</span>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={(e) => handleImageUpload(e, 'associatePastorImage')} 
-                            className="hidden" 
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setSiteForm({ ...siteForm, associatePastorImage: '/images/franklin.jpg' })}
-                          className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 transition-colors"
-                        >
-                          Reset Default
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. Church Sanctuary Photo Customizer */}
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                      Church Sanctuary Hall Photo
-                    </span>
-                    <span className="text-[10px] text-slate-400">Banner Shadow</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <div className="w-28 h-24 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
-                      <img 
-                        src={siteForm.churchHallImage} 
-                        alt="Sanctuary Preview" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.src = '/images/church_hall.jpg'; }}
-                      />
-                    </div>
-                    <div className="space-y-2 flex-1 min-w-0 w-full">
-                      <label className="block text-[11px] font-medium text-slate-300">
-                        Image File or Online URL
-                      </label>
-                      <input
-                        type="text"
-                        value={siteForm.churchHallImage}
-                        onChange={(e) => setSiteForm({ ...siteForm, churchHallImage: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:border-amber-400"
-                        placeholder="/images/church_hall.jpg"
-                      />
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        <label className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors">
-                          <Upload className="w-3 h-3" />
-                          <span>Upload Device</span>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={(e) => handleImageUpload(e, 'churchHallImage')} 
-                            className="hidden" 
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setSiteForm({ ...siteForm, churchHallImage: '/images/church_hall.jpg' })}
-                          className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 transition-colors"
-                        >
-                          Reset
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="px-8 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-xl shadow-amber-400/20 transition-all flex items-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Save Media Changes Live</span>
-                </button>
-              </div>
-
-            </form>
           </div>
         )}
 
@@ -4085,6 +4155,37 @@ export default function AdminDashboard() {
                   <span>Add New Testimony</span>
                 </button>
               </div>
+            </div>
+
+            {/* PRAYER & TESTIMONIES PAGE HEADER SCRIPTURE VERSE */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-serif font-bold text-base text-white flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>Prayer & Testimonies Page Header Scripture Verse</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Scripture verse displayed at the top of the Prayer & Testimonies page.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveSettings}
+                  disabled={isSavingSettings}
+                  className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer shrink-0 self-start sm:self-auto"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{isSavingSettings ? 'Saving...' : 'Save Verse Live'}</span>
+                </button>
+              </div>
+              <textarea
+                rows={2}
+                value={siteForm.prayerWallVerse || ''}
+                onChange={(e) => setSiteForm({ ...siteForm, prayerWallVerse: e.target.value })}
+                placeholder="“Again I say unto you, That if two of you shall agree on earth...”"
+                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none resize-y"
+              />
             </div>
 
             {/* HOME PAGE FEATURED 3 SELECTOR PANEL */}
@@ -5316,22 +5417,30 @@ export default function AdminDashboard() {
               {/* WHAT ELSE IS IN THE FOOTER */}
               <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
                 <div className="text-xs font-extrabold uppercase tracking-wider text-amber-300">
-                  Footer-la vera enna varudhu? (already admin-la update panlaam)
+                  Other Details Displayed in the Footer (Managed on Their Dedicated Tabs)
                 </div>
                 <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside leading-relaxed">
-                  <li><strong className="text-white">Service Schedule</strong> (Sunday / Wednesday / Friday timings) — Church & Contact Info tab</li>
-                  <li><strong className="text-white">Contact & Location</strong> (address, phone, email) — Church & Contact Info tab</li>
-                  <li><strong className="text-white">Church name, Tamil name & Established year</strong> — Church & Contact Info tab</li>
-                  <li><strong className="text-white">WhatsApp icon number</strong> — Church & Contact Info tab</li>
+                  <li><strong className="text-white">Service Schedule, Address, Phone, Email & WhatsApp</strong> — Contact & Visit Page tab</li>
+                  <li><strong className="text-white">Church Name, Tamil Name & Established Year</strong> — Church Identity & Admin tab</li>
                 </ul>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('settings')}
-                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  <span>Open Church & Contact Info</span>
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('contact')}
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>Open Contact & Visit Page</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('settings')}
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    <span>Open Church Identity & Admin</span>
+                  </button>
+                </div>
               </div>
 
               {/* SAVE BAR */}
