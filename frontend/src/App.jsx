@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -15,7 +15,9 @@ import Events from './pages/Events';
 import PrayerWall from './pages/PrayerWall';
 import Giving from './pages/Giving';
 import Contact from './pages/Contact';
-import AdminDashboard from './pages/AdminDashboard';
+
+// Lazy-load AdminDashboard so public visitors don't download the CMS bundle on initial load
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 // Auto scroll to top on page navigation
 function ScrollToTop() {
@@ -96,7 +98,20 @@ export default function App() {
             path="/contact" 
             element={<Contact onOpenPlanVisit={() => navigate('/contact')} />} 
           />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route
+            path="/admin"
+            element={
+              <Suspense
+                fallback={
+                  <div className="min-h-screen flex items-center justify-center bg-[#070F1E] text-amber-400 text-sm font-bold">
+                    Loading Admin Portal...
+                  </div>
+                }
+              >
+                <AdminDashboard />
+              </Suspense>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

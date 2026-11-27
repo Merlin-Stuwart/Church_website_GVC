@@ -21,6 +21,7 @@ logger = logging.getLogger("uvicorn")
 router = APIRouter(prefix="/api/donations", tags=["Donations & Giving"])
 
 donations_store = []
+_pending_orders: dict = {}
 
 async def get_active_razorpay_keys() -> Tuple[str, str]:
     """Retrieve Razorpay API credentials securely from MongoDB, cache, or Environment."""
@@ -170,6 +171,21 @@ async def create_payment_order(order_req: PaymentOrderCreate):
     except Exception:
         pass
 
+    # Persist expected server-side order amount to prevent client-side amount tampering
+    if len(_pending_orders) > 500:
+        _pending_orders.clear()
+    _pending_orders[order_id] = float(order_req.amount)
+    if is_db_connected():
+        try:
+            db = get_database()
+            await db.payment_orders.update_one(
+                {"_id": order_id},
+                {"$set": {"order_id": order_id, "amount": float(order_req.amount), "created_at": datetime.now()}},
+                upsert=True
+            )
+        except Exception as e:
+            logger.warning("Could not store pending payment order metadata: %s", e)
+
     return {
         "order_id": order_id,
         "amount": amount_in_paise,
@@ -202,7 +218,8 @@ async def verify_payment(verify_req: PaymentVerifyRequest):
         ).hexdigest()
         is_signature_valid = hmac.compare_digest(expected_signature, verify_req.razorpay_signature)
 
-    is_simulated_test = is_test_config and verify_req.razorpay_payment_id.startswith("pay_sim_")
+    allow_simulation = os.getenv("ALLOW_PAYMENT_SIMULATION", "false").lower() == "true"
+    is_simulated_test = allow_simulation and is_test_config and verify_req.razorpay_payment_id.startswith("pay_sim_")
 
     if not is_signature_valid and not is_simulated_test:
         logger.error("Payment verification FAILED! Order: %s, Payment: %s", verify_req.razorpay_order_id, verify_req.razorpay_payment_id)
@@ -210,6 +227,34 @@ async def verify_payment(verify_req: PaymentVerifyRequest):
             status_code=400,
             detail="Payment verification failed: The bank transaction signature could not be verified. No donation was recorded."
         )
+
+    # Replay / idempotency protection: return existing record if this payment_id was already recorded
+    if is_db_connected() and verify_req.razorpay_payment_id:
+        try:
+            db = get_database()
+            existing = await db.donations.find_one({"transaction_id": verify_req.razorpay_payment_id})
+            if existing:
+                existing["id"] = str(existing.get("id") or existing.get("_id"))
+                existing.pop("_id", None)
+                return existing
+        except Exception as e:
+            logger.warning("Replay check lookup error: %s", e)
+
+    # Verify amount against server-side order amount when available
+    verified_amount = float(verify_req.amount)
+    if is_signature_valid and verify_req.razorpay_order_id:
+        expected_amount = _pending_orders.get(verify_req.razorpay_order_id)
+        if expected_amount is None and is_db_connected():
+            try:
+                order_doc = await get_database().payment_orders.find_one({"_id": verify_req.razorpay_order_id})
+                if order_doc and order_doc.get("amount") is not None:
+                    expected_amount = float(order_doc["amount"])
+            except Exception:
+                pass
+        if expected_amount is not None:
+            if abs(verified_amount - expected_amount) > 0.01:
+                raise HTTPException(status_code=400, detail="Payment amount mismatch with original order.")
+            verified_amount = expected_amount
 
     # Store in MongoDB collection 'donations'
     receipt_no = f"GVC-{datetime.now().strftime('%Y%m')}-{uuid.uuid4().hex[:6].upper()}"
@@ -219,7 +264,7 @@ async def verify_payment(verify_req: PaymentVerifyRequest):
         "donor_name": verify_req.donor_name.strip() or "Faithful Giver",
         "email": verify_req.email.strip() or "",
         "phone": verify_req.phone.strip() if verify_req.phone else "",
-        "amount": verify_req.amount,
+        "amount": verified_amount,
         "cause": verify_req.cause or "Tithes & General Offerings",
         "payment_method": "Razorpay / Bank UPI (Test Simulation)" if is_simulated_test else "Razorpay / Bank UPI (100% Verified)",
         "transaction_id": verify_req.razorpay_payment_id,
@@ -298,8 +343,11 @@ async def razorpay_webhook(request: Request):
 
             donations_store.insert(0, donation_dict)
             return {"status": "success", "recorded": True}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("Error processing Razorpay webhook: %s", e)
+        raise HTTPException(status_code=500, detail="Error processing webhook event")
 
     return {"status": "received"}
 

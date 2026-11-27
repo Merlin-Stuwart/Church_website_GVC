@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { X, Play, Volume2, BookOpen, Share2, Check, Download, Video, ExternalLink } from 'lucide-react';
+import { normalizeExternalUrl } from '../context/ChurchContext';
 
 export function getYouTubeEmbedUrl(url) {
   if (!url) return '';
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|live\/)([^#&?]*).*/;
-  const match = url.match(regExp);
+  const match = String(url).match(regExp);
   const videoId = (match && match[2].length === 11) ? match[2] : null;
   if (videoId) {
     return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
   }
-  return url;
+  return '';
 }
 
 export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
@@ -34,6 +35,8 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
   };
 
   const embedUrl = getYouTubeEmbedUrl(sermon.video_url);
+  const safeVideoUrl = normalizeExternalUrl(sermon.video_url);
+  const safeAudioUrl = normalizeExternalUrl(sermon.audio_url);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
@@ -49,11 +52,11 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {sermon.video_url && (
+            {safeVideoUrl && (
               <a
-                href={sermon.video_url}
+                href={safeVideoUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="px-2.5 sm:px-3 py-1.5 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors flex items-center gap-1.5 text-xs font-semibold"
                 title="Watch on YouTube"
               >
@@ -105,7 +108,7 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
               <p className="text-xs text-amber-800 font-semibold mb-4 sm:mb-6">{sermon.speaker}</p>
               
               <audio controls className="w-full max-w-md accent-amber-600">
-                <source src={sermon.audio_url || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"} type="audio/mpeg" />
+                <source src={safeAudioUrl} type="audio/mpeg" />
                 Your browser does not support the audio element.
               </audio>
             </div>
@@ -128,26 +131,28 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <button
-                onClick={() => setActiveTab('video')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                  activeTab === 'video' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Video className="w-3.5 h-3.5" />
-                <span>Video</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('audio')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                  activeTab === 'audio' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Volume2 className="w-3.5 h-3.5" />
-                <span>Audio Podcast</span>
-              </button>
-            </div>
+            {safeAudioUrl && (
+              <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button
+                  onClick={() => setActiveTab('video')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                    activeTab === 'video' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Video className="w-3.5 h-3.5" />
+                  <span>Video</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('audio')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                    activeTab === 'audio' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>Audio Podcast</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Scripture badge */}

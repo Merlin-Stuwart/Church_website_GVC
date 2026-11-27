@@ -133,7 +133,7 @@ export default function AdminDashboard() {
     accountNumber: settings.accountNumber,
     branch: settings.branch,
     ifscCode: settings.ifscCode,
-    razorpayKeyId: settings.razorpayKeyId || settings.razorpay_key_id || 'rzp_test_GVC1024Testing',
+    razorpayKeyId: settings.razorpayKeyId || settings.razorpay_key_id || '',
     razorpayKeySecret: '',
     sliderSpeedSeconds: settings.sliderSpeedSeconds || 3,
     featuredHomeTestimonyIds: settings.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
       accountNumber: settings.accountNumber,
       branch: settings.branch,
       ifscCode: settings.ifscCode,
-      razorpayKeyId: settings.razorpayKeyId || settings.razorpay_key_id || 'rzp_test_GVC1024Testing',
+      razorpayKeyId: settings.razorpayKeyId || settings.razorpay_key_id || '',
       razorpayKeySecret: '',
       sliderSpeedSeconds: settings.sliderSpeedSeconds || 3,
       featuredHomeTestimonyIds: settings.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'],
@@ -434,28 +434,35 @@ export default function AdminDashboard() {
       alert('No donation records available to export.');
       return;
     }
+    const safeCell = (val) => {
+      let str = String(val ?? '');
+      if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
+      return `"${str.replace(/"/g, '""')}"`;
+    };
     const headers = ['Receipt No', 'Donor Name', 'Amount (INR)', 'Cause / Purpose', 'Payment Method', 'Phone', 'Email', 'Transaction ID', 'Status', 'Date', 'Notes'];
     const rows = donations.map(d => [
-      `"${d.receipt_number || ''}"`,
-      `"${(d.donor_name || '').replace(/"/g, '""')}"`,
+      safeCell(d.receipt_number || ''),
+      safeCell(d.donor_name || ''),
       d.amount || 0,
-      `"${(d.cause || '').replace(/"/g, '""')}"`,
-      `"${(d.payment_method || '').replace(/"/g, '""')}"`,
-      `"${(d.phone || '').replace(/"/g, '""')}"`,
-      `"${(d.email || '').replace(/"/g, '""')}"`,
-      `"${(d.transaction_id || '').replace(/"/g, '""')}"`,
-      `"${d.status || 'Completed'}"`,
-      `"${d.created_at ? new Date(d.created_at).toLocaleString() : ''}"`,
-      `"${(d.notes || '').replace(/"/g, '""')}"`
+      safeCell(d.cause || ''),
+      safeCell(d.payment_method || ''),
+      safeCell(d.phone || ''),
+      safeCell(d.email || ''),
+      safeCell(d.transaction_id || ''),
+      safeCell(d.status || 'Completed'),
+      safeCell(d.created_at ? new Date(d.created_at).toLocaleString() : ''),
+      safeCell(d.notes || '')
     ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const csvString = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `GVC_Donations_Report_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleCreateManualDonation = async (e) => {
@@ -515,7 +522,7 @@ export default function AdminDashboard() {
       `"The Lord bless you and keep you; The Lord make His face shine upon you!" — Numbers 6:24-26\n\n` +
       `With prayers and blessings,\n${pastorLabel} & ${churchLabel} Pastoral Team`
     );
-    window.open(`https://wa.me/${cleanPhone ? (cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone) : ''}?text=${text}`, '_blank');
+    window.open(`https://wa.me/${cleanPhone ? (cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone) : ''}?text=${text}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleUpdateAuthCredentials = async (e) => {

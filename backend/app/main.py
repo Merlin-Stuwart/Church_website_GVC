@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.config import settings
-from app.database import connect_to_mongo, close_mongo_connection, is_db_connected
+from app.database import connect_to_mongo, close_mongo_connection, is_db_connected, get_database
 from app.routers import sermons, events, prayers, testimonies, contact, donations, admin, ministries, notifications
 
 logging.basicConfig(level=logging.INFO)
@@ -16,10 +16,17 @@ async def lifespan(app: FastAPI):
     await connect_to_mongo()
     # Initialize db.auth collection
     try:
-        from app.routers.admin import ensure_auth_collection
+        from app.routers.admin import ensure_auth_collection, site_settings_cache
         await ensure_auth_collection()
+        # Hydrate in-memory settings cache from MongoDB so cold starts use live settings immediately
+        if is_db_connected():
+            db = get_database()
+            saved = await db.site_settings.find_one({"_id": "global_config"})
+            if saved:
+                saved.pop("_id", None)
+                site_settings_cache.update(saved)
     except Exception as e:
-        logger.warning("Auth collection init check: %s", e)
+        logger.warning("Startup init check: %s", e)
     yield
     # Shutdown: Close MongoDB connection
     await close_mongo_connection()

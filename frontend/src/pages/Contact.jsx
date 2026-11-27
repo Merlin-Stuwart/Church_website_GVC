@@ -3,8 +3,23 @@ import {
   MapPin, Phone, Mail, Clock, Send, CheckCircle, AlertCircle,
   HelpCircle, ChevronDown, MessageCircle, Sparkles, ExternalLink 
 } from 'lucide-react';
-import { submitContact, getGmailComposeUrl, openGmailCompose } from '../api/client';
-import { useChurch } from '../context/ChurchContext';
+import { submitContact, getGmailComposeUrl } from '../api/client';
+import { useChurch, normalizeExternalUrl } from '../context/ChurchContext';
+
+const DEFAULT_MAPS_EMBED = "https://maps.google.com/maps?q=Grace%20Victory%20Church,%20Vattamalai,%20Tamil%20Nadu,%20India&t=&z=15&ie=UTF8&iwloc=&output=embed";
+const DEFAULT_MAPS_LINK = "https://maps.google.com/?q=Grace+Victory+Church+Vattamalai+Tamil+Nadu+India";
+
+function getSafeMapsEmbedUrl(raw) {
+  const clean = normalizeExternalUrl(raw);
+  if (!clean) return DEFAULT_MAPS_EMBED;
+  try {
+    const parsed = new URL(clean);
+    if (parsed.protocol === 'https:' && (parsed.hostname === 'maps.google.com' || parsed.hostname === 'www.google.com')) {
+      return clean;
+    }
+  } catch {}
+  return DEFAULT_MAPS_EMBED;
+}
 
 export default function Contact() {
   const church = useChurch();
@@ -16,8 +31,8 @@ export default function Contact() {
   const churchWhatsapp = settings.whatsappNumber || "+91 93605 88397";
   const churchEmail = settings.email || "contact@gracevictorychurch.org";
   const adminNotificationEmail = settings.adminNotificationEmail || churchEmail;
-  const googleMapsEmbedUrl = settings.googleMapsEmbedUrl || "https://maps.google.com/maps?q=Grace%20Victory%20Church,%20Vattamalai,%20Tamil%20Nadu,%20India&t=&z=15&ie=UTF8&iwloc=&output=embed";
-  const googleMapsLink = settings.googleMapsLink || "https://maps.google.com/?q=Grace+Victory+Church+Vattamalai+Tamil+Nadu+India";
+  const googleMapsEmbedUrl = getSafeMapsEmbedUrl(settings.googleMapsEmbedUrl);
+  const googleMapsLink = normalizeExternalUrl(settings.googleMapsLink) || DEFAULT_MAPS_LINK;
   const sundayTiming = settings.serviceTimings || "09:30 AM – 11:30 AM";
   const wednesdayTiming = settings.wednesdayTiming || "07:00 PM – 08:30 PM";
   const fridayTiming = settings.fridayTiming || "10:30 AM – 01:30 PM";
@@ -45,16 +60,6 @@ export default function Contact() {
         sent_to_email: adminNotificationEmail
       });
       setSubmitted(true);
-
-      // Open Gmail Web directly in browser with pre-filled message
-      const mailSubject = `[GVC NOTIFICATION] ✉️ New Serve Message: ${formData.subject || 'General'} - from ${formData.name}`;
-      const mailBody = `Dear ${churchName} Pastoral & Admin Team,\n\nA new message was submitted on the website under "HOW CAN WE SERVE YOU?":\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone (WhatsApp): ${formData.phone || 'N/A'}\nSubject: ${formData.subject}\nDate: ${new Date().toLocaleString()}\n\nMessage Body:\n"${formData.message}"\n\n---\nSubmitted via ${churchName} Website`;
-
-      openGmailCompose({
-        to: adminNotificationEmail,
-        subject: mailSubject,
-        body: mailBody
-      });
     } catch (err) {
       setError(err.message || 'Could not send your message right now. Please try again or contact us on WhatsApp.');
     } finally {

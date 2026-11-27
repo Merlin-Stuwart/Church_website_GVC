@@ -20,7 +20,7 @@ export default {
       },
       fontFamily: {
         serif: ['Cinzel', 'Playfair Display', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
       }
     },
   },

@@ -327,7 +327,14 @@ export default function Sermons() {
       <SermonPlayerModal
         sermon={activeSermon}
         isOpen={isPlayerOpen}
-        onClose={() => setIsPlayerOpen(false)}
+        onClose={() => {
+          setIsPlayerOpen(false);
+          if (searchParams.has('id')) {
+            const next = new URLSearchParams(searchParams);
+            next.delete('id');
+            setSearchParams(next, { replace: true });
+          }
+        }}
       />
 
     </div>

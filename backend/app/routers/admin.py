@@ -490,8 +490,36 @@ async def reset_password_with_otp(payload: ResetPasswordWithOTPRequest):
     if datetime.now().timestamp() > record.get("expires_at", 0):
         raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
 
+    # Enforce brute-force protection: max 5 failed attempts per OTP
+    attempts = int(record.get("attempts", 0))
+    if attempts >= 5:
+        password_resets_store.pop(user_key, None)
+        if is_db_connected():
+            try:
+                await get_database().password_resets.delete_many({"user_id": user_key})
+            except Exception:
+                pass
+        raise HTTPException(status_code=429, detail="Too many failed OTP attempts. Please request a new OTP.")
+
     # Constant-time comparison for security
     if not hmac.compare_digest(str(record.get("otp", "")).strip(), provided_otp):
+        next_attempts = attempts + 1
+        if user_key in password_resets_store:
+            password_resets_store[user_key]["attempts"] = next_attempts
+        if is_db_connected():
+            try:
+                if next_attempts >= 5:
+                    await get_database().password_resets.delete_many({"user_id": user_key})
+                else:
+                    await get_database().password_resets.update_one(
+                        {"user_id": user_key},
+                        {"$set": {"attempts": next_attempts}}
+                    )
+            except Exception:
+                pass
+        if next_attempts >= 5:
+            password_resets_store.pop(user_key, None)
+            raise HTTPException(status_code=429, detail="Too many failed OTP attempts. Please request a new OTP.")
         raise HTTPException(status_code=400, detail="Incorrect OTP code. Please check and try again.")
 
     # Hash new password with Argon2
@@ -545,6 +573,7 @@ async def get_site_settings():
             saved = await db.site_settings.find_one({"_id": "global_config"})
             if saved:
                 saved.pop("_id", None)
+                site_settings_cache.update(saved)
                 settings_data = {**site_settings_cache, **saved}
         except Exception:
             pass
@@ -553,6 +582,7 @@ async def get_site_settings():
     safe_copy["razorpay_secret_configured"] = _is_real_secret(safe_copy.get("razorpay_key_secret"))
     safe_copy.pop("razorpay_key_secret", None)
     safe_copy.pop("smtp_password", None)
+    safe_copy.pop("smtp_user", None)
     return safe_copy
 
 @router.post("/settings")

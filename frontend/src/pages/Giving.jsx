@@ -171,10 +171,15 @@ export default function Giving() {
         !orderData.order_id.startsWith('order_');
 
       if (isDummyTestKey) {
-        // Open the GVC Bank Payment Simulator (prevents Razorpay 400 rejection with dummy keys)
-        setActiveOrder(orderData);
-        setSimulatorStatus('idle');
-        setIsSimulatorOpen(true);
+        if (import.meta.env.DEV) {
+          setActiveOrder(orderData);
+          setSimulatorStatus('idle');
+          setIsSimulatorOpen(true);
+        } else {
+          // In production without live Razorpay keys, open the real UPI QR Scanner directly
+          setTimeLeft(300);
+          setIsQrModalOpen(true);
+        }
         setLoading(false);
         return;
       }

@@ -527,7 +527,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                   key={key}
                   href={link.url}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group"
                   title={title}
                 >

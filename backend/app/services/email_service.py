@@ -49,13 +49,8 @@ def send_notification_email(subject: str, html_content: str, text_content: str, 
     msg.attach(MIMEText(text_content, "plain", "utf-8"))
     msg.attach(MIMEText(html_content, "html", "utf-8"))
 
-    # Log dispatch
-    print(f"\n=======================================================")
-    print(f"[GVC NOTIFICATION DISPATCHED] To: {to_email}")
-    print(f"Subject: {subject}")
-    print(f"=======================================================")
-    print(text_content)
-    print(f"=======================================================\n")
+    # Log non-sensitive dispatch metadata only (never log OTPs or confidential prayer bodies)
+    logger.info("[GVC EMAIL] Dispatching notification to %s", to_email)
 
     if not smtp_user or not smtp_pass:
         print(f"⚠️ [SMTP UNCONFIGURED] SMTP_USER and SMTP_PASSWORD missing. Cannot deliver email to {to_email}.")
@@ -326,7 +321,7 @@ MESSAGE BODY:
 def send_password_reset_otp_email(recipient: str, otp: str, user_id: str = "admin", return_error: bool = False):
     """Send a secure 6-digit OTP verification email for admin password reset."""
     now_str = datetime.now().strftime("%d %b %Y, %I:%M %p")
-    subject = f"[GVC SECURITY] 🔐 Admin Password Reset OTP: {otp}"
+    subject = "[GVC SECURITY] Admin Password Reset Verification Code"
 
     html = f"""
     <!DOCTYPE html>

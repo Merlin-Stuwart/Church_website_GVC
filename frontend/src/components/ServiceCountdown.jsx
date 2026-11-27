@@ -14,30 +14,33 @@ export default function ServiceCountdown({ onWatchLive }) {
 
   useEffect(() => {
     function calculateCountdown() {
-      const now = new Date();
-      const currentDay = now.getDay(); // 0 is Sunday
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
+      // Compute strictly in IST (Asia/Kolkata, UTC+05:30) so overseas visitors see accurate church timing
+      const nowUtcMs = Date.now();
+      const istOffsetMs = 5.5 * 60 * 60 * 1000;
+      const nowIst = new Date(nowUtcMs + istOffsetMs);
+      const currentDay = nowIst.getUTCDay(); // 0 is Sunday in IST
+      const currentHour = nowIst.getUTCHours();
+      const currentMinute = nowIst.getUTCMinutes();
 
-      // Check if Sunday service is currently live (Sunday 9:30 AM to 11:30 AM)
+      // Check if Sunday service is currently live (Sunday 9:30 AM to 11:30 AM IST)
       if (currentDay === 0 && ((currentHour === 9 && currentMinute >= 30) || (currentHour === 10) || (currentHour === 11 && currentMinute <= 30))) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isLive: true });
         return;
       }
 
-      // Calculate next Sunday at 09:30 AM
-      const nextSunday = new Date(now);
+      // Calculate next Sunday at 09:30 AM IST
+      const nextSundayIst = new Date(nowIst.getTime());
       const daysUntilSunday = (7 - currentDay) % 7;
       
       if (currentDay === 0 && (currentHour > 11 || (currentHour === 11 && currentMinute > 30))) {
-        nextSunday.setDate(now.getDate() + 7);
+        nextSundayIst.setUTCDate(nowIst.getUTCDate() + 7);
       } else if (daysUntilSunday > 0) {
-        nextSunday.setDate(now.getDate() + daysUntilSunday);
+        nextSundayIst.setUTCDate(nowIst.getUTCDate() + daysUntilSunday);
       }
 
-      nextSunday.setHours(9, 30, 0, 0);
+      nextSundayIst.setUTCHours(9, 30, 0, 0);
 
-      const diff = nextSunday.getTime() - now.getTime();
+      const diff = nextSundayIst.getTime() - nowIst.getTime();
 
       if (diff > 0) {
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));

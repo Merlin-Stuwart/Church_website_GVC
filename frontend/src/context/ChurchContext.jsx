@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CHURCH_INFO, CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM } from '../data/mockData';
+import { CHURCH_INFO, CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM, FAQ_LIST } from '../data/mockData';
 import { compressImage } from '../utils/imageCompressor';
 import { API_BASE_URL } from '../api/client';
 
@@ -94,7 +94,7 @@ export const DEFAULT_SETTINGS = {
   pastorWelcomeP1: "Beloved brother and sister, welcome to Grace Victory Church. For over 28 years, God has granted us the privilege of shepherding precious families across Vattamalai with love, truth, and the supernatural power of the Holy Spirit.",
   pastorWelcomeP2: "No matter what challenge, illness, or heartbreak you are carrying today, our Lord Jesus Christ is alive and His grace is more than sufficient. We believe that when you step into our church, you will experience the tangible presence of God, deep fellowship, and supernatural peace.",
   pastorWelcomeQuote: "“Together with our pastoral leadership and our youth pastor, Pastor R. Franklin Rajendran, we personally invite you to worship with us this Sunday. We look forward to welcoming you and your family!”",
-  faqList: null,
+  faqList: FAQ_LIST,
   swiftCode: "SBININBB492",
   givingVerse: "“Bring ye all the tithes into the storehouse, that there may be meat in mine house, and prove me now herewith, saith the Lord of hosts, if I will not open you the windows of heaven, and pour you out a blessing, that there shall not be room enough to receive it.” — Malachi 3:10",
   givingPresets: "500, 1000, 2500, 5000, 10000",
@@ -360,7 +360,7 @@ export function ChurchProvider({ children }) {
     const updated = {
       ...settings,
       ...newSettings,
-      associatePastor: sanitizeFranklinName(newSettings.associatePastor || settings.associatePastor),
+      associatePastor: sanitizeFranklinName(newSettings.associatePastor ?? settings.associatePastor),
       leadershipTeam: finalLeadership
     };
 

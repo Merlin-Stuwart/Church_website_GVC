@@ -63,17 +63,17 @@ export default function Footer({ onOpenAdminAuth }) {
 
             <div className="flex items-center gap-2 pt-0.5">
               {socialLinks.youtube.url && (
-                <a href={socialLinks.youtube.url} target="_blank" rel="noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-500/40 transition-colors" title="YouTube">
+                <a href={socialLinks.youtube.url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-500/40 transition-colors" title="YouTube">
                   <Youtube className="w-3.5 h-3.5" />
                 </a>
               )}
               {socialLinks.facebook.url && (
-                <a href={socialLinks.facebook.url} target="_blank" rel="noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:border-blue-500/40 transition-colors" title="Facebook">
+                <a href={socialLinks.facebook.url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:border-blue-500/40 transition-colors" title="Facebook">
                   <Facebook className="w-3.5 h-3.5" />
                 </a>
               )}
               {socialLinks.instagram.url && (
-                <a href={socialLinks.instagram.url} target="_blank" rel="noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-pink-500 hover:border-pink-500/40 transition-colors" title="Instagram">
+                <a href={socialLinks.instagram.url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-pink-500 hover:border-pink-500/40 transition-colors" title="Instagram">
                   <Instagram className="w-3.5 h-3.5" />
                 </a>
               )}
@@ -81,7 +81,7 @@ export default function Footer({ onOpenAdminAuth }) {
                 const digits = (settings?.whatsappNumber || '919360588397').replace(/[^0-9]/g, '');
                 const waNum = digits.length === 10 ? `91${digits}` : (digits || '919360588397');
                 return (
-                  <a href={`https://wa.me/${waNum}`} target="_blank" rel="noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors" title="WhatsApp">
+                  <a href={`https://wa.me/${waNum}`} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors" title="WhatsApp">
                     <MessageCircle className="w-3.5 h-3.5" />
                   </a>
                 );
