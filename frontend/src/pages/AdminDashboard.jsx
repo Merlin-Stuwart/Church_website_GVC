@@ -2938,7 +2938,7 @@ export default function AdminDashboard() {
                   </label>
                   <input
                     type="text"
-                    value={siteForm.foundedYear || '1998'}
+                    value={siteForm.foundedYear ?? ''}
                     onChange={(e) => setSiteForm({ ...siteForm, foundedYear: e.target.value })}
                     placeholder="1998"
                     className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 font-mono"
