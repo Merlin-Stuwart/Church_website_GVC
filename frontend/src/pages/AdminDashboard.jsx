@@ -7,9 +7,10 @@ import {
   ExternalLink, Sparkles, BookOpen, AlertCircle, Lock, Key, ArrowRight, Eye, EyeOff, Upload,
   Search, Check, Filter, ChevronUp, ChevronDown, Layers,
   Mail, MessageCircle, Send, Inbox, Star, User, UserCheck, Menu, Shield,
-  Sun, Moon, QrCode, Receipt, Download, Printer, FileText, CreditCard, TrendingUp, HelpCircle
+  Sun, Moon, QrCode, Receipt, Download, Printer, FileText, CreditCard, TrendingUp, HelpCircle,
+  Instagram, Facebook, Youtube, Share2
 } from 'lucide-react';
-import { useChurch } from '../context/ChurchContext';
+import { useChurch, resolveSocialLinks, resolveFooterConfig, normalizeExternalUrl, DEFAULT_SOCIAL_LINKS, DEFAULT_FOOTER_CONFIG } from '../context/ChurchContext';
 import { 
   fetchSermons, createSermon, deleteSermon, clearAllSermons, 
   fetchEvents, createEvent, updateEvent, deleteEvent, clearAllEvents, getEventNotices,
@@ -24,6 +25,12 @@ import {
 } from '../api/client';
 import { CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP_TEAM, FAQ_LIST } from '../data/mockData';
 import { compressImage } from '../utils/imageCompressor';
+
+const FOOTER_SOCIAL_PLATFORMS = [
+  { key: 'instagram', name: 'Instagram', Icon: Instagram, accent: 'text-pink-400', linkPlaceholder: 'https://instagram.com/yourchurch' },
+  { key: 'facebook', name: 'Facebook', Icon: Facebook, accent: 'text-blue-400', linkPlaceholder: 'https://facebook.com/yourchurch' },
+  { key: 'youtube', name: 'YouTube', Icon: Youtube, accent: 'text-red-500', linkPlaceholder: 'https://youtube.com/@yourchannel' },
+];
 
 const NOTICE_EMOJI_OPTIONS = [
   '✨', '🙏', '✝️', '⛪', '📖', '🕯️', '🕊️', '❤️',
@@ -630,6 +637,87 @@ export default function AdminDashboard() {
     } catch (err) {
       alert('Could not save settings: ' + (err.message || 'Please try again'));
       setIsSavingSettings(false);
+    }
+  };
+
+  // ---- Footer & Social Links (separate admin tab; saves only socialLinks + footerConfig) ----
+  const [footerForm, setFooterForm] = useState(() => ({
+    social: resolveSocialLinks(settings),
+    footer: resolveFooterConfig(settings)
+  }));
+  const footerDirtyRef = React.useRef(false);
+  const [isSavingFooter, setIsSavingFooter] = useState(false);
+  const [footerSaveMsg, setFooterSaveMsg] = useState(null);
+
+  useEffect(() => {
+    if (footerDirtyRef.current) return;
+    setFooterForm({
+      social: resolveSocialLinks(settings),
+      footer: resolveFooterConfig(settings)
+    });
+  }, [settings.socialLinks, settings.footerConfig]);
+
+  const updateFooterSocial = (key, field, value) => {
+    footerDirtyRef.current = true;
+    setFooterSaveMsg(null);
+    setFooterForm(prev => ({
+      ...prev,
+      social: { ...prev.social, [key]: { ...prev.social[key], [field]: value } }
+    }));
+  };
+
+  const updateFooterText = (field, value) => {
+    footerDirtyRef.current = true;
+    setFooterSaveMsg(null);
+    setFooterForm(prev => ({ ...prev, footer: { ...prev.footer, [field]: value } }));
+  };
+
+  const handleResetFooterDefaults = () => {
+    footerDirtyRef.current = true;
+    setFooterSaveMsg(null);
+    setFooterForm({
+      social: JSON.parse(JSON.stringify(DEFAULT_SOCIAL_LINKS)),
+      footer: { ...DEFAULT_FOOTER_CONFIG }
+    });
+  };
+
+  const handleSaveFooter = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setFooterSaveMsg(null);
+
+    const social = {};
+    for (const platform of FOOTER_SOCIAL_PLATFORMS) {
+      const item = footerForm.social[platform.key] || {};
+      const rawUrl = String(item.url || '').trim();
+      const cleanUrl = normalizeExternalUrl(rawUrl);
+      if (rawUrl && !cleanUrl) {
+        setFooterSaveMsg({ ok: false, text: `${platform.name} link is not valid. Please enter a proper web address (https://...).` });
+        return;
+      }
+      social[platform.key] = {
+        url: cleanUrl,
+        label: String(item.label || '').trim(),
+        sublabel: String(item.sublabel || '').trim()
+      };
+    }
+
+    const footer = {
+      verse: String(footerForm.footer.verse || '').trim(),
+      prayerButtonText: String(footerForm.footer.prayerButtonText || '').trim(),
+      brandDescription: String(footerForm.footer.brandDescription || '').trim()
+    };
+
+    setIsSavingFooter(true);
+    try {
+      await updateSettings({ socialLinks: social, footerConfig: footer });
+      footerDirtyRef.current = false;
+      setFooterForm({ social, footer });
+      setFooterSaveMsg({ ok: true, text: 'Saved! Hero slide social bar and Footer are updated live on the website.' });
+      setTimeout(() => setFooterSaveMsg(null), 5000);
+    } catch (err) {
+      setFooterSaveMsg({ ok: false, text: 'Could not save: ' + (err.message || 'Please try again') });
+    } finally {
+      setIsSavingFooter(false);
     }
   };
 
@@ -1536,6 +1624,12 @@ export default function AdminDashboard() {
       icon: BookOpen,
       category: 'IDENTITY & BRANDING'
     },
+    footer: {
+      title: 'Footer & Social Media Links',
+      subtitle: 'Update Instagram, Facebook, YouTube names & links (Hero slide + Footer) and footer text',
+      icon: Share2,
+      category: 'IDENTITY & BRANDING'
+    },
     sermons: {
       title: 'Sermons & Video Library',
       subtitle: 'Publish, organize, and manage Sunday messages, YouTube video links, and study notes',
@@ -1596,6 +1690,7 @@ export default function AdminDashboard() {
         { id: 'settings', label: 'Church & Contact Info', icon: Settings, count: null },
         { id: 'media', label: 'Photos & Backgrounds', icon: Image, count: null },
         { id: 'about', label: 'About Page & History', icon: BookOpen, count: null },
+        { id: 'footer', label: 'Footer & Social Links', icon: Share2, count: null },
       ]
     },
     {
@@ -5048,6 +5143,224 @@ export default function AdminDashboard() {
                   <span>Save Banking Info Live</span>
                 </button>
               </div>
+            </form>
+          </div>
+        )}
+
+        {/* =========================================================================
+            TAB: FOOTER & SOCIAL MEDIA LINKS (HERO SLIDE SOCIAL BAR + WEBSITE FOOTER)
+           ========================================================================= */}
+        {activeTab === 'footer' && (
+          <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
+            <div>
+              <h2 className="font-serif font-black text-2xl text-white mb-2 flex items-center gap-2">
+                <Share2 className="w-6 h-6 text-amber-400 shrink-0" />
+                <span>Footer & Social Media Links</span>
+              </h2>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Instagram, Facebook & YouTube names and links are used in two places: the <strong className="text-amber-300">Hero slide bottom bar</strong> and the <strong className="text-amber-300">website Footer</strong>. Update once here and both change live.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveFooter} className="space-y-8">
+
+              {/* SOCIAL MEDIA CHANNELS */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                  <Share2 className="w-4 h-4 shrink-0" />
+                  <span>Social Media Channels</span>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+                  {FOOTER_SOCIAL_PLATFORMS.map(({ key, name, Icon, accent, linkPlaceholder }) => {
+                    const item = footerForm.social[key] || { url: '', label: '', sublabel: '' };
+                    return (
+                      <div key={key} className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-slate-950 border border-slate-700 flex items-center justify-center shrink-0">
+                              <Icon className={`w-4 h-4 ${accent}`} />
+                            </div>
+                            <span className="font-serif font-bold text-sm text-white truncate">{name}</span>
+                          </div>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border shrink-0 ${
+                            item.url
+                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                          }`}>
+                            {item.url ? 'Visible' : 'Hidden'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                            Page / Channel Link
+                          </label>
+                          <input
+                            type="text"
+                            value={item.url}
+                            onChange={(e) => updateFooterSocial(key, 'url', e.target.value)}
+                            placeholder={linkPlaceholder}
+                            className="w-full min-w-0 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-amber-400"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                              Name (Line 1)
+                            </label>
+                            <input
+                              type="text"
+                              value={item.label}
+                              onChange={(e) => updateFooterSocial(key, 'label', e.target.value)}
+                              placeholder="@gracevictorychurch"
+                              className="w-full min-w-0 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:outline-none focus:border-amber-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                              Name (Line 2)
+                            </label>
+                            <input
+                              type="text"
+                              value={item.sublabel}
+                              onChange={(e) => updateFooterSocial(key, 'sublabel', e.target.value)}
+                              placeholder="@pastorrajendran"
+                              className="w-full min-w-0 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Live preview of the hero bar item */}
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#020B14] border border-slate-800 min-w-0">
+                          <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                            <Icon className={`w-3 h-3 ${accent}`} />
+                          </div>
+                          <div className="text-left leading-none min-w-0">
+                            <span className="block text-[9px] font-bold text-white truncate">{item.label || '—'}</span>
+                            <span className="block text-[8px] text-slate-400 truncate">{item.sublabel || ' '}</span>
+                          </div>
+                          <span className="ml-auto text-[9px] text-slate-500 shrink-0">Hero preview</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  💡 Link-ah kaali vitta andha icon hero slide & footer-la irundhu <strong className="text-slate-200">hide</strong> aagum. Name fields kaali vitta label text mattum varadhu. Link-la <code className="text-amber-300 font-mono">https://</code> illaiyaana auto-ah serthukkum.
+                </p>
+              </div>
+
+              {/* FOOTER TEXT CONTENT */}
+              <div className="space-y-4 p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
+                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                  <Edit className="w-4 h-4 shrink-0" />
+                  <span>Footer Text Content</span>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                    Top Scripture Strip Text
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={footerForm.footer.verse}
+                    onChange={(e) => updateFooterText('verse', e.target.value)}
+                    placeholder="Leave empty to use the main verse from Church & Contact Info"
+                    className="w-full min-w-0 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 resize-y"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                      Prayer Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={footerForm.footer.prayerButtonText}
+                      onChange={(e) => updateFooterText('prayerButtonText', e.target.value)}
+                      placeholder="Need Prayer?"
+                      className="w-full min-w-0 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                      Footer About Text (under church name)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={footerForm.footer.brandDescription}
+                      onChange={(e) => updateFooterText('brandDescription', e.target.value)}
+                      placeholder="Leave empty for automatic text: Apostolic, Bible-believing family... Established 1998 • Vattamalai"
+                      className="w-full min-w-0 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-400 resize-y"
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Text fields kaali vitta website automatic default text-ah kaattum.
+                </p>
+              </div>
+
+              {/* WHAT ELSE IS IN THE FOOTER */}
+              <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                <div className="text-xs font-extrabold uppercase tracking-wider text-amber-300">
+                  Footer-la vera enna varudhu? (already admin-la update panlaam)
+                </div>
+                <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside leading-relaxed">
+                  <li><strong className="text-white">Service Schedule</strong> (Sunday / Wednesday / Friday timings) — Church & Contact Info tab</li>
+                  <li><strong className="text-white">Contact & Location</strong> (address, phone, email) — Church & Contact Info tab</li>
+                  <li><strong className="text-white">Church name, Tamil name & Established year</strong> — Church & Contact Info tab</li>
+                  <li><strong className="text-white">WhatsApp icon number</strong> — Church & Contact Info tab</li>
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('settings')}
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Open Church & Contact Info</span>
+                </button>
+              </div>
+
+              {/* SAVE BAR */}
+              <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="min-w-0">
+                  {footerSaveMsg && (
+                    <div className={`flex items-start gap-2 text-xs font-bold px-4 py-2.5 rounded-xl border animate-in fade-in ${
+                      footerSaveMsg.ok
+                        ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+                        : 'text-red-400 bg-red-500/10 border-red-500/30'
+                    }`}>
+                      {footerSaveMsg.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                      <span className="break-words min-w-0">{footerSaveMsg.text}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleResetFooterDefaults}
+                    className="px-5 py-3 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Reset to Defaults
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingFooter}
+                    className="px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-xl shadow-amber-400/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-wait"
+                  >
+                    {isSavingFooter ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    <span>{isSavingFooter ? 'Saving...' : 'Save Footer & Social Links Live'}</span>
+                  </button>
+                </div>
+              </div>
+
             </form>
           </div>
         )}

@@ -3,7 +3,51 @@ import { CHURCH_INFO, CHURCH_STATS, DEFAULT_MILESTONES, CORE_BELIEFS, LEADERSHIP
 import { compressImage } from '../utils/imageCompressor';
 import { API_BASE_URL } from '../api/client';
 
+// Social media channels shown in the Hero slide dock and the Footer (editable from Admin > Footer & Social Links)
+export const DEFAULT_SOCIAL_LINKS = {
+  instagram: { url: "https://instagram.com", label: "@gracevictorychurch", sublabel: "@pastorrajendran" },
+  facebook: { url: "https://facebook.com", label: "@gracevictorychurch", sublabel: "@franklinraj" },
+  youtube: { url: "https://youtube.com", label: "GRACE VICTORY CHURCH", sublabel: "GVC WORSHIP CHANNEL" },
+};
+
+// Footer text blocks (empty value = automatic default text is used)
+export const DEFAULT_FOOTER_CONFIG = {
+  verse: "",
+  prayerButtonText: "Need Prayer?",
+  brandDescription: "",
+};
+
+// Adds https:// when missing and blocks unsafe protocols (javascript:, data:, etc.)
+export function normalizeExternalUrl(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  if (/^(https?:)?\/\//i.test(value)) return value.startsWith('//') ? `https:${value}` : value;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return '';
+  return `https://${value}`;
+}
+
+export function resolveSocialLinks(settings) {
+  const saved = (settings && typeof settings.socialLinks === 'object' && settings.socialLinks) || {};
+  const out = {};
+  Object.keys(DEFAULT_SOCIAL_LINKS).forEach((key) => {
+    const merged = { ...DEFAULT_SOCIAL_LINKS[key], ...(saved[key] || {}) };
+    out[key] = {
+      url: normalizeExternalUrl(merged.url),
+      label: String(merged.label ?? ''),
+      sublabel: String(merged.sublabel ?? ''),
+    };
+  });
+  return out;
+}
+
+export function resolveFooterConfig(settings) {
+  const saved = (settings && typeof settings.footerConfig === 'object' && settings.footerConfig) || {};
+  return { ...DEFAULT_FOOTER_CONFIG, ...saved };
+}
+
 export const DEFAULT_SETTINGS = {
+  socialLinks: DEFAULT_SOCIAL_LINKS,
+  footerConfig: DEFAULT_FOOTER_CONFIG,
   churchName: "Grace Victory Church",
   tamilName: "கிரேஸ் விக்டரி சர்ச்",
   seniorPastor: "Pastor P. Rajendran",
@@ -225,6 +269,8 @@ export function ChurchProvider({ children }) {
             givingVerse: pick(remote.giving_verse, prev.givingVerse),
             givingPresets: pick(remote.giving_presets, prev.givingPresets),
             prayerWallVerse: pick(remote.prayer_wall_verse, prev.prayerWallVerse),
+            socialLinks: (remote.social_links && typeof remote.social_links === 'object') ? remote.social_links : prev.socialLinks,
+            footerConfig: (remote.footer_config && typeof remote.footer_config === 'object') ? remote.footer_config : prev.footerConfig,
           };
           try {
             if (JSON.stringify(next) === JSON.stringify(prev)) {
@@ -385,6 +431,8 @@ export function ChurchProvider({ children }) {
           giving_verse: updated.givingVerse,
           giving_presets: updated.givingPresets,
           prayer_wall_verse: updated.prayerWallVerse,
+          social_links: updated.socialLinks,
+          footer_config: updated.footerConfig,
         }),
         signal: controller.signal
       });

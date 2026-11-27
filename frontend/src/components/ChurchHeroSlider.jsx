@@ -5,7 +5,7 @@ import {
   Facebook, Youtube, Sparkles, Heart, Calendar, ArrowRight, 
   MapPin, Clock, CheckCircle, ShieldCheck
 } from 'lucide-react';
-import { useChurch, sanitizeFranklinName } from '../context/ChurchContext';
+import { useChurch, sanitizeFranklinName, resolveSocialLinks } from '../context/ChurchContext';
 import { 
   fetchEvents, 
   getEventNotices, 
@@ -18,6 +18,7 @@ import {
 export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
   const church = useChurch();
   const settings = church?.settings || {};
+  const socialLinks = resolveSocialLinks(settings);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [events, setEvents] = useState(() => {
     const cached = getStoredEvents();
@@ -512,58 +513,36 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
       <div className="relative z-20 w-full bg-[#020B14]/85 backdrop-blur-md border-t border-white/10">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-2.5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 text-xs text-slate-200">
           
-          {/* Social Channels */}
+          {/* Social Channels (labels & links managed from Admin > Footer & Social Links) */}
           <div className="flex items-center gap-2.5 sm:gap-4 md:gap-6">
-            {/* Instagram */}
-            <a 
-              href="https://instagram.com" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group"
-              title="Follow GVC on Instagram"
-            >
-              <div className="w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white/10 group-hover:bg-pink-600/30 flex items-center justify-center transition-colors">
-                <Instagram className="w-3 h-3 text-pink-400" />
-              </div>
-              <div className="hidden lg:block text-left leading-none">
-                <span className="block text-[9px] font-bold text-white group-hover:text-amber-300">@gracevictorychurch</span>
-                <span className="block text-[8px] text-slate-400">@pastorrajendran</span>
-              </div>
-            </a>
-
-            {/* Facebook */}
-            <a 
-              href="https://facebook.com" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group"
-              title="Follow GVC on Facebook"
-            >
-              <div className="w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white/10 group-hover:bg-blue-600/30 flex items-center justify-center transition-colors">
-                <Facebook className="w-3 h-3 text-blue-400" />
-              </div>
-              <div className="hidden lg:block text-left leading-none">
-                <span className="block text-[9px] font-bold text-white group-hover:text-amber-300">@gracevictorychurch</span>
-                <span className="block text-[8px] text-slate-400">@franklinraj</span>
-              </div>
-            </a>
-
-            {/* YouTube */}
-            <a 
-              href="https://youtube.com" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group"
-              title="Watch GVC on YouTube"
-            >
-              <div className="w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white/10 group-hover:bg-red-600/30 flex items-center justify-center transition-colors">
-                <Youtube className="w-3 h-3 text-red-500" />
-              </div>
-              <div className="hidden lg:block text-left leading-none">
-                <span className="block text-[9px] font-bold text-white group-hover:text-amber-300">GRACE VICTORY CHURCH</span>
-                <span className="block text-[8px] text-slate-400">GVC WORSHIP CHANNEL</span>
-              </div>
-            </a>
+            {[
+              { key: 'instagram', Icon: Instagram, iconClass: 'text-pink-400', hoverBg: 'group-hover:bg-pink-600/30', title: 'Follow GVC on Instagram' },
+              { key: 'facebook', Icon: Facebook, iconClass: 'text-blue-400', hoverBg: 'group-hover:bg-blue-600/30', title: 'Follow GVC on Facebook' },
+              { key: 'youtube', Icon: Youtube, iconClass: 'text-red-500', hoverBg: 'group-hover:bg-red-600/30', title: 'Watch GVC on YouTube' },
+            ].map(({ key, Icon, iconClass, hoverBg, title }) => {
+              const link = socialLinks[key];
+              if (!link || !link.url) return null;
+              return (
+                <a
+                  key={key}
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group"
+                  title={title}
+                >
+                  <div className={`w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white/10 ${hoverBg} flex items-center justify-center transition-colors`}>
+                    <Icon className={`w-3 h-3 ${iconClass}`} />
+                  </div>
+                  {(link.label || link.sublabel) && (
+                    <div className="hidden lg:block text-left leading-none">
+                      {link.label && <span className="block text-[9px] font-bold text-white group-hover:text-amber-300">{link.label}</span>}
+                      {link.sublabel && <span className="block text-[8px] text-slate-400">{link.sublabel}</span>}
+                    </div>
+                  )}
+                </a>
+              );
+            })}
           </div>
 
           {/* Center Pagination & Slide Navigation Hub (Zero content obstruction) */}

@@ -111,6 +111,8 @@ site_settings_cache: Dict[str, Any] = {
     "giving_verse": "“Bring ye all the tithes into the storehouse, that there may be meat in mine house, and prove me now herewith, saith the Lord of hosts, if I will not open you the windows of heaven, and pour you out a blessing, that there shall not be room enough to receive it.” — Malachi 3:10",
     "giving_presets": "500, 1000, 2500, 5000, 10000",
     "prayer_wall_verse": "“Again I say unto you, That if two of you shall agree on earth as touching any thing that they shall ask, it shall be done for them of my Father which is in heaven.” — Matthew 18:19",
+    "social_links": None,
+    "footer_config": None,
     "updated_at": datetime.now().isoformat()
 }
 
@@ -196,6 +198,8 @@ class SettingsUpdateRequest(BaseModel):
     giving_verse: Optional[str] = None
     giving_presets: Optional[str] = None
     prayer_wall_verse: Optional[str] = None
+    social_links: Optional[Dict[str, Any]] = None
+    footer_config: Optional[Dict[str, Any]] = None
 
 def _identity_query(value: str) -> Dict[str, Any]:
     """Case-insensitive exact matching, with regex metacharacters escaped."""
