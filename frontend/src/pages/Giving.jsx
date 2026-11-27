@@ -377,7 +377,7 @@ export default function Giving() {
           
           {/* LEFT: ONLINE GIVING FORM */}
           <div className="lg:col-span-7">
-            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-4 sm:p-8 lg:p-10">
               
               {!receipt ? (
                 <div>
@@ -458,11 +458,11 @@ export default function Giving() {
                         ))}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setAmount('custom')}
-                          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          className={`shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             amount === 'custom'
                               ? 'bg-amber-600 text-white shadow-md'
                               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -478,7 +478,7 @@ export default function Giving() {
                             placeholder="Enter Amount in ₹ (e.g., 25000)"
                             value={customAmount}
                             onChange={(e) => setCustomAmount(e.target.value)}
-                            className="flex-1 px-4 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-amber-600 font-bold"
+                            className="w-full sm:flex-1 min-w-0 px-4 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-amber-600 font-bold"
                             autoFocus
                           />
                         )}
@@ -523,21 +523,21 @@ export default function Giving() {
                     </div>
 
                     {/* 4. Payment Method Indicator (100% Automated Bank Verification) */}
-                    <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center font-bold shadow-sm">
+                    <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center font-bold shadow-sm shrink-0">
                           <ShieldCheck className="w-5 h-5" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-xs font-bold text-amber-950 uppercase tracking-wider block">
                             Bank-Verified Online Giving
                           </span>
-                          <span className="text-[11px] text-slate-600">
+                          <span className="text-[11px] text-slate-600 block">
                             Google Pay • PhonePe • Paytm • Any UPI • Cards (100% Verified)
                           </span>
                         </div>
                       </div>
-                      <span className="text-sm font-black text-amber-800 font-serif">
+                      <span className="text-sm font-black text-amber-800 font-serif shrink-0">
                         ₹{finalAmount}
                       </span>
                     </div>
@@ -548,12 +548,12 @@ export default function Giving() {
                       disabled={loading || finalAmount <= 0}
                       className="w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wider text-white bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 shadow-xl shadow-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <ShieldCheck className="w-4 h-4" />
+                      <ShieldCheck className="w-4 h-4 shrink-0" />
                       <span>{loading ? 'Initializing Secure Payment...' : `Proceed to Secure Giving ₹${finalAmount}`}</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4 shrink-0" />
                     </button>
 
-                    <div className="flex items-center justify-between gap-2 pt-1 text-xs text-slate-500 font-medium">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-xs text-slate-500 font-medium">
                       <span className="flex items-center gap-1.5 text-emerald-700 font-semibold text-[11px]">
                         <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <span>Stores in DB only upon Bank Success</span>
@@ -562,7 +562,7 @@ export default function Giving() {
                       <button
                         type="button"
                         onClick={handleOpenPaymentModal}
-                        className="text-[11px] text-amber-800 hover:text-amber-950 font-bold underline flex items-center gap-1 cursor-pointer"
+                        className="text-[11px] text-amber-800 hover:text-amber-950 font-bold underline flex items-center gap-1 cursor-pointer shrink-0 self-start sm:self-auto"
                       >
                         <QrCode className="w-3 h-3 text-amber-700" />
                         <span>Or Direct UPI QR Scanner</span>
@@ -585,32 +585,32 @@ export default function Giving() {
                     “God is able to make all grace abound toward you.” — 2 Corinthians 9:8
                   </p>
 
-                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-3 text-xs text-slate-700 mb-6">
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="font-medium text-slate-500">Official Receipt No:</span>
-                      <strong className="font-mono text-slate-950">{receipt.receipt_number}</strong>
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-3 text-xs text-slate-700 mb-6">
+                    <div className="flex justify-between items-start gap-3 border-b pb-2">
+                      <span className="font-medium text-slate-500 shrink-0">Official Receipt No:</span>
+                      <strong className="font-mono text-slate-950 text-right break-all min-w-0">{receipt.receipt_number}</strong>
                     </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="font-medium text-slate-500">Donor Name:</span>
-                      <strong className="text-slate-950">{receipt.donor_name}</strong>
+                    <div className="flex justify-between items-start gap-3 border-b pb-2">
+                      <span className="font-medium text-slate-500 shrink-0">Donor Name:</span>
+                      <strong className="text-slate-950 text-right break-words min-w-0">{receipt.donor_name}</strong>
                     </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="font-medium text-slate-500">Amount Given:</span>
-                      <strong className="font-serif text-base text-amber-700">₹{receipt.amount}</strong>
+                    <div className="flex justify-between items-center gap-3 border-b pb-2">
+                      <span className="font-medium text-slate-500 shrink-0">Amount Given:</span>
+                      <strong className="font-serif text-base text-amber-700 shrink-0">₹{receipt.amount}</strong>
                     </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="font-medium text-slate-500">Ministry Cause:</span>
-                      <span className="text-slate-900 font-semibold">{receipt.cause}</span>
+                    <div className="flex justify-between items-start gap-3 border-b pb-2">
+                      <span className="font-medium text-slate-500 shrink-0">Ministry Cause:</span>
+                      <span className="text-slate-900 font-semibold text-right break-words min-w-0">{receipt.cause}</span>
                     </div>
                     {receipt.notes && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-slate-500">Prayer Note / Purpose:</span>
-                        <span className="text-slate-900 italic">"{receipt.notes}"</span>
+                      <div className="flex justify-between items-start gap-3 border-b pb-2">
+                        <span className="font-medium text-slate-500 shrink-0">Prayer Note / Purpose:</span>
+                        <span className="text-slate-900 italic text-right break-words min-w-0">"{receipt.notes}"</span>
                       </div>
                     )}
-                    <div className="flex justify-between">
-                      <span className="font-medium text-slate-500">Payment Mode:</span>
-                      <span className="text-slate-900 font-semibold">{receipt.payment_method}</span>
+                    <div className="flex justify-between items-start gap-3">
+                      <span className="font-medium text-slate-500 shrink-0">Payment Mode:</span>
+                      <span className="text-slate-900 font-semibold text-right break-words min-w-0">{receipt.payment_method}</span>
                     </div>
                   </div>
 
@@ -639,13 +639,13 @@ export default function Giving() {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Direct Bank Account Card - Live Admin Synced */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-md">
-              <div className="flex items-center justify-between mb-2">
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-8 shadow-md">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-                  <Building className="w-4 h-4 text-amber-600" />
+                  <Building className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>Direct Bank Wire (NEFT / IMPS)</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-300 shrink-0">
                   Verified
                 </span>
               </div>
@@ -655,42 +655,42 @@ export default function Giving() {
               </h4>
 
               <div className="space-y-3 text-xs text-slate-600">
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
-                  <div>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
+                  <div className="min-w-0">
                     <span className="text-[11px] text-slate-500 block font-medium">Account Name</span>
-                    <strong className="text-slate-950">{effectiveChurchName}</strong>
+                    <strong className="text-slate-950 break-words">{effectiveChurchName}</strong>
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
-                  <div>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
+                  <div className="min-w-0">
                     <span className="text-[11px] text-slate-500 block font-medium">Account Number</span>
-                    <strong className="text-slate-950 font-mono text-sm">{effectiveAccountNumber}</strong>
+                    <strong className="text-slate-950 font-mono text-sm break-all">{effectiveAccountNumber}</strong>
                   </div>
                   <button
                     onClick={() => handleCopy(effectiveAccountNumber, 'acc')}
-                    className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 cursor-pointer"
+                    className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 cursor-pointer shrink-0"
                     title="Copy Account Number"
                   >
                     {copiedField === 'acc' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
-                  <div>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
+                  <div className="min-w-0">
                     <span className="text-[11px] text-slate-500 block font-medium">Bank & Branch</span>
-                    <strong className="text-slate-950">{effectiveBankName} — {effectiveBranch}</strong>
+                    <strong className="text-slate-950 break-words">{effectiveBankName} — {effectiveBranch}</strong>
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
-                  <div>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
+                  <div className="min-w-0">
                     <span className="text-[11px] text-slate-500 block font-medium">IFSC Code</span>
-                    <strong className="text-slate-950 font-mono text-sm">{effectiveIfsc}</strong>
+                    <strong className="text-slate-950 font-mono text-sm break-all">{effectiveIfsc}</strong>
                   </div>
                   <button
                     onClick={() => handleCopy(effectiveIfsc, 'ifsc')}
-                    className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 cursor-pointer"
+                    className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 cursor-pointer shrink-0"
                     title="Copy IFSC"
                   >
                     {copiedField === 'ifsc' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -698,14 +698,14 @@ export default function Giving() {
                 </div>
 
                 {effectiveSwift && (
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
-                    <div>
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
+                    <div className="min-w-0">
                       <span className="text-[11px] text-slate-500 block font-medium">SWIFT Code (International Transfer)</span>
-                      <strong className="text-slate-950 font-mono text-sm">{effectiveSwift}</strong>
+                      <strong className="text-slate-950 font-mono text-sm break-all">{effectiveSwift}</strong>
                     </div>
                     <button
                       onClick={() => handleCopy(effectiveSwift, 'swift')}
-                      className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 cursor-pointer shrink-0"
                       title="Copy SWIFT Code"
                     >
                       {copiedField === 'swift' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -714,14 +714,14 @@ export default function Giving() {
                 )}
               </div>
 
-              <div className="mt-5 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
-                <div>
+              <div className="mt-5 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 flex items-center justify-between gap-2">
+                <div className="min-w-0">
                   <span className="block text-[10px] uppercase font-bold text-amber-700">Church UPI ID</span>
-                  <span className="font-mono font-bold">{effectiveUpiId}</span>
+                  <span className="font-mono font-bold break-all">{effectiveUpiId}</span>
                 </div>
                 <button
                   onClick={() => handleCopy(effectiveUpiId, 'upi')}
-                  className="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold transition-colors cursor-pointer"
+                  className="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold transition-colors cursor-pointer shrink-0"
                 >
                   {copiedField === 'upi' ? 'Copied' : 'Copy'}
                 </button>
@@ -906,21 +906,21 @@ export default function Giving() {
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative text-left my-auto space-y-5">
             
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-700 flex items-center justify-center font-bold">
+            <div className="flex items-start justify-between gap-2 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-700 flex items-center justify-center font-bold shrink-0">
                   <ShieldCheck className="w-6 h-6 text-amber-600" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-serif font-bold text-base sm:text-lg text-slate-950">
                       GVC Bank Gateway
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
                       🧪 Test Simulator
                     </span>
                   </div>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-500 block">
                     Simulating 100% Automated Bank Verification
                   </span>
                 </div>
@@ -928,7 +928,7 @@ export default function Giving() {
 
               <button
                 onClick={() => setIsSimulatorOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
                 aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
@@ -937,21 +937,21 @@ export default function Giving() {
 
             {/* Transaction Summary Card */}
             <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 border border-amber-200/90 text-xs space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Donor Name:</span>
-                <strong className="text-slate-900 font-bold">{donorName || 'Faithful Giver'}</strong>
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-slate-500 font-medium shrink-0">Donor Name:</span>
+                <strong className="text-slate-900 font-bold text-right break-words min-w-0">{donorName || 'Faithful Giver'}</strong>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Contact:</span>
-                <span className="text-slate-700">{phone || email}</span>
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-slate-500 font-medium shrink-0">Contact:</span>
+                <span className="text-slate-700 text-right break-all min-w-0">{phone || email}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Purpose:</span>
-                <span className="text-slate-700 truncate max-w-[220px]">{cause}</span>
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-slate-500 font-medium shrink-0">Purpose:</span>
+                <span className="text-slate-700 text-right break-words min-w-0">{cause}</span>
               </div>
-              <div className="pt-2 border-t border-amber-200/60 flex justify-between items-center">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-900">Total Amount:</span>
-                <span className="font-serif font-black text-2xl text-amber-700">₹{finalAmount}</span>
+              <div className="pt-2 border-t border-amber-200/60 flex justify-between items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-900 shrink-0">Total Amount:</span>
+                <span className="font-serif font-black text-2xl text-amber-700 shrink-0">₹{finalAmount}</span>
               </div>
             </div>
 
@@ -1004,7 +1004,7 @@ export default function Giving() {
             </div>
 
             {/* Or Direct UPI QR Option */}
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+            <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
               <span className="text-slate-500">Want to scan via phone?</span>
               <button
                 type="button"

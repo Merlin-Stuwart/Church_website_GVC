@@ -111,17 +111,17 @@ export default function Footer({ onOpenAdminAuth }) {
               Service Schedule
             </h4>
             <div className="space-y-1 text-[11px]">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-center">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-center gap-2">
                 <span className="font-bold text-amber-300">Sunday Service</span>
-                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">{settings.serviceTimings || '09:30 AM'}</span>
+                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px] shrink-0">{settings.serviceTimings || '09:30 AM'}</span>
               </div>
-              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-center">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-center gap-2">
                 <span className="font-bold text-slate-300">Wednesday Study</span>
-                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">{settings.wednesdayTiming || '07:00 PM'}</span>
+                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px] shrink-0">{settings.wednesdayTiming || '07:00 PM'}</span>
               </div>
-              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-center">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex justify-between items-center gap-2">
                 <span className="font-bold text-slate-300">Friday Fasting</span>
-                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">{settings.fridayTiming || '10:30 AM'}</span>
+                <span className="text-slate-400 font-mono text-[10px] sm:text-[11px] shrink-0">{settings.fridayTiming || '10:30 AM'}</span>
               </div>
             </div>
           </div>
@@ -143,13 +143,13 @@ export default function Footer({ onOpenAdminAuth }) {
                   {settings.phone || '+91 93605 88397'}
                 </a>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 min-w-0">
                 <Mail className="w-3 h-3 text-amber-400 shrink-0" />
                 <a 
                   href={getGmailComposeUrl({ to: settings.email || 'contact@gracevictorychurch.org' })} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="hover:text-white transition-colors truncate"
+                  className="hover:text-white transition-colors truncate break-all"
                 >
                   {settings.email || 'contact@gracevictorychurch.org'}
                 </a>

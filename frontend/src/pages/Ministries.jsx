@@ -102,7 +102,7 @@ export default function Ministries({ onOpenPlanVisit }) {
           <div className="flex flex-wrap items-center justify-center gap-2 mb-6 sm:mb-8">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 selectedCategory === 'all'
                   ? 'bg-amber-600 text-white shadow-md'
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -115,7 +115,7 @@ export default function Ministries({ onOpenPlanVisit }) {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                   selectedCategory === cat
                     ? 'bg-amber-600 text-white shadow-md'
                     : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -212,16 +212,16 @@ export default function Ministries({ onOpenPlanVisit }) {
 
                   <div className="space-y-3 pt-4 border-t border-slate-100 text-xs">
                     {(m.meeting_time || m.meetingTime) && (
-                      <div className="flex items-center gap-2 text-slate-700">
+                      <div className="flex items-center gap-2 text-slate-700 min-w-0">
                         <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span className="font-semibold">{m.meeting_time || m.meetingTime}</span>
+                        <span className="font-semibold min-w-0 break-words">{m.meeting_time || m.meetingTime}</span>
                       </div>
                     )}
                     
                     {m.leader && (
-                      <div className="flex items-center gap-2 text-slate-700">
+                      <div className="flex items-center gap-2 text-slate-700 min-w-0">
                         <Users className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>Led by: <strong>{m.leader}</strong></span>
+                        <span className="min-w-0 break-words">Led by: <strong>{m.leader}</strong></span>
                       </div>
                     )}
                   </div>

@@ -1506,7 +1506,7 @@ export default function AdminDashboard() {
             </form>
           )}
 
-          <div className="mt-6 pt-5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <div className="mt-6 pt-5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
             <span>Shortcut: <kbd className="text-amber-400 font-mono font-bold">Ctrl+Shift+A</kbd></span>
             <Link to="/" className="text-slate-400 hover:text-white transition-colors">
               Return to Website &rarr;
@@ -1777,13 +1777,13 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0 bg-[#070F1E] overflow-x-hidden">
         
         {/* Modern Top Header Bar */}
-        <header className="sticky top-0 z-30 bg-[#0B1528]/95 backdrop-blur-md border-b border-slate-800/90 px-4 sm:px-8 py-3.5 shadow-xl flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-30 bg-[#0B1528]/95 backdrop-blur-md border-b border-slate-800/90 px-3 sm:px-6 xl:px-8 py-3.5 shadow-xl flex items-center justify-between gap-2 sm:gap-4">
           
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             {/* Mobile Hamburger Button */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 cursor-pointer"
+              className="lg:hidden p-2 rounded-xl bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 cursor-pointer shrink-0"
               aria-label="Open sidebar navigation"
             >
               <Menu className="w-5 h-5" />
@@ -1792,27 +1792,27 @@ export default function AdminDashboard() {
             {/* Active Page Title & Category */}
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-400/90">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-400/90 truncate">
                   {currentTab.category}
                 </span>
-                <span className="text-slate-600 text-xs hidden sm:inline">•</span>
-                <span className="text-[10px] font-semibold text-slate-400 hidden sm:inline">
+                <span className="text-slate-600 text-xs hidden sm:inline shrink-0">•</span>
+                <span className="text-[10px] font-semibold text-slate-400 hidden sm:inline shrink-0">
                   Admin Dashboard
                 </span>
               </div>
-              <h2 className="text-base sm:text-lg font-serif font-black text-white truncate flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-serif font-black text-white flex items-center gap-2 min-w-0">
                 <CurrentIcon className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>{currentTab.title}</span>
+                <span className="truncate">{currentTab.title}</span>
               </h2>
             </div>
           </div>
 
           {/* Quick Badges & Actions */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Quick Prayers shortcut */}
             <button
               onClick={() => setActiveTab('prayers')}
-              className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'prayers'
                   ? 'bg-amber-400 text-slate-950 font-black shadow-md'
                   : 'bg-slate-800/80 hover:bg-slate-800 text-amber-300 border border-slate-700'
@@ -1826,7 +1826,7 @@ export default function AdminDashboard() {
             {/* Quick Inquiries shortcut */}
             <button
               onClick={() => setActiveTab('inquiries')}
-              className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'inquiries'
                   ? 'bg-amber-400 text-slate-950 font-black shadow-md'
                   : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700'
@@ -1840,7 +1840,7 @@ export default function AdminDashboard() {
             {/* Quick Donations shortcut */}
             <button
               onClick={() => setActiveTab('donations')}
-              className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'donations'
                   ? 'bg-amber-400 text-slate-950 font-black shadow-md'
                   : 'bg-slate-800/80 hover:bg-slate-800 text-emerald-400 border border-slate-700'
@@ -1855,7 +1855,7 @@ export default function AdminDashboard() {
             <button
               type="button"
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+              className={`px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
                 isDarkMode 
                   ? 'bg-amber-400 text-slate-950 hover:bg-amber-300' 
                   : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300'
@@ -1863,19 +1863,19 @@ export default function AdminDashboard() {
               title={isDarkMode ? "Switch to Bright Mode" : "Switch to Dark Mode"}
             >
               {isDarkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5 text-amber-800" />}
-              <span className="hidden sm:inline">{isDarkMode ? 'Dark Mode' : 'Bright Mode'}</span>
+              <span className="hidden xl:inline">{isDarkMode ? 'Dark Mode' : 'Bright Mode'}</span>
             </button>
 
             {/* View Live Site Button */}
             <Link
               to="/"
-              className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-200 hover:text-white bg-slate-800/90 hover:bg-slate-800 border border-slate-700 transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-slate-200 hover:text-white bg-slate-800/90 hover:bg-slate-800 border border-slate-700 transition-colors flex items-center gap-1.5 shadow-sm"
               target="_blank"
               rel="noopener noreferrer"
               title="Open public website in new tab"
             >
               <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
-              <span>View Site</span>
+              <span className="hidden sm:inline">View Site</span>
             </Link>
 
             {/* Top Bar Change Password Button */}
@@ -1884,7 +1884,7 @@ export default function AdminDashboard() {
                 setIsChangePasswordModalOpen(true);
                 setAuthSaveStatus(null);
               }}
-              className="hidden sm:flex px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300 hover:text-white hover:bg-amber-500/20 border border-amber-500/30 transition-colors items-center gap-1.5 cursor-pointer shadow-sm"
+              className="hidden xl:flex px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300 hover:text-white hover:bg-amber-500/20 border border-amber-500/30 transition-colors items-center gap-1.5 cursor-pointer shadow-sm"
               title="Change Admin Password"
             >
               <Key className="w-3.5 h-3.5 text-amber-400" />
@@ -1894,17 +1894,17 @@ export default function AdminDashboard() {
             {/* Top Bar Logout Button */}
             <button
               onClick={handleLogout}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:text-white hover:bg-red-600/30 border border-red-500/30 transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:text-white hover:bg-red-600/30 border border-red-500/30 transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Logout"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden xl:inline">Logout</span>
             </button>
           </div>
         </header>
 
         {/* Subtitle / Description bar */}
-        <div className="px-4 sm:px-8 py-2 bg-[#091122] border-b border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+        <div className="px-3 sm:px-6 xl:px-8 py-2 bg-[#091122] border-b border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
           <p className="truncate text-slate-400 text-[11px] sm:text-xs">
             {currentTab.subtitle}
           </p>
@@ -1921,7 +1921,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Content Area */}
-        <main className="max-w-7xl mx-auto w-full p-4 sm:p-8 flex-1">
+        <main className="max-w-7xl mx-auto w-full p-3 sm:p-6 lg:p-8 flex-1">
 
         {/* Live Backend & Database Diagnostic Banner */}
         {systemStatus && (systemStatus.status === 'offline-fallback' || !systemStatus.database?.connected) && (
@@ -1951,14 +1951,14 @@ export default function AdminDashboard() {
         
         {/* Success Alert Banner */}
         {saveSuccess && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex items-center justify-between shadow-xl animate-in fade-in">
-            <div className="flex items-center gap-3">
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex flex-wrap items-center justify-between gap-3 shadow-xl animate-in fade-in">
+            <div className="flex items-center gap-3 min-w-0">
               <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
               <span className="font-bold text-sm">
                 All changes have been successfully saved and published live to the website!
               </span>
             </div>
-            <Link to="/" className="text-xs font-bold underline hover:text-white">
+            <Link to="/" className="text-xs font-bold underline hover:text-white shrink-0">
               View on live site &rarr;
             </Link>
           </div>
@@ -1968,7 +1968,7 @@ export default function AdminDashboard() {
             TAB 1: LIVE CHURCH INFORMATION & CONTACT EDITOR
            ========================================================================= */}
         {activeTab === 'settings' && (
-          <div className="bg-slate-950 p-6 sm:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
+          <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
             <div>
               <h2 className="font-serif font-black text-2xl text-white mb-2 flex items-center gap-2">
                 <Settings className="w-6 h-6 text-amber-400" />
@@ -2221,7 +2221,7 @@ export default function AdminDashboard() {
                     <Mail className="w-4 h-4 text-amber-400" />
                     <span>Notification "To" Email (Gmail Alerts Recipient)</span>
                   </label>
-                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-mono">
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-mono break-all max-w-full self-start sm:self-auto">
                     To: {siteForm.adminNotificationEmail || 'contact@gracevictorychurch.org'}
                   </span>
                 </div>
@@ -2741,7 +2741,7 @@ export default function AdminDashboard() {
             TAB 2: IMAGES & MEDIA MANAGER (CHANGE PASTOR PHOTO & BACKGROUND)
            ========================================================================= */}
         {activeTab === 'media' && (
-          <div className="bg-slate-950 p-6 sm:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
+          <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-8">
             <div>
               <h2 className="font-serif font-black text-2xl text-white mb-2 flex items-center gap-2">
                 <Image className="w-6 h-6 text-amber-400" />
@@ -2754,18 +2754,18 @@ export default function AdminDashboard() {
 
             <form onSubmit={handleSaveSettings} className="space-y-8">
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6 items-start">
                 
                 {/* 1. Senior Pastor Photo Customizer */}
                 <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
                       Senior Pastor Picture
                     </span>
                     <span className="text-[10px] text-slate-400">Pastor P. Rajendran</span>
                   </div>
 
-                  <div className="flex gap-4 items-center">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                     <div className="w-24 h-32 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
                       <img 
                         src={siteForm.pastorImage} 
@@ -2774,7 +2774,7 @@ export default function AdminDashboard() {
                         onError={(e) => { e.target.src = '/images/pastor.jpg'; }}
                       />
                     </div>
-                    <div className="space-y-2 flex-1">
+                    <div className="space-y-2 flex-1 min-w-0 w-full">
                       <label className="block text-[11px] font-medium text-slate-300">
                         Image File or Online URL
                       </label>
@@ -2810,14 +2810,14 @@ export default function AdminDashboard() {
 
                 {/* 2. Second Pastor Photo Customizer (Elder Son) */}
                 <div className="p-5 rounded-2xl bg-slate-900 border border-amber-500/30 space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
                       Second Pastor Picture
                     </span>
                     <span className="text-[10px] text-amber-300 font-semibold">Elder Son</span>
                   </div>
 
-                  <div className="flex gap-4 items-center">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                     <div className="w-24 h-32 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
                       <img 
                         src={siteForm.associatePastorImage} 
@@ -2826,7 +2826,7 @@ export default function AdminDashboard() {
                         onError={(e) => { e.target.src = '/images/franklin.jpg'; }}
                       />
                     </div>
-                    <div className="space-y-2 flex-1">
+                    <div className="space-y-2 flex-1 min-w-0 w-full">
                       <label className="block text-[11px] font-medium text-slate-300">
                         Image File or Online URL
                       </label>
@@ -2862,14 +2862,14 @@ export default function AdminDashboard() {
 
                 {/* 3. Church Sanctuary Photo Customizer */}
                 <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
                       Church Sanctuary Hall Photo
                     </span>
                     <span className="text-[10px] text-slate-400">Banner Shadow</span>
                   </div>
 
-                  <div className="flex gap-4 items-center">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                     <div className="w-28 h-24 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-lg">
                       <img 
                         src={siteForm.churchHallImage} 
@@ -2878,7 +2878,7 @@ export default function AdminDashboard() {
                         onError={(e) => { e.target.src = '/images/church_hall.jpg'; }}
                       />
                     </div>
-                    <div className="space-y-2 flex-1">
+                    <div className="space-y-2 flex-1 min-w-0 w-full">
                       <label className="block text-[11px] font-medium text-slate-300">
                         Image File or Online URL
                       </label>
@@ -2932,7 +2932,7 @@ export default function AdminDashboard() {
             TAB: ABOUT & HERITAGE CUSTOMIZER
            ========================================================================= */}
         {activeTab === 'about' && (
-          <div className="bg-slate-950 p-6 sm:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-12">
+          <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-12">
             
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
@@ -3284,7 +3284,7 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
                 {leadersList.map((leader, idx) => (
                   <div key={idx} className="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 flex flex-col justify-between relative group">
                     <div className="space-y-4">
@@ -3332,7 +3332,7 @@ export default function AdminDashboard() {
                         <label className="block text-[11px] text-slate-400 mb-2">
                           Leader Picture
                         </label>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                           <div className="w-20 h-24 rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shrink-0 shadow-md relative group/pic">
                             {leader.image ? (
                               <img 
@@ -3349,7 +3349,7 @@ export default function AdminDashboard() {
                             )}
                           </div>
 
-                          <div className="space-y-1.5 flex-1">
+                          <div className="space-y-1.5 flex-1 min-w-0 w-full">
                             <div className="flex flex-wrap gap-1.5">
                               {/* Upload / Update Button */}
                               <label className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold cursor-pointer inline-flex items-center gap-1 transition-colors">
@@ -3493,7 +3493,7 @@ export default function AdminDashboard() {
            ========================================================================= */}
         {activeTab === 'sermons' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="font-serif font-black text-2xl text-white">
                   Sermons & Video Messages ({sermons.length})
@@ -3539,7 +3539,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
             ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6">
               {sermons.map((s) => (
                 <div key={s.id} className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-lg flex flex-col justify-between">
                   <div>
@@ -3632,10 +3632,10 @@ export default function AdminDashboard() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
               {events.map((e) => (
-                <div key={e.id} className="bg-slate-950 rounded-2xl border border-slate-800 p-5 shadow-lg flex gap-4 items-start justify-between">
-                  <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shrink-0">
+                <div key={e.id} className="bg-slate-950 rounded-2xl border border-slate-800 p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row gap-4 items-start justify-between">
+                  <div className="w-full h-36 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shrink-0">
                     <img 
                       src={e.image_url || 'https://images.unsplash.com/photo-1508997449629-303059a039c0?auto=format&fit=crop&w=800&q=80'} 
                       alt={e.title}
@@ -3643,7 +3643,7 @@ export default function AdminDashboard() {
                       onError={(ev) => { ev.target.src = 'https://images.unsplash.com/photo-1508997449629-303059a039c0?auto=format&fit=crop&w=800&q=80'; }}
                     />
                   </div>
-                  <div className="space-y-1.5 flex-1 min-w-0">
+                  <div className="space-y-1.5 flex-1 min-w-0 w-full">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold">
                         {e.category}
@@ -3697,7 +3697,7 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-1.5 shrink-0">
+                  <div className="flex flex-row sm:flex-col justify-end w-full sm:w-auto gap-1.5 shrink-0">
                     <button
                       onClick={() => handleOpenEditEvent(e)}
                       className="p-2.5 rounded-xl text-amber-400 hover:text-white hover:bg-amber-500/20 transition-colors cursor-pointer"
@@ -3851,7 +3851,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 text-[11px] font-bold border border-amber-500/30">
                               {p.category || 'General Prayer Need'}
                             </span>
@@ -3876,15 +3876,15 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* Actions Bar */}
-                        <div className={`flex items-center justify-between pt-3 border-t text-xs ${
+                        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t text-xs ${
                           isDarkMode ? 'border-slate-900' : (isInterceded ? 'border-emerald-200/70' : 'border-slate-200')
                         }`}>
                           <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                            <Lock className="w-3 h-3 text-slate-500" />
+                            <Lock className="w-3 h-3 text-slate-500 shrink-0" />
                             <span>Confidential • Not visible on public website</span>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <button
                               onClick={async () => {
                                 const nextVal = !isInterceded;
@@ -4041,7 +4041,7 @@ export default function AdminDashboard() {
             })()}
 
             {/* Testimonies Grid in Admin */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6">
               {testimonies.map((t) => {
                 const currentFeatured = siteForm.featuredHomeTestimonyIds || settings.featuredHomeTestimonyIds || ['testimony-1', 'testimony-2', 'testimony-3'];
                 const isFeatured = currentFeatured.map(String).includes(String(t.id));
@@ -4050,14 +4050,14 @@ export default function AdminDashboard() {
                 return (
                   <div 
                     key={t.id} 
-                    className={`bg-slate-950 p-6 rounded-2xl border transition-all flex flex-col justify-between ${
+                    className={`bg-slate-950 p-5 sm:p-6 rounded-2xl border transition-all flex flex-col justify-between ${
                       isFeatured 
                         ? 'border-amber-500/70 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/40' 
                         : 'border-slate-800 hover:border-slate-700'
                     }`}
                   >
                     <div>
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5 mb-3">
                         <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 text-[10px] font-bold border border-amber-500/30">
                           {t.type || 'Miraculous Healing'}
                         </span>
@@ -4176,7 +4176,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
             ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6">
               {ministries.map((m) => (
                 <div 
                   key={m.id} 
@@ -4287,7 +4287,7 @@ export default function AdminDashboard() {
           });
 
           return (
-            <div className={`p-6 sm:p-10 rounded-3xl border space-y-8 transition-colors ${
+            <div className={`p-4 sm:p-6 lg:p-10 rounded-3xl border space-y-8 transition-colors ${
               isDarkMode 
                 ? 'bg-slate-950 border-slate-800 text-white shadow-2xl' 
                 : 'bg-white border-slate-200 text-slate-900 shadow-[0_4px_25px_rgba(0,0,0,0.05)]'
@@ -4354,7 +4354,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* 4 Summary KPI Metric Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {/* Card 1: Total Giving */}
                 <div className={`p-5 rounded-2xl border transition-all ${
                   isDarkMode 
@@ -4365,11 +4365,11 @@ export default function AdminDashboard() {
                     <span className={`text-[11px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-amber-400' : 'text-white keep-text-white'}`}>
                       Total Giving Received
                     </span>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-white/20 text-white keep-text-white'}`}>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-white/20 text-white keep-text-white'}`}>
                       <TrendingUp className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="font-serif font-black text-2xl sm:text-3xl text-white keep-text-white">
+                  <div className="font-serif font-black text-2xl 2xl:text-3xl text-white keep-text-white break-words">
                     ₹{totalDonationsAmount.toLocaleString('en-IN')}
                   </div>
                   <span className={`text-[10px] block mt-1 ${isDarkMode ? 'text-slate-400' : 'text-white/95 keep-text-white'}`}>
@@ -4387,11 +4387,11 @@ export default function AdminDashboard() {
                     <span className={`text-[11px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
                       Total Contributions
                     </span>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}>
                       <Receipt className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className={`font-serif font-black text-2xl sm:text-3xl ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
+                  <div className={`font-serif font-black text-2xl 2xl:text-3xl break-words ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
                     {donations.length}
                   </div>
                   <span className={`text-[10px] block mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -4409,11 +4409,11 @@ export default function AdminDashboard() {
                     <span className={`text-[11px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>
                       Generous Donors
                     </span>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-sky-500/20 text-sky-400' : 'bg-sky-50 text-sky-700'}`}>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-sky-500/20 text-sky-400' : 'bg-sky-50 text-sky-700'}`}>
                       <Users className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className={`font-serif font-black text-2xl sm:text-3xl ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
+                  <div className={`font-serif font-black text-2xl 2xl:text-3xl break-words ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
                     {totalDonorsCount}
                   </div>
                   <span className={`text-[10px] block mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -4431,11 +4431,11 @@ export default function AdminDashboard() {
                     <span className={`text-[11px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`}>
                       Average Offering
                     </span>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-50 text-purple-700'}`}>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-50 text-purple-700'}`}>
                       <CreditCard className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className={`font-serif font-black text-2xl sm:text-3xl ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
+                  <div className={`font-serif font-black text-2xl 2xl:text-3xl break-words ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
                     ₹{avgDonation.toLocaleString('en-IN')}
                   </div>
                   <span className={`text-[10px] block mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -4446,7 +4446,7 @@ export default function AdminDashboard() {
 
               {/* Search & Filter Bar */}
               <div className="flex flex-col md:flex-row gap-3 pt-2">
-                <div className="relative flex-1">
+                <div className="relative flex-1 min-w-0">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
@@ -4469,11 +4469,11 @@ export default function AdminDashboard() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:items-center gap-2 shrink-0">
                   <select
                     value={donationCauseFilter}
                     onChange={(e) => setDonationCauseFilter(e.target.value)}
-                    className={`px-3 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-amber-500 cursor-pointer ${
+                    className={`w-full md:w-auto min-w-0 px-3 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-amber-500 cursor-pointer ${
                       isDarkMode 
                         ? 'bg-slate-900 border-slate-800 text-slate-300' 
                         : 'bg-white border-slate-200 text-slate-800 shadow-sm'
@@ -4490,7 +4490,7 @@ export default function AdminDashboard() {
                   <select
                     value={donationStatusFilter}
                     onChange={(e) => setDonationStatusFilter(e.target.value)}
-                    className={`px-3 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-amber-500 cursor-pointer ${
+                    className={`w-full md:w-auto min-w-0 px-3 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-amber-500 cursor-pointer ${
                       isDarkMode 
                         ? 'bg-slate-900 border-slate-800 text-slate-300' 
                         : 'bg-white border-slate-200 text-slate-800 shadow-sm'
@@ -4541,7 +4541,7 @@ export default function AdminDashboard() {
                   <div className={`overflow-x-auto rounded-2xl border ${
                     isDarkMode ? 'border-slate-800 bg-slate-950/60' : 'border-slate-200 bg-white shadow-sm'
                   }`}>
-                    <table className="w-full text-left text-xs border-collapse">
+                    <table className="w-full min-w-[780px] text-left text-xs border-collapse">
                       <thead>
                         <tr className={`border-b ${
                           isDarkMode 
@@ -4733,7 +4733,7 @@ export default function AdminDashboard() {
             TAB: GIVING & BANK DETAILS
            ========================================================================= */}
         {activeTab === 'giving' && (
-          <div className={`p-6 sm:p-10 rounded-3xl border shadow-xl space-y-8 transition-colors ${
+          <div className={`p-4 sm:p-6 lg:p-10 rounded-3xl border shadow-xl space-y-8 transition-colors ${
             isDarkMode 
               ? 'bg-slate-950 border-slate-800 text-white shadow-2xl' 
               : 'bg-white border-slate-200 text-slate-900 shadow-[0_4px_25px_rgba(0,0,0,0.05)]'
@@ -4789,7 +4789,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${
                     isDarkMode ? 'text-slate-300' : 'text-slate-700'
@@ -5003,12 +5003,12 @@ export default function AdminDashboard() {
                 <div className={`p-5 rounded-2xl border space-y-3 transition-colors ${
                   isDarkMode ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200 shadow-sm'
                 }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-2">
-                      <QrCode className="w-4 h-4 text-amber-500" />
-                      <span>Live Donor UPI QR Code Preview (Generated for {siteForm.upiId})</span>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-2 min-w-0">
+                      <QrCode className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span className="break-all">Live Donor UPI QR Code Preview (Generated for {siteForm.upiId})</span>
                     </span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border shrink-0 ${
                       isDarkMode 
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
                         : 'bg-emerald-100 text-emerald-800 border-emerald-200'
@@ -5056,11 +5056,11 @@ export default function AdminDashboard() {
             TAB: CONTACT INQUIRIES & MESSAGES ("HOW CAN WE SERVE YOU?")
            ========================================================================= */}
         {activeTab === 'inquiries' && (
-          <div className="bg-slate-950 p-6 sm:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
+          <div className="bg-slate-950 p-4 sm:p-6 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
               <div>
                 <h2 className="font-serif font-black text-2xl text-white mb-1 flex items-center gap-2">
-                  <Mail className="w-6 h-6 text-amber-400" />
+                  <Mail className="w-6 h-6 text-amber-400 shrink-0" />
                   <span>Contact Form Inquiries ({inquiries.length})</span>
                 </h2>
                 <p className="text-xs text-slate-400">
@@ -5068,15 +5068,15 @@ export default function AdminDashboard() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 text-xs px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300">
-                <span className="font-semibold">Live Alert Sent to:</span>
-                <span className="font-mono text-white font-bold">{siteForm.adminNotificationEmail || 'contact@gracevictorychurch.org'}</span>
+              <div className="flex flex-wrap items-center gap-2 text-xs px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 max-w-full">
+                <span className="font-semibold shrink-0">Live Alert Sent to:</span>
+                <span className="font-mono text-white font-bold break-all">{siteForm.adminNotificationEmail || 'contact@gracevictorychurch.org'}</span>
               </div>
             </div>
 
             {/* Search & Filter Toolbar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="relative flex-1 max-w-md">
+              <div className="relative flex-1 max-w-md min-w-0">
                 <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
@@ -5088,11 +5088,11 @@ export default function AdminDashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-slate-400" />
+                <Filter className="w-4 h-4 text-slate-400 shrink-0" />
                 <select
                   value={inquirySubjectFilter}
                   onChange={(e) => setInquirySubjectFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                  className="w-full sm:w-auto min-w-0 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
                 >
                   <option value="All">All Subjects</option>
                   <option value="General Church Inquiry">General Church Inquiry</option>
@@ -5150,7 +5150,7 @@ export default function AdminDashboard() {
                               {(item.name || 'G')[0].toUpperCase()}
                             </div>
                             <div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <h4 className="font-bold text-sm text-white">{item.name || 'Anonymous Visitor'}</h4>
                                 {item.subject && (
                                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
@@ -5164,7 +5164,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 self-start sm:self-auto">
+                          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                             {item.email && (
                               <a
                                 href={getGmailComposeUrl({
@@ -5459,7 +5459,7 @@ export default function AdminDashboard() {
                     type="text"
                     value={newEvent.image_url}
                     onChange={(e) => setNewEvent({ ...newEvent, image_url: e.target.value })}
-                    className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
+                    className="flex-1 min-w-0 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="https://... or upload image"
                   />
                   <label className={`h-11 px-4 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors ${
@@ -5501,7 +5501,7 @@ export default function AdminDashboard() {
 
               {/* SPECIAL NOTICES & DETAILS SECTION (With Emoji Picker + Add Detail Button) */}
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <label className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     <span>Special Notices / Additional Details (கூடுதல் தகவல்கள்)</span>
@@ -5540,7 +5540,7 @@ export default function AdminDashboard() {
 
                         {isPickerOpen && (
                           <div
-                            className={`absolute left-6 top-full mt-1.5 z-50 w-72 rounded-2xl border p-3 shadow-2xl ${
+                            className={`absolute left-0 right-0 sm:right-auto sm:left-6 top-full mt-1.5 z-50 w-full sm:w-72 rounded-2xl border p-3 shadow-2xl ${
                               isDarkMode
                                 ? 'bg-slate-950 border-slate-700 text-slate-100'
                                 : 'bg-white border-slate-200 text-slate-800'
@@ -5571,7 +5571,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-8 gap-1">
+                            <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
                               {NOTICE_EMOJI_OPTIONS.map((emo) => (
                                 <button
                                   key={emo}
@@ -5598,7 +5598,7 @@ export default function AdminDashboard() {
                           type="text"
                           value={notice}
                           onChange={(e) => handleUpdateNotice(nIdx, e.target.value)}
-                          className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-100 placeholder-slate-500 text-sm focus:border-amber-400 focus:outline-none"
+                          className="flex-1 min-w-0 h-11 px-3.5 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-100 placeholder-slate-500 text-sm focus:border-amber-400 focus:outline-none"
                           placeholder={
                             nIdx === 0
                               ? "e.g. 🙏 Fellowship Lunch / அன்பு விருந்து"
@@ -5611,7 +5611,7 @@ export default function AdminDashboard() {
                           <button
                             type="button"
                             onClick={() => handleRemoveNotice(nIdx)}
-                            className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-900 transition-colors cursor-pointer"
+                            className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-900 transition-colors cursor-pointer shrink-0"
                             title="Remove this detail"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -5625,9 +5625,9 @@ export default function AdminDashboard() {
 
               {/* KEY HIGHLIGHTS / BULLET POINTS (Shown on Slide 2 VIP card & Event cards) */}
               <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                     <span>Event Highlights & Features (நிகழ்ச்சி சிறப்பம்சங்கள் - Up to 3)</span>
                   </label>
                   <span className="text-[10px] text-slate-400 shrink-0">Slide 2 Bullet Points</span>
@@ -5637,7 +5637,7 @@ export default function AdminDashboard() {
                   const currentHighlights = Array.isArray(newEvent.highlights) ? [...newEvent.highlights] : [];
                   return (
                     <div key={idx} className="flex items-center gap-2">
-                      <span className="text-xs text-amber-400 font-bold w-4 text-center">{idx + 1}.</span>
+                      <span className="text-xs text-amber-400 font-bold w-4 text-center shrink-0">{idx + 1}.</span>
                       <input
                         type="text"
                         value={currentHighlights[idx] || ''}
@@ -5650,7 +5650,7 @@ export default function AdminDashboard() {
                             return { ...prev, highlights: updated };
                           });
                         }}
-                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
+                        className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                         placeholder={
                           idx === 0 
                             ? "e.g. Anointed Praise & Intercession" 
@@ -5710,7 +5710,7 @@ export default function AdminDashboard() {
                     required
                     value={newTestimony.name}
                     onChange={(e) => setNewTestimony({ ...newTestimony, name: e.target.value })}
-                    className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
+                    className="flex-1 min-w-0 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="e.g. Samuel / Priya & Family"
                   />
                 </div>
@@ -5921,7 +5921,7 @@ export default function AdminDashboard() {
                     type="text"
                     value={ministryForm.image}
                     onChange={(e) => setMinistryForm({ ...ministryForm, image: e.target.value })}
-                    className="flex-1 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
+                    className="flex-1 min-w-0 h-11 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-400 focus:outline-none"
                     placeholder="https://... or upload photo"
                   />
                   <label className={`h-11 px-4 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors ${
@@ -6110,7 +6110,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Receipt Certificate Box */}
-            <div id="printable-receipt" className="p-6 rounded-2xl bg-amber-50/40 border-2 border-amber-200/80 space-y-4">
+            <div id="printable-receipt" className="p-4 sm:p-6 rounded-2xl bg-amber-50/40 border-2 border-amber-200/80 space-y-4">
               <div className="text-center space-y-1 pb-3 border-b border-amber-200">
                 <h4 className="font-serif font-black text-lg text-amber-950 tracking-tight">
                   {settings.churchName || 'GRACE VICTORY CHURCH'}
@@ -6123,7 +6123,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Donor Name</span>
                   <strong className="text-slate-900 text-sm font-serif">{selectedReceiptDonation.donor_name || 'Faithful Giver'}</strong>
@@ -6182,7 +6182,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2.5 pt-2">
               <button
                 onClick={() => setSelectedReceiptDonation(null)}
                 className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors cursor-pointer"
@@ -6190,10 +6190,10 @@ export default function AdminDashboard() {
                 Close
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <button
                   onClick={() => handleSendWhatsAppThankYou(selectedReceiptDonation)}
-                  className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-md"
+                  className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   <span>Send on WhatsApp</span>
@@ -6201,7 +6201,7 @@ export default function AdminDashboard() {
 
                 <button
                   onClick={() => window.print()}
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-md"
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Print Receipt</span>

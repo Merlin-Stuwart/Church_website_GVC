@@ -31,11 +31,13 @@ export default class ErrorBoundary extends React.Component {
           textAlign: 'center'
         }}>
           <div style={{
+            width: '100%',
             maxWidth: '540px',
+            boxSizing: 'border-box',
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(251, 191, 36, 0.3)',
             borderRadius: '24px',
-            padding: '32px',
+            padding: '24px',
             boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
           }}>
             <h2 style={{ color: '#FBBF24', fontSize: '22px', marginBottom: '12px' }}>
@@ -53,6 +55,7 @@ export default class ErrorBoundary extends React.Component {
                 color: '#F87171',
                 textAlign: 'left',
                 overflowX: 'auto',
+                maxWidth: '100%',
                 marginBottom: '20px'
               }}>
                 {this.state.error.toString()}

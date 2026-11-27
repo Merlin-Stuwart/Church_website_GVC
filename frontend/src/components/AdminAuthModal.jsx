@@ -213,10 +213,10 @@ export default function AdminAuthModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
       
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] overflow-y-auto my-auto">
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-x-hidden max-h-[92vh] overflow-y-auto my-auto">
         
         {/* Top Header */}
-        <div className="bg-[#0B192C] p-6 text-white text-center relative">
+        <div className="bg-[#0B192C] rounded-t-3xl p-6 text-white text-center relative">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
@@ -306,7 +306,7 @@ export default function AdminAuthModal({ isOpen, onClose }) {
 
               {/* Password Field */}
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-wrap items-center justify-between gap-1 mb-2">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Admin Password
                   </label>

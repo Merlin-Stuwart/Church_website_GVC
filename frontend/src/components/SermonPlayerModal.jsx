@@ -37,24 +37,24 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto my-auto bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-slate-800 animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto overflow-x-hidden my-auto bg-white border border-slate-200 rounded-3xl shadow-2xl text-slate-800 animate-in zoom-in-95 duration-200">
         
         {/* Header bar */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-6 py-3 sm:py-4 bg-slate-50 border-b border-slate-200">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200 truncate max-w-[140px] sm:max-w-xs">
               {sermon.series || 'Sunday Service'}
             </span>
-            <span className="text-xs text-slate-500 font-semibold">{sermon.language}</span>
+            <span className="text-xs text-slate-500 font-semibold hidden sm:inline shrink-0">{sermon.language}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {sermon.video_url && (
               <a
                 href={sermon.video_url}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3 py-1.5 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+                className="px-2.5 sm:px-3 py-1.5 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors flex items-center gap-1.5 text-xs font-semibold"
                 title="Watch on YouTube"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -63,7 +63,7 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
             )}
             <button
               onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors flex items-center gap-1.5 text-xs font-semibold"
               title="Share Sermon"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
@@ -79,7 +79,7 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
         </div>
 
         {/* Media Player Area */}
-        <div className="relative bg-black aspect-video flex items-center justify-center">
+        <div className={`relative bg-black flex items-center justify-center ${activeTab === 'video' ? 'aspect-video' : 'min-h-[260px] sm:aspect-video'}`}>
           {activeTab === 'video' ? (
             <div className="w-full h-full">
               {embedUrl ? (
@@ -97,12 +97,12 @@ export default function SermonPlayerModal({ sermon, isOpen, onClose }) {
               )}
             </div>
           ) : (
-            <div className="w-full h-full p-8 flex flex-col items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center mb-4 shadow-sm">
-                <Volume2 className="w-10 h-10 animate-pulse" />
+            <div className="w-full h-full p-5 sm:p-8 flex flex-col items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200 text-center">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
+                <Volume2 className="w-7 h-7 sm:w-10 sm:h-10 animate-pulse" />
               </div>
-              <h4 className="font-serif font-bold text-xl text-slate-900 mb-1">{sermon.title}</h4>
-              <p className="text-xs text-amber-800 font-semibold mb-6">{sermon.speaker}</p>
+              <h4 className="font-serif font-bold text-base sm:text-xl text-slate-900 mb-1">{sermon.title}</h4>
+              <p className="text-xs text-amber-800 font-semibold mb-4 sm:mb-6">{sermon.speaker}</p>
               
               <audio controls className="w-full max-w-md accent-amber-600">
                 <source src={sermon.audio_url || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"} type="audio/mpeg" />

@@ -94,11 +94,11 @@ export default function Sermons() {
       </section>
 
       {/* SEARCH & FILTERS BAR */}
-      <section className="sticky top-[60px] sm:top-[73px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-6 lg:px-8 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-4">
+      <section className="sticky top-[56px] sm:top-[64px] xl:top-[68px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-6 lg:px-8 shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-4">
 
           {/* Search box */}
-          <div className="relative w-full md:w-80">
+          <div className="relative w-full lg:w-72 xl:w-80 shrink-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -109,14 +109,14 @@ export default function Sermons() {
             />
           </div>
 
-          {/* Filter Dropdowns - Clean 2-column grid on mobile, inline on desktop */}
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3 w-full md:w-auto">
-            <div className="flex items-center gap-1.5 min-w-0">
+          {/* Filter Dropdowns - Clean 1/2-col grid on mobile/tablet, inline on desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+            <div className="flex items-center gap-1.5 w-full lg:w-48 xl:w-56 min-w-0">
               <span className="text-[11px] text-slate-500 font-bold shrink-0 hidden sm:inline">Category:</span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-2.5 sm:px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold focus:outline-none focus:border-amber-600 truncate cursor-pointer"
+                className="w-full min-w-0 px-2.5 sm:px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold focus:outline-none focus:border-amber-600 truncate cursor-pointer"
               >
                 {categories.map(c => (
                   <option key={c} value={c}>{c === 'All' ? 'All Categories' : c}</option>
@@ -124,12 +124,12 @@ export default function Sermons() {
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="flex items-center gap-1.5 w-full lg:w-48 xl:w-56 min-w-0">
               <span className="text-[11px] text-slate-500 font-bold shrink-0 hidden sm:inline">Series:</span>
               <select
                 value={selectedSeries}
                 onChange={(e) => setSelectedSeries(e.target.value)}
-                className="w-full px-2.5 sm:px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold focus:outline-none focus:border-amber-600 truncate cursor-pointer"
+                className="w-full min-w-0 px-2.5 sm:px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold focus:outline-none focus:border-amber-600 truncate cursor-pointer"
               >
                 {seriesList.map(s => (
                   <option key={s} value={s}>{s === 'All' ? 'All Series' : s}</option>
@@ -273,20 +273,20 @@ export default function Sermons() {
                     </div>
                   </button>
 
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
-                    <span className="px-2.5 py-0.5 rounded bg-black/60 backdrop-blur-sm font-medium">
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 text-xs text-white">
+                    <span className="px-2.5 py-0.5 rounded bg-black/60 backdrop-blur-sm font-medium truncate max-w-[70%]">
                       {sermon.series || sermon.category}
                     </span>
-                    <span className="font-semibold text-amber-300">
+                    <span className="font-semibold text-amber-300 shrink-0">
                       {sermon.duration || '45 mins'}
                     </span>
                   </div>
                 </div>
 
                 {/* Sermon Body */}
-                <div className="p-6 flex-1 flex flex-col justify-between">
+                <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-xs text-slate-500 mb-2">
                       <span className="font-bold text-amber-700">{sermon.speaker}</span>
                       <span>{sermon.date}</span>
                     </div>
@@ -297,7 +297,7 @@ export default function Sermons() {
 
                     {sermon.scripture && (
                       <div className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold mb-3">
-                        <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+                        <BookOpen className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span>{sermon.scripture}</span>
                       </div>
                     )}

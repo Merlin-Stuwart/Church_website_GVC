@@ -132,16 +132,16 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
   };
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#020B14] select-none shadow-2xl">
+    <div className="relative w-full overflow-hidden bg-[#020B14] select-none shadow-2xl flex flex-col">
       
-      {/* Viewport: Controlled cinematic height with comfortable layout breathing room across all screen sizes */}
-      <div className="relative min-h-[580px] sm:min-h-[560px] md:h-[580px] lg:h-[620px] xl:h-[650px] 2xl:h-[720px] overflow-hidden">
+      {/* Viewport: Fluid height with comfortable breathing room across all screen sizes */}
+      <div className="relative flex-1 overflow-hidden">
         
         {/* =========================================================================
             TRUE HORIZONTAL CAROUSEL TRACK: WHOLE SLIDE (BG + CONTENT) MOVES TOGETHER!
            ========================================================================= */}
         <div 
-          className="flex w-full h-full transition-transform duration-500 ease-in-out"
+          className="flex w-full items-stretch transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
@@ -149,7 +149,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
           {slides.map((s, idx) => (
             <div 
               key={s.id || idx}
-              className="relative w-full h-full shrink-0 flex items-center justify-center overflow-hidden"
+              className="relative w-full shrink-0 flex items-center justify-center overflow-hidden min-h-[500px] lg:min-h-[540px] xl:min-h-[580px]"
             >
               
               {/* =====================================================================
@@ -197,7 +197,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
               {/* =====================================================================
                   SLIDE FOREGROUND CONTENT STAGE
                  ===================================================================== */}
-              <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 sm:px-12 md:px-16 lg:px-20 xl:px-24 h-full flex flex-col justify-center pb-20 sm:pb-20 pt-2">
+              <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-8 md:px-12 lg:px-12 xl:px-20 py-8 sm:py-10 lg:py-12 flex flex-col justify-center">
                 
                 {s.isEventSlide ? (
                   /* =================================================================
@@ -215,7 +215,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                       </div>
 
                       {/* Event Title */}
-                      <h1 className="font-serif font-black text-2xl sm:text-4xl lg:text-5xl text-white tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] leading-[1.15]">
+                      <h1 className="font-serif font-black text-2xl sm:text-4xl xl:text-5xl text-white tracking-tight uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] leading-[1.15]">
                         {s.event?.title}
                       </h1>
 
@@ -248,7 +248,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
 
                       {/* Special Notice Banners (e.g. Food, Transportation, etc.) */}
                       {getEventNotices(s.event).length > 0 && (
-                        <div className="flex flex-wrap gap-2 max-w-xl">
+                        <div className="flex flex-wrap justify-center lg:justify-start gap-2 max-w-xl">
                           {getEventNotices(s.event).map((notice, nIdx) => (
                             <div key={nIdx} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/25 border border-amber-400/50 text-amber-200 text-xs font-semibold backdrop-blur-md shadow-lg">
                               <span className="text-white font-medium">{notice}</span>
@@ -363,19 +363,19 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                   /* =================================================================
                       SLIDE 1: ULTRA-LUXURY CHURCH & PASTORAL LEADERSHIP
                      ================================================================= */
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-center w-full animate-in fade-in duration-500">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-12 items-center w-full animate-in fade-in duration-500">
                     
                     {/* LEFT: CHURCH IDENTITY, THEME & CALLS TO ACTION */}
-                    <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left space-y-2.5 sm:space-y-3.5">
+                    <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left space-y-2.5 sm:space-y-3.5 min-w-0">
                       
                       {/* Established Crest Badge */}
-                      <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-amber-400/40 text-amber-300 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest shadow-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                      <div className="inline-flex flex-wrap items-center justify-center gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-amber-400/40 text-amber-300 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest shadow-md max-w-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
                         <span>Established {settings.foundedYear || '1998'} • {(settings.address || 'Vattamalai, India').replace(/^Grace Victory Church,\s*/i, '')}</span>
                       </div>
 
                       {/* Main Church Title */}
-                      <h1 className="font-serif font-black text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white tracking-wide uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] leading-[1.1]">
+                      <h1 className="font-serif font-black text-2xl sm:text-4xl md:text-5xl xl:text-6xl text-white tracking-wide uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] leading-[1.1]">
                         {s.churchName}
                       </h1>
 
@@ -385,15 +385,15 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                       </p>
 
                       {/* THE LUXURY 2026 THEME EMBLEM */}
-                      <div className="pt-1">
+                      <div className="pt-1 max-w-full">
                         <div className="flex flex-col items-center lg:items-start">
                           
                           {/* Sleek Unified Architectural Badge */}
-                          <div className="bg-gradient-to-r from-white via-slate-50 to-amber-50 text-[#041D35] px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.6)] border-2 border-amber-400/80 flex items-center gap-2.5 sm:gap-4">
-                            <span className="font-serif font-black text-xl sm:text-3xl md:text-4xl text-amber-600 tracking-tight border-r border-slate-300 pr-2.5 sm:pr-4 leading-none">
+                          <div className="bg-gradient-to-r from-white via-slate-50 to-amber-50 text-[#041D35] px-3.5 sm:px-6 md:px-7 py-2 sm:py-3 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.6)] border-2 border-amber-400/80 flex items-center gap-2.5 sm:gap-4 max-w-full">
+                            <span className="font-serif font-black text-xl sm:text-3xl md:text-4xl text-amber-600 tracking-tight border-r border-slate-300 pr-2.5 sm:pr-4 leading-none shrink-0">
                               {s.year}
                             </span>
-                            <div className="text-left leading-none">
+                            <div className="text-left leading-none min-w-0">
                               <span className="font-serif font-black text-xs sm:text-base md:text-xl lg:text-2xl tracking-wider uppercase text-[#031E3A] block">
                                 {s.themeName}
                               </span>
@@ -442,10 +442,10 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                       <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/20 via-blue-500/15 to-amber-500/10 rounded-full blur-3xl transform scale-95 pointer-events-none"></div>
 
                       {/* Side-by-side Overlapping Duo */}
-                      <div className="relative flex items-end justify-center gap-2 sm:gap-4">
+                      <div className="relative flex items-end justify-center gap-2.5 sm:gap-4">
                         
                         {/* 1. YOUTH PASTOR R. FRANKLIN RAJENDRAN */}
-                        <div className="relative w-24 sm:w-36 xl:w-44 mb-1 z-10 transition-transform hover:scale-105 duration-300">
+                        <div className="relative w-28 sm:w-36 lg:w-36 xl:w-44 mb-1 z-10 transition-transform hover:scale-105 duration-300">
                           <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.85)] aspect-[3/4] bg-slate-950 border border-amber-400/40">
                             <img 
                               src={s.associatePastorImg || '/images/franklin.jpg'} 
@@ -456,7 +456,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                             
                             {/* Bottom Title Gradient Fade with Clear Typography */}
                             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#020B14] via-[#020B14]/90 to-transparent pt-6 sm:pt-8 pb-2 sm:pb-2.5 px-1.5 sm:px-2 text-center">
-                              <span className="text-[7px] sm:text-[9px] uppercase tracking-wider font-extrabold text-amber-400 block mb-0.5 truncate">
+                              <span className="text-[7px] sm:text-[8.5px] uppercase tracking-wider font-extrabold text-amber-400 block mb-0.5 leading-tight line-clamp-2">
                                 {s.associatePastorTitle}
                               </span>
                               <h4 className="font-serif font-black text-[10px] sm:text-xs xl:text-sm text-white drop-shadow leading-tight">
@@ -467,7 +467,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
                         </div>
 
                         {/* 2. SENIOR PASTOR (PROMINENT & MAJESTIC) */}
-                        <div className="relative w-36 sm:w-56 xl:w-64 z-20 transition-transform hover:scale-105 duration-300">
+                        <div className="relative w-36 sm:w-48 lg:w-48 xl:w-64 z-20 transition-transform hover:scale-105 duration-300">
                           <div className="relative rounded-3xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.95)] aspect-[3/4] bg-slate-950 border-2 border-amber-400/50">
                             <img 
                               src={s.pastorImg || '/images/pastor.jpg'} 
@@ -507,13 +507,13 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
       </div>
 
       {/* =========================================================================
-          BOTTOM SOCIAL & HELPLINE DOCK (STABLE ACROSS TRANSITIONS)
+          BOTTOM SOCIAL & HELPLINE DOCK (NON-OVERLAPPING FLOW BAR)
          ========================================================================= */}
-      <div className="absolute bottom-2.5 inset-x-0 z-20 pointer-events-auto px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1600px] mx-auto">
-        <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 sm:gap-3 text-xs text-slate-200">
+      <div className="relative z-20 w-full bg-[#020B14]/85 backdrop-blur-md border-t border-white/10">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-2.5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 text-xs text-slate-200">
           
           {/* Social Channels */}
-          <div className="flex items-center gap-2.5 sm:gap-4 md:gap-7">
+          <div className="flex items-center gap-2.5 sm:gap-4 md:gap-6">
             {/* Instagram */}
             <a 
               href="https://instagram.com" 
@@ -522,10 +522,10 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
               className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group"
               title="Follow GVC on Instagram"
             >
-              <div className="w-5 h-5 rounded-full bg-white/10 group-hover:bg-pink-600/30 flex items-center justify-center transition-colors">
+              <div className="w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white/10 group-hover:bg-pink-600/30 flex items-center justify-center transition-colors">
                 <Instagram className="w-3 h-3 text-pink-400" />
               </div>
-              <div className="hidden sm:block text-left leading-none">
+              <div className="hidden lg:block text-left leading-none">
                 <span className="block text-[9px] font-bold text-white group-hover:text-amber-300">@gracevictorychurch</span>
                 <span className="block text-[8px] text-slate-400">@pastorrajendran</span>
               </div>
@@ -539,10 +539,10 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
               className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group"
               title="Follow GVC on Facebook"
             >
-              <div className="w-5 h-5 rounded-full bg-white/10 group-hover:bg-blue-600/30 flex items-center justify-center transition-colors">
+              <div className="w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white/10 group-hover:bg-blue-600/30 flex items-center justify-center transition-colors">
                 <Facebook className="w-3 h-3 text-blue-400" />
               </div>
-              <div className="hidden sm:block text-left leading-none">
+              <div className="hidden lg:block text-left leading-none">
                 <span className="block text-[9px] font-bold text-white group-hover:text-amber-300">@gracevictorychurch</span>
                 <span className="block text-[8px] text-slate-400">@franklinraj</span>
               </div>
@@ -556,10 +556,10 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
               className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group"
               title="Watch GVC on YouTube"
             >
-              <div className="w-5 h-5 rounded-full bg-white/10 group-hover:bg-red-600/30 flex items-center justify-center transition-colors">
+              <div className="w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-white/10 group-hover:bg-red-600/30 flex items-center justify-center transition-colors">
                 <Youtube className="w-3 h-3 text-red-500" />
               </div>
-              <div className="hidden sm:block text-left leading-none">
+              <div className="hidden lg:block text-left leading-none">
                 <span className="block text-[9px] font-bold text-white group-hover:text-amber-300">GRACE VICTORY CHURCH</span>
                 <span className="block text-[8px] text-slate-400">GVC WORSHIP CHANNEL</span>
               </div>
@@ -605,7 +605,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
           {/* 24/7 Helpline Phone */}
           <a
             href={`tel:${(settings.phone || '+91 93605 88397').replace(/[^0-9+]/g, '')}`}
-            className="flex items-center gap-1.5 sm:gap-2 bg-white text-[#031527] px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full font-bold shadow-md border border-amber-400 hover:scale-105 transition-transform"
+            className="flex items-center gap-1.5 sm:gap-2 bg-white text-[#031527] px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full font-bold shadow-md border border-amber-400 hover:scale-105 transition-transform shrink-0"
           >
             <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#072B4F] text-amber-400 flex items-center justify-center">
               <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400" />
@@ -619,13 +619,13 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
         </div>
       </div>
 
-      {/* Slider Left / Right Side Floating Chevrons (Kept in clean outer margins with zero content overlap) */}
+      {/* Slider Left / Right Side Floating Chevrons (Visible on xl+ wide screens with clear outer gutter) */}
       {slides.length > 1 && (
         <>
           <button
             onClick={prevSlide}
             aria-label="Previous Slide"
-            className="hidden sm:flex absolute left-3 lg:left-5 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/70 hover:bg-amber-400 text-white hover:text-slate-950 items-center justify-center backdrop-blur-md border border-white/20 hover:border-amber-400 transition-all hover:scale-110 active:scale-95 z-20 shadow-2xl cursor-pointer"
+            className="hidden xl:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 hover:bg-amber-400 text-white hover:text-slate-950 items-center justify-center backdrop-blur-md border border-white/20 hover:border-amber-400 transition-all hover:scale-110 active:scale-95 z-20 shadow-2xl cursor-pointer"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -633,7 +633,7 @@ export default function ChurchHeroSlider({ onOpenPlanVisit, onWatchSermon }) {
           <button
             onClick={nextSlide}
             aria-label="Next Slide"
-            className="hidden sm:flex absolute right-3 lg:right-5 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/70 hover:bg-amber-400 text-white hover:text-slate-950 items-center justify-center backdrop-blur-md border border-white/20 hover:border-amber-400 transition-all hover:scale-110 active:scale-95 z-20 shadow-2xl cursor-pointer"
+            className="hidden xl:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 hover:bg-amber-400 text-white hover:text-slate-950 items-center justify-center backdrop-blur-md border border-white/20 hover:border-amber-400 transition-all hover:scale-110 active:scale-95 z-20 shadow-2xl cursor-pointer"
           >
             <ChevronRight className="w-5 h-5" />
           </button>

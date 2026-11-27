@@ -77,12 +77,12 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
 
         {!submitted ? (
           <div>
-            <div className="flex items-center gap-2 mb-2 text-amber-700 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-4 h-4 text-amber-600" />
+            <div className="flex items-center gap-2 mb-2 pr-10 text-amber-700 text-xs font-bold uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
               <span>Share God's Miracles • தேவ சாட்சிகள்</span>
             </div>
 
-            <h3 className="font-serif font-bold text-2xl text-slate-950 mb-2">
+            <h3 className="font-serif font-bold text-2xl text-slate-950 mb-2 pr-10">
               Share Your Testimony
             </h3>
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
@@ -102,7 +102,7 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
                   <select
                     value={prefix}
                     onChange={(e) => setPrefix(e.target.value)}
-                    className="w-32 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-bold text-amber-900"
+                    className="shrink-0 w-28 sm:w-32 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-bold text-amber-900"
                   >
                     <option value="Brother">Brother</option>
                     <option value="Sister">Sister</option>
@@ -118,7 +118,7 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Samuel / Priya & Family"
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-medium"
+                    className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:outline-none focus:border-amber-600 focus:bg-white transition-colors font-medium"
                   />
                 </div>
                 <span className="text-[11px] text-slate-500 mt-1 block">
@@ -192,7 +192,7 @@ export default function TestimonyModal({ isOpen, onClose, onTestimonyAdded }) {
                 <span>Notification Dispatched to Church Office:</span>
               </div>
               <p className="text-slate-600">
-                An alert was dispatched to <strong className="text-slate-900 font-mono">{adminNotificationEmail}</strong> and saved for admin review in the portal.
+                An alert was dispatched to <strong className="text-slate-900 font-mono break-all">{adminNotificationEmail}</strong> and saved for admin review in the portal.
               </p>
             </div>
 

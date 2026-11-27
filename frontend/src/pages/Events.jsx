@@ -116,7 +116,7 @@ export default function Events() {
               className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col md:flex-row group"
             >
               {/* Event Image Column (Compact, controlled width) */}
-              <div className="w-full md:w-64 lg:w-72 h-44 sm:h-52 md:h-auto min-h-[190px] relative overflow-hidden bg-slate-900 shrink-0">
+              <div className="w-full md:w-64 lg:w-72 h-48 sm:h-52 md:h-auto md:min-h-[200px] relative overflow-hidden bg-slate-900 shrink-0">
                 <img
                   src={evt.image_url || 'https://images.unsplash.com/photo-1508997449629-303059a039c0?auto=format&fit=crop&w=800&q=80'}
                   alt={evt.title}
@@ -162,7 +162,7 @@ export default function Events() {
                     )}
 
                     {evt.location && (
-                      <span className="inline-flex items-center gap-1.5 text-slate-600 truncate max-w-xs text-xs">
+                      <span className="inline-flex items-center gap-1.5 text-slate-600 truncate max-w-full sm:max-w-xs min-w-0 text-xs">
                         <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span className="truncate">{evt.location}</span>
                       </span>

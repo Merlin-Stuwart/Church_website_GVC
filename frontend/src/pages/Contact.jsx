@@ -91,9 +91,9 @@ export default function Contact() {
           {/* LEFT: INFO CARDS (Dynamically controlled via Admin Panel) */}
           <div className="lg:col-span-5 space-y-6">
             
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-8 shadow-sm">
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-8 shadow-sm">
               <h3 className="font-serif font-bold text-xl text-slate-950 mb-6 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-amber-600" />
+                <MapPin className="w-5 h-5 text-amber-600 shrink-0" />
                 <span>Sanctuary Location</span>
               </h3>
 
@@ -104,16 +104,16 @@ export default function Contact() {
 
                 <div className="pt-2 flex flex-col gap-3 text-xs">
                   <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-amber-600" />
+                    <Phone className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>Office: <a href={`tel:${churchPhone.replace(/[^0-9+]/g, '')}`} className="font-bold text-slate-900 hover:text-amber-700">{churchPhone}</a></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                    <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>WhatsApp: <strong className="text-slate-900">{churchWhatsapp}</strong></span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-amber-600" />
-                    <span>Email: <a href={getGmailComposeUrl({ to: churchEmail })} target="_blank" rel="noopener noreferrer" className="font-bold text-slate-900 hover:text-amber-700">{churchEmail}</a></span>
+                  <div className="flex items-start gap-2 min-w-0">
+                    <Mail className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span className="min-w-0">Email: <a href={getGmailComposeUrl({ to: churchEmail })} target="_blank" rel="noopener noreferrer" className="font-bold text-slate-900 hover:text-amber-700 break-all">{churchEmail}</a></span>
                   </div>
                 </div>
               </div>
@@ -138,15 +138,15 @@ export default function Contact() {
                 <span>Weekly Service Schedule</span>
               </h4>
               <div className="space-y-2 text-xs">
-                <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between gap-2">
+                <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
                   <span className="font-bold text-amber-900">Sunday Worship Service</span>
                   <span className="font-semibold text-slate-800">{sundayTiming}</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
                   <span className="font-bold text-slate-800">Wednesday Bible Study</span>
                   <span className="font-semibold text-slate-600">{wednesdayTiming}</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
                   <span className="font-bold text-slate-800">Friday Fasting Prayer</span>
                   <span className="font-semibold text-slate-600">{fridayTiming}</span>
                 </div>
@@ -154,17 +154,17 @@ export default function Contact() {
             </div>
 
             {/* INTERACTIVE GOOGLE MAP LOCATION (Managed via Admin Portal) */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm overflow-hidden space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm overflow-hidden space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h4 className="font-serif font-bold text-base text-slate-950 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-amber-600" />
+                  <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>Church Location & Map</span>
                 </h4>
                 <a
                   href={googleMapsLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 hover:underline"
+                  className="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 hover:underline shrink-0"
                 >
                   <span>Open in Maps</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -186,15 +186,15 @@ export default function Contact() {
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-between gap-3">
-                <p className="text-xs text-slate-500 truncate">
+              <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <p className="text-xs text-slate-500 line-clamp-2 sm:truncate">
                   {churchAddress}
                 </p>
                 <a
                   href={googleMapsLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm shrink-0"
+                  className="w-full sm:w-auto justify-center px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm shrink-0"
                 >
                   <span>Get Driving Directions</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -206,7 +206,7 @@ export default function Contact() {
 
           {/* RIGHT: CONTACT FORM */}
           <div className="lg:col-span-7">
-            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-8 sm:p-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-5 sm:p-8 lg:p-10">
               
               {!submitted ? (
                 <div>
@@ -217,7 +217,7 @@ export default function Contact() {
                     How Can We Serve You?
                   </h3>
                   <p className="text-xs text-slate-500 mb-6">
-                    Inquiries are sent directly to the church administration email at <strong className="text-slate-700">{churchEmail}</strong>.
+                    Inquiries are sent directly to the church administration email at <strong className="text-slate-700 break-all">{churchEmail}</strong>.
                   </p>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -316,7 +316,7 @@ export default function Contact() {
                       <span>Instant Pastoral Notification Dispatched:</span>
                     </div>
                     <p className="text-slate-600">
-                      Thank you, <strong>{formData.name}</strong>! Your inquiry was dispatched to <strong className="text-slate-900 font-mono">{adminNotificationEmail}</strong> and logged in the church admin system.
+                      Thank you, <strong>{formData.name}</strong>! Your inquiry was dispatched to <strong className="text-slate-900 font-mono break-all">{adminNotificationEmail}</strong> and logged in the church admin system.
                     </p>
                   </div>
 
@@ -383,7 +383,7 @@ export default function Contact() {
                     className="w-full p-5 text-left flex items-center justify-between gap-4 font-serif font-bold text-base text-slate-900 hover:text-amber-700 transition-colors"
                   >
                     <span>{faq.q}</span>
-                    <ChevronDown className={`w-4 h-4 text-amber-600 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-amber-600 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {isOpen && (

@@ -179,7 +179,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
           <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             {/* DUAL PASTORAL LEADERSHIP PHOTOS (SENIOR PASTOR & ELDER SON) */}
-            <div className="lg:col-span-5 relative grid grid-cols-2 gap-2 h-72 sm:h-96 lg:h-full min-h-[280px] sm:min-h-[420px] bg-slate-950 p-2 sm:p-2.5 rounded-2xl">
+            <div className="lg:col-span-5 relative grid grid-cols-2 gap-2 h-72 sm:h-96 lg:h-full min-h-[300px] sm:min-h-[400px] bg-slate-950 p-2 sm:p-2.5 rounded-t-3xl lg:rounded-none lg:rounded-l-3xl">
               {/* Senior Pastor */}
               <div className="relative h-full rounded-xl overflow-hidden shadow-lg border border-amber-400/20">
                 <img 
@@ -187,9 +187,9 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
                   alt={settings.seniorPastor || "Pastor P. Rajendran - Senior Pastor"} 
                   className="w-full h-full object-cover object-top filter brightness-105"
                 />
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#041628]/95 via-[#041628]/60 to-transparent p-3 text-white text-left">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400 block">{settings.seniorPastorTitle || 'Founder & Senior Pastor'}</span>
-                  <h4 className="font-serif font-bold text-sm text-white leading-tight">{settings.seniorPastor || 'Pastor P. Rajendran'}</h4>
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#041628]/95 via-[#041628]/60 to-transparent p-2 sm:p-3 text-white text-left">
+                  <span className="text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-400 block">{settings.seniorPastorTitle || 'Founder & Senior Pastor'}</span>
+                  <h4 className="font-serif font-bold text-xs sm:text-sm text-white leading-tight">{settings.seniorPastor || 'Pastor P. Rajendran'}</h4>
                 </div>
               </div>
 
@@ -201,9 +201,9 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
                   className="w-full h-full object-cover object-top filter brightness-105"
                   onError={(e) => { e.target.src = '/images/franklin.jpg'; }}
                 />
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#041628]/95 via-[#041628]/60 to-transparent p-3 text-white text-left">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400 block">{settings.associatePastorTitle || 'Youth Pastor & Admin'}</span>
-                  <h4 className="font-serif font-bold text-sm text-white leading-tight">{settings.associatePastor || 'Pastor R. Franklin Rajendran'}</h4>
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#041628]/95 via-[#041628]/60 to-transparent p-2 sm:p-3 text-white text-left">
+                  <span className="text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-400 block">{settings.associatePastorTitle || 'Youth Pastor & Admin'}</span>
+                  <h4 className="font-serif font-bold text-xs sm:text-sm text-white leading-tight">{settings.associatePastor || 'Pastor R. Franklin Rajendran'}</h4>
                 </div>
               </div>
             </div>
@@ -311,18 +311,18 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
                 </div>
               </button>
 
-              <div className="absolute bottom-4 left-4 right-4 flex justify-between text-xs text-white">
-                <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md font-bold uppercase">
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between gap-2 text-xs text-white">
+                <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md font-bold uppercase truncate max-w-[70%]">
                   {sermons[0]?.category}
                 </span>
-                <span className="font-bold text-amber-300">
+                <span className="font-bold text-amber-300 shrink-0">
                   {sermons[0]?.duration || '48 mins'}
                 </span>
               </div>
             </div>
 
-            <div className="p-6 sm:p-8 text-left">
-              <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <div className="p-5 sm:p-8 text-left">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mb-2">
                 <span className="font-bold text-amber-700">{sermons[0]?.speaker}</span>
                 <span>•</span>
                 <span>{sermons[0]?.date}</span>
@@ -409,13 +409,13 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
       <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="bg-gradient-to-b from-amber-50/70 via-white to-amber-50/40 border border-amber-200/90 rounded-3xl p-5 sm:p-8 md:p-12 shadow-sm text-left">
           
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-12">
-            <div>
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 sm:mb-12">
+            <div className="min-w-0">
               <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 mb-2">
-                <Sparkles className="w-4 h-4 text-amber-600" />
+                <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>Miracles & Supernatural Breakthroughs • சாட்சிகள்</span>
               </div>
-              <h2 className="font-serif font-extrabold text-2xl sm:text-4xl md:text-5xl text-slate-950">
+              <h2 className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl xl:text-5xl text-slate-950">
                 Real Stories of God's Grace
               </h2>
               <p className="text-slate-600 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
@@ -423,11 +423,11 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
               </p>
             </div>
 
-            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3 w-full md:w-auto shrink-0">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full lg:w-auto lg:shrink-0">
               {/* SEPARATE BUTTON 1: SHARE YOUR TESTIMONY */}
               <button
                 onClick={onOpenTestimonyModal}
-                className="w-full md:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95"
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95"
               >
                 <Sparkles className="w-3.5 h-3.5 text-slate-950 shrink-0" />
                 <span>Share Your Testimony</span>
@@ -436,7 +436,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
               {/* SEPARATE BUTTON 2: SUBMIT PRAYER REQUEST */}
               <button
                 onClick={onOpenPrayerModal}
-                className="w-full md:w-auto px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95"
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95"
               >
                 <Heart className="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
                 <span>Submit Prayer Request</span>
@@ -478,7 +478,7 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
             }
 
             return (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-8 items-stretch">
                 {homeDisplayTestimonies.map((item, idx) => {
                   const cardId = item.id || `testimony-${idx}`;
                   const isExpanded = Boolean(expandedTestimonies[cardId]);
@@ -487,14 +487,14 @@ export default function Home({ onOpenPlanVisit, onOpenPrayerModal, onOpenTestimo
                   return (
                     <div 
                       key={cardId} 
-                      className="bg-white p-6 sm:p-7 rounded-3xl border border-amber-200/80 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative group h-full min-h-[280px]"
+                      className="bg-white p-5 sm:p-6 rounded-3xl border border-amber-200/80 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative group h-full min-h-[280px]"
                     >
                       <div className="absolute top-6 right-6 text-amber-400/20 group-hover:text-amber-400/40 transition-colors pointer-events-none">
                         <Quote className="w-10 h-10" />
                       </div>
 
                       <div className="flex-1 flex flex-col">
-                        <div className="mb-3">
+                        <div className="mb-3 pr-10">
                           <span className="inline-block px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold uppercase tracking-wider">
                             {item.type || 'Miraculous Healing'}
                           </span>

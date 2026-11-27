@@ -65,10 +65,10 @@ export default function About({ onOpenPlanVisit }) {
             </div>
 
             <div className="lg:col-span-5">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {churchStats.map((stat, idx) => (
-                  <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-md text-left">
-                    <span className="font-serif font-extrabold text-4xl text-amber-700 block mb-1">{stat.value}</span>
+                  <div key={idx} className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-md text-left">
+                    <span className="font-serif font-extrabold text-2xl sm:text-3xl lg:text-4xl text-amber-700 block mb-1 break-words">{stat.value}</span>
                     <span className="text-xs font-bold text-slate-900 block">{stat.label}</span>
                     {stat.desc && <p className="text-[11px] text-slate-500 mt-1">{stat.desc}</p>}
                   </div>
@@ -81,10 +81,10 @@ export default function About({ onOpenPlanVisit }) {
       </section>
 
       {/* MISSION, VISION & DNA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 text-left">
           
-          <div className="bg-white p-8 rounded-3xl border border-slate-200/90 shadow-md flex flex-col justify-between">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-md flex flex-col justify-between">
             <div>
               <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center mb-6">
                 <Compass className="w-6 h-6" />
@@ -97,7 +97,7 @@ export default function About({ onOpenPlanVisit }) {
             <span className="text-xs font-bold text-amber-700 mt-6 block">Ephesians 1:17-19</span>
           </div>
 
-          <div className="bg-white p-8 rounded-3xl border border-slate-200/90 shadow-md flex flex-col justify-between">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-md flex flex-col justify-between">
             <div>
               <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center mb-6">
                 <Heart className="w-6 h-6" />
@@ -110,7 +110,7 @@ export default function About({ onOpenPlanVisit }) {
             <span className="text-xs font-bold text-amber-700 mt-6 block">Matthew 28:19-20</span>
           </div>
 
-          <div className="bg-white p-8 rounded-3xl border border-slate-200/90 shadow-md flex flex-col justify-between">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-md flex flex-col justify-between">
             <div>
               <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center mb-6">
                 <Shield className="w-6 h-6" />
@@ -142,13 +142,13 @@ export default function About({ onOpenPlanVisit }) {
             </p>
           </div>
 
-          <div className="relative pl-6 sm:pl-8 border-l-2 border-amber-400 space-y-12 text-left">
+          <div className="relative ml-3 sm:ml-4 pl-7 sm:pl-9 border-l-2 border-amber-400 space-y-12 text-left">
             {milestones.map((m, idx) => (
               <div key={idx} className="relative group">
-                {/* Node circle */}
-                <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-7 h-7 rounded-full bg-white border-4 border-amber-500 shadow-md"></div>
+                {/* Node circle centered cleanly on left border */}
+                <div className="absolute -left-[41px] sm:-left-[49px] top-1.5 w-6 h-6 rounded-full bg-white border-4 border-amber-500 shadow-md"></div>
                 
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-sm group-hover:shadow-md transition-shadow">
+                <div className="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200/90 shadow-sm group-hover:shadow-md transition-shadow">
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-700 block mb-1">
                     {m.year}
                   </span>

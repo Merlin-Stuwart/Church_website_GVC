@@ -76,25 +76,25 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
           </div>
 
           {/* Desktop Rich View (>= sm) */}
-          <div className="hidden sm:flex items-center justify-between w-full">
+          <div className="hidden sm:flex items-center justify-between w-full gap-3 min-w-0">
             {/* Service Timings Pill */}
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-900 border border-amber-500/20 text-[10px] tracking-wide">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-900 border border-amber-500/20 text-[10px] tracking-wide shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 Sunday Worship
               </span>
-              <span className="text-slate-600 font-medium">
+              <span className="text-slate-600 font-medium truncate">
                 Sunday Service: <strong className="text-slate-900 font-bold">{settings.serviceTimings || '09:30 AM – 11:30 AM'}</strong>
               </span>
             </div>
 
             {/* Quick Access Info */}
-            <div className="flex items-center gap-4 font-semibold text-slate-500">
-              <Link to="/contact" className="hidden md:inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">
+            <div className="flex items-center gap-3 lg:gap-4 font-semibold text-slate-500 shrink-0">
+              <Link to="/contact" className="hidden lg:inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                 <span className="max-w-[220px] truncate">{(settings.address || 'Vattamalai, Tamil Nadu').replace(/^Grace Victory Church,\s*/i, '')}</span>
               </Link>
-              <span className="hidden md:inline text-slate-300">|</span>
+              <span className="hidden lg:inline text-slate-300">|</span>
               <a href={`tel:${(settings.phone || '+91 93605 88397').replace(/[^0-9+]/g, '')}`} className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">
                 <Phone className="w-3.5 h-3.5 text-amber-600" />
                 <span>{settings.phone || '+91 93605 88397'}</span>
@@ -123,11 +123,11 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
           ? 'bg-white/98 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.06)] py-2 sm:py-2.5 border-b border-slate-200/90' 
           : 'bg-white py-2.5 sm:py-3 border-b border-slate-200/60'
       }`}>
-        <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex items-center justify-between gap-2 sm:gap-6">
+        <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 xl:px-8 2xl:px-12">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             
             {/* Ultra-Clean Modern Church Brand Logo */}
-            <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 shrink">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 xl:shrink-0">
               <div 
                 onClick={handleLogoSecretTap}
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#0B192C] to-[#162D4A] p-1.5 sm:p-2 flex items-center justify-center shadow-md border border-amber-400/30 shrink-0 group-hover:scale-105 transition-transform duration-300 cursor-pointer select-none"
@@ -137,18 +137,18 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
                   <path d="M11 2h2v7h7v2h-7v11h-2V11H4V9h7V2z"/>
                 </svg>
               </div>
-              <div className="flex flex-col text-left leading-none min-w-0">
+              <div className="flex flex-col text-left leading-none min-w-0 overflow-hidden">
                 {(() => {
                   const words = (settings.churchName || 'Grace Victory Church').trim().split(/\s+/);
                   const lastWord = words.length > 1 ? words[words.length - 1] : '';
                   const mainPart = words.length > 1 ? words.slice(0, -1).join(' ') : words[0];
                   return (
-                    <div className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
-                      <span className="font-serif font-black text-xs sm:text-base md:text-xl text-[#0B192C] tracking-tight sm:tracking-wide uppercase">
+                    <div className="flex items-center gap-1 sm:gap-1.5 truncate">
+                      <span className="font-serif font-black text-[13px] sm:text-base md:text-lg xl:text-lg 2xl:text-xl text-[#0B192C] tracking-tight sm:tracking-wide uppercase">
                         {mainPart}
                       </span>
                       {lastWord && (
-                        <span className="font-serif font-black text-xs sm:text-base md:text-xl text-amber-600 tracking-tight sm:tracking-wide uppercase">
+                        <span className="font-serif font-black text-[13px] sm:text-base md:text-lg xl:text-lg 2xl:text-xl text-amber-600 tracking-tight sm:tracking-wide uppercase">
                           {lastWord}
                         </span>
                       )}
@@ -162,14 +162,14 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+            <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-2 shrink-0">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.path;
                 return (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`relative px-3.5 py-2 text-[13px] font-semibold transition-all duration-200 whitespace-nowrap ${
+                    className={`relative px-2.5 2xl:px-3.5 py-2 text-[13px] font-semibold transition-all duration-200 whitespace-nowrap ${
                       isActive 
                         ? 'text-amber-800 font-bold' 
                         : 'text-slate-600 hover:text-slate-950'
@@ -185,24 +185,24 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
             </nav>
 
             {/* Action Buttons: Prominent GIVE Button */}
-            <div className="hidden lg:flex items-center gap-3 shrink-0">
+            <div className="hidden xl:flex items-center gap-3 shrink-0">
               <Link
                 to="/giving"
-                className="px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-extrabold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-md shadow-amber-500/25 transition-all flex items-center gap-2 hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+                className="px-4 2xl:px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-extrabold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-md shadow-amber-500/25 transition-all flex items-center gap-2 hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
               >
                 <Heart className="w-4 h-4 fill-slate-950 text-slate-950" />
                 <span>Give Online</span>
               </Link>
             </div>
 
-            {/* Mobile Actions: Compact Give + Hamburger Menu (Visible ONLY on Mobile & Tablet < lg) */}
-            <div className="flex lg:hidden items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Mobile & Compact Window Actions: Compact Give + Hamburger Menu (< xl) */}
+            <div className="flex xl:hidden items-center gap-1.5 sm:gap-2 shrink-0">
               <Link
                 to="/giving"
                 className="px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-sm flex items-center gap-1 sm:gap-1.5 whitespace-nowrap"
               >
                 <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-slate-950" />
-                <span>Give</span>
+                <span>Give<span className="hidden sm:inline"> Online</span></span>
               </Link>
 
               <button
@@ -217,9 +217,9 @@ export default function Navbar({ onOpenPlanVisit, onOpenAdminAuth }) {
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
+        {/* Mobile / Compact Window Navigation Drawer */}
         {isOpen && (
-          <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 animate-in slide-in-from-top-4 duration-200 shadow-2xl">
+          <div className="xl:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 animate-in slide-in-from-top-4 duration-200 shadow-2xl max-h-[calc(100dvh-64px)] overflow-y-auto">
             <div className="space-y-1">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.path;

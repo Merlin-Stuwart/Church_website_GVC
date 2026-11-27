@@ -70,10 +70,10 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
           </p>
 
           {/* TWO SEPARATE ACTION BUTTONS */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-xl mx-auto sm:max-w-none">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-3 sm:gap-4 w-full max-w-xl mx-auto sm:max-w-none">
             <button
               onClick={onOpenTestimonyModal}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 shadow-xl shadow-amber-500/25 transition-all inline-flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-5 sm:px-6 md:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 shadow-xl shadow-amber-500/25 transition-all inline-flex items-center justify-center gap-2 cursor-pointer"
             >
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950 shrink-0" />
               <span>Share Your Testimony</span>
@@ -81,15 +81,15 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
 
             <button
               onClick={onOpenPrayerModal}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider text-white bg-slate-900 hover:bg-slate-800 shadow-xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-5 sm:px-6 md:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider text-white bg-slate-900 hover:bg-slate-800 shadow-xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer"
             >
               <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-500 text-amber-500 shrink-0" />
               <span>Submit Confidential Prayer Request</span>
             </button>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
-            <Lock className="w-3.5 h-3.5 text-amber-700" />
+          <div className="mt-6 flex items-start sm:items-center justify-center gap-2 text-xs text-slate-500 font-medium">
+            <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5 sm:mt-0" />
             <span>Prayer requests are held strictly confidential. Only testimonies of God's goodness are publicly shared.</span>
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
                 </div>
 
                 <div className="flex-1 flex flex-col">
-                  <div className="mb-3">
+                  <div className="mb-3 pr-10">
                     <span className="inline-block px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold uppercase tracking-wider">
                       {item.type || 'Miraculous Healing'}
                     </span>
@@ -196,7 +196,7 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
         )}
 
         {/* Pastoral Prayer Promise Banner */}
-        <div className="mt-16 bg-[#F8F6F0] text-slate-800 rounded-3xl p-8 sm:p-12 border border-amber-200/80 text-center max-w-3xl mx-auto shadow-md">
+        <div className="mt-16 bg-[#F8F6F0] text-slate-800 rounded-3xl p-5 sm:p-10 border border-amber-200/80 text-center max-w-3xl mx-auto shadow-md">
           <BookOpen className="w-10 h-10 text-amber-700 mx-auto mb-4" />
           <h3 className="font-serif font-bold text-2xl text-slate-950 mb-3">
             Every Request Is Lifted Up In Prayer
@@ -206,9 +206,9 @@ export default function PrayerWall({ onOpenPrayerModal, onOpenTestimonyModal }) 
           </p>
           <button
             onClick={onOpenPrayerModal}
-            className="px-6 py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-md flex items-center gap-2 mx-auto"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 mx-auto"
           >
-            <Heart className="w-4 h-4 fill-white" />
+            <Heart className="w-4 h-4 fill-white shrink-0" />
             <span>Submit Confidential Prayer Request</span>
           </button>
         </div>

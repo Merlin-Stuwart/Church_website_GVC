@@ -65,12 +65,12 @@ export default function PrayerModal({ isOpen, onClose, onPrayerAdded }) {
 
         {!submitted ? (
           <div>
-            <div className="flex items-center gap-2 mb-2 text-amber-700 text-xs font-bold uppercase tracking-wider">
-              <Heart className="w-4 h-4 fill-amber-600 text-amber-600" />
+            <div className="flex items-center gap-2 mb-2 pr-10 text-amber-700 text-xs font-bold uppercase tracking-wider">
+              <Heart className="w-4 h-4 fill-amber-600 text-amber-600 shrink-0" />
               <span>We Are Standing With You In Faith</span>
             </div>
 
-            <h3 className="font-serif font-bold text-2xl text-slate-950 mb-2">
+            <h3 className="font-serif font-bold text-2xl text-slate-950 mb-2 pr-10">
               Submit a Prayer Request
             </h3>
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
@@ -172,7 +172,7 @@ export default function PrayerModal({ isOpen, onClose, onPrayerAdded }) {
                 <span>Notification Dispatched to Pastoral Team:</span>
               </div>
               <p className="text-slate-600">
-                An alert was dispatched to <strong className="text-slate-900 font-mono">{adminNotificationEmail}</strong> and logged in the church admin system.
+                An alert was dispatched to <strong className="text-slate-900 font-mono break-all">{adminNotificationEmail}</strong> and logged in the church admin system.
               </p>
             </div>
 
